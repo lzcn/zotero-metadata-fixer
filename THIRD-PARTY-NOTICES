@@ -1,0 +1,22 @@
+Metadata Linter is a new implementation inspired by these projects:
+
+arXiv Workflow for Zotero (AllanChain and contributors)
+https://github.com/AllanChain/zotero-arxiv-workflow
+Inspected commit: 6adc06879be6e9d52c7e24e27ff21854c9866d7b
+Upstream license: AGPL-3.0
+Design reference: preserve the preprint's identity when applying published metadata.
+
+Linter for Zotero (northword and contributors)
+https://github.com/northword/zotero-format-metadata
+Inspected commit: 2b747409e8c3df866fca327a8ad859d770694a5b
+Upstream license: AGPL-3.0
+Design reference: no-save Zotero translators and blank/replace metadata modes.
+
+Zotero Metadata Hunter (Federico Torrielli and contributors)
+https://github.com/federicotorrielli/zotero-metadata-hunter
+Inspected commit: 017cc64c5599e553c179f63fb75c80cea8cad2f4
+Upstream license: EUPL-1.2
+Design reference: multiple discovery sources, DBLP mirrors and DOI-free OpenReview records.
+
+The three upstream plugins are not bundled or required at runtime.
+Build-time dependencies and their licenses are recorded in package-lock.json.

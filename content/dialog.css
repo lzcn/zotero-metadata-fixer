@@ -1,0 +1,151 @@
+:root {
+  color-scheme: light dark;
+  font:
+    14px system-ui,
+    sans-serif;
+}
+body {
+  margin: 24px;
+  min-width: 640px;
+  max-width: 1080px;
+  background: Canvas;
+  color: CanvasText;
+}
+h1 {
+  font-size: 20px;
+}
+p {
+  line-height: 1.6;
+}
+#content {
+  max-height: 60vh;
+  overflow: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+th,
+td {
+  border-bottom: 1px solid GrayText;
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+th:first-child,
+td:first-child {
+  width: 70%;
+}
+td small {
+  display: block;
+  margin-top: 8px;
+}
+button,
+select {
+  font: inherit;
+  padding: 6px 12px;
+}
+button {
+  cursor: pointer;
+}
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+}
+#options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+pre {
+  font: 12px system-ui;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 120px;
+  overflow: auto;
+}
+.muted {
+  color: GrayText;
+}
+.rule-card {
+  border: 1px solid GrayText;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.rule-card textarea,
+.rule-card input:not([type="checkbox"]) {
+  width: 280px;
+  font: inherit;
+}
+.rule-card p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.rule-card h2 {
+  font-size: 16px;
+  flex-basis: 100%;
+  margin: 0;
+}
+.rule-card label:has(textarea),
+.rule-card label:has(input:not([type="checkbox"])) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+#options > p,
+#options > textarea {
+  flex-basis: 100%;
+  margin: 0;
+}
+#options > textarea {
+  font: 12px monospace;
+  width: 100%;
+}
+#options input[type="search"] {
+  font: inherit;
+  padding: 6px;
+  min-width: 260px;
+}
+[hidden] {
+  display: none !important;
+}
+
+.rule-editor {
+  flex-basis: 100%;
+}
+.rule-editor[open] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.rule-editor > summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+#options > details {
+  flex-basis: 100%;
+}
+#options details > textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rule-editor > summary {
+  flex-basis: 100%;
+}

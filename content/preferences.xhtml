@@ -1,0 +1,21 @@
+<vbox
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="Zotero.MetadataLinter?.initializePreferences(document)"
+  onshowing="Zotero.MetadataLinter?.refreshPreferences(document)"
+>
+  <html:section class="main-section">
+    <html:p id="ml-settings-help"></html:p>
+    <html:label
+      id="ml-publication-label"
+      for="ml-publication-style"
+    ></html:label>
+    <html:select id="ml-publication-style">
+      <html:option id="ml-retrieved-names" value="original"></html:option>
+      <html:option id="ml-standard-names" value="standard"></html:option>
+      <html:option id="ml-short-names" value="short"></html:option>
+    </html:select>
+    <html:p id="ml-publication-help"></html:p>
+    <html:button id="ml-conference-rules" type="button"></html:button>
+  </html:section>
+</vbox>
