@@ -327,37 +327,57 @@ test("Lint applies the Publication switch to a matched ECCV publication and pres
   }
 });
 
-test("conference configuration saves one validated preference including the format toggle", async () => {
+test("preferences only expose naming style while internal conference rules remain intact", async () => {
   const runtime = new Runtime();
-  let dialog;
   const saved = [];
-  runtime.open = (_, data) => {
-    dialog = data;
-    return { window: {}, result: new Promise(() => {}) };
+  const ids = [
+    "ml-publication-style",
+    "ml-settings-help",
+    "ml-publication-label",
+    "ml-retrieved-names",
+    "ml-standard-names",
+    "ml-short-names",
+    "ml-publication-help",
+  ];
+  const elements = Object.fromEntries(
+    ids.map((id) => [id, { textContent: "", addEventListener: () => {} }]),
+  );
+  const settings = {
+    rules: DEFAULT_CONFERENCE_RULES,
+    formatPublication: false,
+    publicationStyle: "original",
   };
+  settings.rules = settings.rules.map((rule) =>
+    rule.id === "eccv" ? { ...rule, name: "Maintained ECCV name" } : rule,
+  );
   globalThis.Zotero.Prefs = {
-    get: () => undefined,
+    get: () => JSON.stringify(settings),
     set: (...args) => saved.push(args),
   };
   try {
-    await runtime.configureConferences({});
-    assert.equal(dialog.settings.formatPublication, false);
-    dialog.saveConfiguration({
-      rules: dialog.settings.rules,
-      formatPublication: true,
+    runtime.initializePreferences({
+      getElementById: (id) => {
+        assert.ok(
+          elements[id],
+          "Unexpected advanced configuration control: " + id,
+        );
+        return elements[id];
+      },
     });
+    runtime.setPublicationStyle("short");
+    const stored = JSON.parse(saved[0][1]);
     assert.equal(saved[0][0], CONFERENCE_SETTINGS_PREF);
-    assert.equal(saved[0][2], true);
-    assert.equal(JSON.parse(saved[0][1]).formatPublication, true);
-    assert.throws(
-      () =>
-        dialog.saveConfiguration({
-          rules: [dialog.settings.rules[0], dialog.settings.rules[0]],
-          formatPublication: true,
-        }),
-      /unique ID/,
+    assert.equal(stored.publicationStyle, "short");
+    assert.equal(stored.rules.length, 386);
+    assert.equal(
+      stored.rules.find((rule) => rule.id === "eccv").name,
+      "Maintained ECCV name",
     );
-    assert.equal(saved.length, 1);
+    const markup = await readFile(
+      new URL("../content/preferences.xhtml", import.meta.url),
+      "utf8",
+    );
+    assert.doesNotMatch(markup, /ml-conference-rules|button/);
   } finally {
     delete globalThis.Zotero.Prefs;
   }
@@ -660,7 +680,6 @@ test("published repair preserves populated fields and fixes a known incorrect co
 test("cancel releases the busy operation while its translator is still pending", async () => {
   const item = new FakeItem();
   const { runtime, win } = runFixture(item);
-  const originalTitle = item.getField("title");
   let finish;
   runtime.retriever.retrieve = () =>
     new Promise((resolve) => {
@@ -677,9 +696,10 @@ test("cancel releases the busy operation while its translator is still pending",
   });
   await runtime.run(win, "DOI");
   assert.equal(item.saved, 1);
+  const savedTitle = item.getField("title");
   finish({ ...published, title: "Late stale result" });
   await Promise.resolve();
-  assert.equal(item.getField("title"), originalTitle);
+  assert.equal(item.getField("title"), savedTitle);
   assert.equal(item.saved, 1);
 });
 

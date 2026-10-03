@@ -12,12 +12,7 @@ import { en, zh } from "./strings";
 import {
   CONFERENCE_SETTINGS_PREF,
   parseConferenceSettings,
-  validateConferenceRules,
   normalizeConference,
-  commonPublicationTitle,
-  conferenceInfo,
-  CONFERENCE_CATALOG_VERSION,
-  DEFAULT_CONFERENCE_RULES,
   type ConferenceSettings,
   type PublicationStyle,
 } from "./conferences";
@@ -201,8 +196,6 @@ export class Runtime {
       resolve = done;
     });
     data.strings = this.s;
-    data.openURL = (url: string) => Zotero.launchURL(url);
-    data.creatorTypeName = (id: number) => Zotero.CreatorTypes.getName(id);
     data.onResult = (value: any) => {
       if (!settled) {
         settled = true;
@@ -300,14 +293,6 @@ export class Runtime {
       false,
       true,
     );
-    doc.getElementById("ml-conference-rules").addEventListener(
-      "click",
-      () => {
-        void this.configureConferences(doc.defaultView);
-      },
-      false,
-      true,
-    );
     this.refreshPreferences(doc);
   }
 
@@ -320,7 +305,6 @@ export class Runtime {
       "ml-standard-names": this.s.standardNames,
       "ml-short-names": this.s.shortNames,
       "ml-publication-help": this.s.formatHelp,
-      "ml-conference-rules": this.s.conferences,
     }))
       doc.getElementById(id).textContent = text;
     doc.getElementById("ml-publication-style").value =
@@ -352,47 +336,6 @@ export class Runtime {
     return parseConferenceSettings(
       Zotero.Prefs?.get(CONFERENCE_SETTINGS_PREF, true),
     );
-  }
-
-  async configureConferences(win: any): Promise<void> {
-    if (!this.alive) return;
-    try {
-      const settings = this.conferenceSettings();
-      this.open(win, {
-        kind: "conferences",
-        settings,
-        commonTitle: commonPublicationTitle,
-        conferenceInfo,
-        validateRules: validateConferenceRules,
-        saveConfiguration: (value: ConferenceSettings) => {
-          if (!this.alive) throw new Error(this.s.cancelled);
-          const rules = validateConferenceRules(value.rules);
-          if (typeof value.formatPublication !== "boolean")
-            throw new Error("Invalid Publication formatting option");
-          const publicationStyle =
-            value.publicationStyle ??
-            (value.formatPublication ? "standard" : "original");
-          if (!["original", "standard", "short"].includes(publicationStyle))
-            throw new Error("Invalid conference naming style");
-          Zotero.Prefs.set(
-            CONFERENCE_SETTINGS_PREF,
-            JSON.stringify({
-              rules,
-              catalogVersion: CONFERENCE_CATALOG_VERSION,
-              removedRuleIDs: DEFAULT_CONFERENCE_RULES.filter(
-                (rule) => !rules.some((saved) => saved.id === rule.id),
-              ).map((rule) => rule.id),
-              formatPublication: publicationStyle !== "original",
-              publicationStyle,
-            }),
-            true,
-          );
-        },
-        defaults: parseConferenceSettings(),
-      });
-    } catch (error) {
-      Zotero.alert(win, this.s.name, String(error));
-    }
   }
 
   async run(win: any, source: RetrievalSource | "lint"): Promise<void> {

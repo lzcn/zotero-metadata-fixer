@@ -1,6 +1,6 @@
 {
   "name": "zotero-metadata-fixer",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "description": "Update preprints and retrieve metadata while preserving the original Zotero item.",
   "author": "Zhi Lu",
@@ -16,7 +16,7 @@
     "lint:fix": "prettier --write .",
     "test": "node scripts/test.mjs",
     "test:host": "node scripts/test-host.mjs",
-    "check": "npm run lint:check && npm test && node scripts/build.mjs --check",
+    "check": "npm run lint:check && node scripts/build.mjs --check && npm test",
     "release": "npm run check && node scripts/release.mjs",
     "build:force": "node scripts/build.mjs --force"
   },

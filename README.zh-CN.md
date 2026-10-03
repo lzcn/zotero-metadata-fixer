@@ -8,7 +8,7 @@
 
 安装 `dist/zotero-metadata-fixer.xpi`，选中一篇或多篇文献，右键 → **Metadata Fixer**。
 
-一个操作完成预印本升级、元数据补空与修错，无候选选择或字段确认弹窗。批量共用一个紧凑进度框，显示处理数量和当前条目，结束后显示统计；详细结果默认折叠。点“取消”或关闭窗口停止尚未完成的更新。
+一个操作完成预印本升级、元数据补空与修错，无候选选择或字段确认弹窗。批量共用一个小窗口，只显示文献标题、简短状态和取消／关闭按钮。点“取消”或关闭窗口停止尚未完成的更新。
 
 Zotero **设置 → Metadata Fixer** 只提供一个会议名称选项：**原名**、**标准全名**、**简洁缩写**。默认保留原名；后两种使用维护的全名或缩写，去掉届数和年份，论文日期不变。名称选项规范化 Proceedings Title，已有 Conference Name 保留。旧 Conference Name 中错放的论文集名称会修正到 Proceedings Title，检索成功或保留原名时也生效。标准全名参考 CCF、会议官网及出版信息；CVPR 使用 **Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition**。
 
@@ -19,17 +19,13 @@ Zotero **设置 → Metadata Fixer** 只提供一个会议名称选项：**原�
 - 自动读取 DOI、arXiv ID、PMID、URL 和 Extra 中的标识符。使用 Zotero 翻译器及 arXiv 官方 API。检索来源包括 Google Scholar、Semantic Scholar、Crossref、DBLP、PubMed、OpenReview。arXiv API 不可用时尝试论文页面的发表 DOI；Semantic Scholar ID 查找不命中时回退标题查询；Crossref 限定发表类型并扩大候选数量；已有发表版 DOI 直接用 Zotero 标识符翻译器；否则先通过预印本关联信息和 Google Scholar 标题查询寻找 DOI，其他来源补充查找。找到 DOI 后优先基于 DOI 检索；无 DOI 或 DOI 检索失败时使用官方论文页面（包括 IEEE）或 OpenReview BibTeX。Google Scholar 出现验证页面或限流时跳过该批次后续 Scholar 请求，其他来源继续。遇到 DBLP 反机器人页面或限流时，同一批次跳过后续 DBLP 请求，其他来源继续。
 - 已发表条目只补空字段、修正明确的类型、会议归属、editor 和无效 DOI，保留已填写的标题、摘要、作者、页码、出版社等内容。所有字段若仅大小写、空格或常见排版不同，即使升级预印本也不改原值。
 - 在原 item 中写入元数据，保留 ID、key、附件、批注、笔记、集合、标签、关系及原有 Extra。空的检索值不会清空已有值。类型转换中无法保留的字段、原预印本来源写入 Extra。发表版没有 DOI 时，旧 arXiv DOI 移入 Extra，不作为正式版 DOI。
-- 批量顺序处理。条目在更新期间被其他操作修改时拒绝旧结果；写入失败回滚。网络警告在“详情”中查看。取消、关闭所属主窗口或退出 Zotero 时立即停止任务并终止插件网络请求；不等待初始化或翻译器完成，迟到结果不会写入。
+- 批量顺序处理。条目在更新期间被其他操作修改时拒绝旧结果；写入失败回滚。取消、关闭所属主窗口或退出 Zotero 时立即停止任务并终止插件网络请求；不等待初始化或翻译器完成，迟到结果不会写入。
 
-## 会议配置
+## 内部会议规则
 
-内置 [CCF 2026 年第七版目录](https://www.ccf.org.cn/Academic_Evaluation/By_category/)全部 **386 个会议、10 个领域**，包括 ICLR、NeurIPS、CVPR、ICCV、ECCV、ICML、ACL。支持名称搜索、领域和等级筛选。
+内置 CCF 2026 年第七版目录的 **386 个会议、10 个领域**。多个名称和历史别名映射到同一会议，按规则处理条目类型、editor 和名称。规则由插件维护者修改 `data/conferences.json`，不向用户展示编辑、导入或导出界面。设置页仅提供名称样式选项；已有规则配置继续保留。
 
-每个会议的“配置”可修改别名、排除条件、条目类型、editor 处理、期刊保留策略、自定义 Publication 名称；可查看官方来源、恢复单个会议或添加自定义规则。导入和导出放在“备份”中。编辑配置不会修改文献。
-
-默认会议论文使用 `conferencePaper`，移除 editor，保留论文作者。默认保留检索到的期刊文章信息，避免把 PACMPL、PACMMOD、PVLDB 等期刊记录转成会议论文。Workshop、Findings、Companion 等不会套用主会议规则；FSE、SEC 等重名缩写需有足够具体的会议名称。
-
-CCF 提供名称与分级依据；条目类型和 editor 策略由插件维护。更新版本时自动补入新增规则，保留已有修改、禁用状态、自定义规则和删除记录。维护时保持规则 ID 稳定，将历史名称加入别名，核对重名冲突；官方 PDF 地址、校验和、页码与数量保存在 `data/conference-catalog.json` 和 `data/conferences.json`。
+默认会议论文使用 `conferencePaper`，移除 editor，保留作者；真正的期刊文章与 Workshop、Findings 等次级会场不套用主会议规则。官方来源、校验和与页码见 `data/conference-catalog.json`。
 
 ## 开发
 

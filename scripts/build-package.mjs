@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 import { zipSync, unzipSync } from "fflate";
-import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, mkdir, writeFile, rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
 import assert from "node:assert/strict";
@@ -9,9 +9,16 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const pkg = JSON.parse(await readFile(root + "package.json", "utf8"));
 const manifest = JSON.parse(await readFile(root + "manifest.json", "utf8"));
 assert.equal(pkg.version, manifest.version);
+assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
+assert.equal(pkg.author, manifest.author);
 assert.equal(manifest.applications.zotero.id, "metadata-linter@lzcn");
 // Zotero rejects manifests without these fields before checking compatibility.
-for (const field of ["id", "update_url", "strict_max_version"])
+for (const field of [
+  "id",
+  "update_url",
+  "strict_min_version",
+  "strict_max_version",
+])
   assert.ok(
     manifest.applications.zotero[field],
     `Missing applications.zotero.${field}`,
@@ -66,5 +73,7 @@ assert.ok(unpacked["content/dialog.xhtml"]);
 assert.ok(unpacked["content/runtime.js"]);
 assert.ok(unpacked["data/conferences.json"]);
 await mkdir(root + "dist", { recursive: true });
-await writeFile(root + "dist/" + pkg.name + ".xpi", bytes);
+const output = root + "dist/" + pkg.name + ".xpi";
+await writeFile(`${output}.tmp`, bytes);
+await rename(`${output}.tmp`, output);
 console.log(`Built dist/${pkg.name}.xpi (${bytes.length} bytes)`);
