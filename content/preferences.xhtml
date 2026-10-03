@@ -4,17 +4,18 @@
   onload="Zotero.MetadataLinter?.initializePreferences(document)"
   onshowing="Zotero.MetadataLinter?.refreshPreferences(document)"
 >
-  <html:section class="main-section">
-    <html:p id="ml-settings-help"></html:p>
-    <html:label
-      id="ml-publication-label"
-      for="ml-publication-style"
-    ></html:label>
-    <html:select id="ml-publication-style">
-      <html:option id="ml-retrieved-names" value="original"></html:option>
-      <html:option id="ml-standard-names" value="standard"></html:option>
-      <html:option id="ml-short-names" value="short"></html:option>
-    </html:select>
-    <html:p id="ml-publication-help"></html:p>
-  </html:section>
+  <vbox class="main-section">
+    <description id="ml-settings-help"></description>
+    <hbox align="center">
+      <label id="ml-publication-label" control="ml-publication-style"></label>
+      <menulist native="true" id="ml-publication-style">
+        <menupopup>
+          <menuitem id="ml-retrieved-names" value="original"></menuitem>
+          <menuitem id="ml-standard-names" value="standard"></menuitem>
+          <menuitem id="ml-short-names" value="short"></menuitem>
+        </menupopup>
+      </menulist>
+    </hbox>
+    <description id="ml-publication-help"></description>
+  </vbox>
 </vbox>

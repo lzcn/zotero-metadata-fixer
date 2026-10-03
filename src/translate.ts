@@ -1,5 +1,11 @@
 import type { Candidate, Item, Metadata, RetrievalSource } from "./model";
-import { identifiers, isPreprint, preprintDOI } from "./identifiers";
+import {
+  identifiers,
+  isPreprint,
+  preprintDOI,
+  cleanDOI,
+  officialPublicationURL,
+} from "./identifiers";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -59,14 +65,61 @@ export class MetadataRetriever {
     if (/^https?:\/\/dblp\.[^/]+\/rec\/.+\.bib(?:\?|$)/i.test(url))
       return this.bibtex(await this.net.text(url));
     this.checkActive();
+    const page = new URL(url);
+    if (
+      page.hostname.replace(/^www\./, "") === "openreview.net" &&
+      page.pathname === "/forum"
+    ) {
+      const forum = page.searchParams.get("id");
+      const accepted = forum
+        ? (await this.finder.openreview({ getField: () => "" }, forum)).find(
+            (record) => new URL(record.url!).searchParams.get("id") === forum,
+          )
+        : undefined;
+      this.checkActive();
+      if (!accepted) throw new Error("No published OpenReview record found");
+      if (accepted.bibtex) return this.bibtex(accepted.bibtex);
+    }
     const docs = this.document
       ? [await this.document(url)]
       : await this.zotero.HTTP.processDocuments(url, (doc: Document) => doc);
     this.checkActive();
     if (!docs[0]) throw new Error("Unable to load item URL");
+    const doc: Document = docs[0];
+    // Read only the article's identifier, not arbitrary DOI links in references.
+    let doi = Array.from(
+      doc.querySelectorAll?.(
+        'meta[name="citation_doi"], meta[name="dc.identifier"], meta[name="DC.Identifier"]',
+      ) || [],
+    )
+      .map((meta) => cleanDOI(meta.getAttribute("content") || ""))
+      .find((value) => value && !preprintDOI(value));
+    if (!doi && officialPublicationURL(url)) {
+      const link = Array.from(doc.querySelectorAll?.("a[href]") || []).find(
+        (anchor) =>
+          (/^DOI\s*:/i.test(anchor.parentElement?.textContent?.trim() || "") ||
+            /^DOI\s*:?$/i.test(
+              anchor.parentElement?.previousElementSibling?.textContent?.trim() ||
+                "",
+            )) &&
+          cleanDOI(anchor.getAttribute("href") || ""),
+      );
+      doi = cleanDOI(link?.getAttribute("href") || "");
+    }
+    if (doi && !preprintDOI(doi)) {
+      try {
+        return await this.identifier({ DOI: doi });
+      } catch (error) {
+        this.checkActive();
+        // The official web translator can work when the DOI service cannot.
+      }
+    }
     const translate = new this.zotero.Translate.Web();
-    translate.setDocument(docs[0]);
-    return this.run(translate);
+    translate.setDocument(doc);
+    const metadata = await this.run(translate);
+    return doi && !preprintDOI(doi) && !metadata.DOI
+      ? { ...metadata, DOI: doi }
+      : metadata;
   }
 
   async retrieve(item: Item, source: RetrievalSource): Promise<Metadata> {

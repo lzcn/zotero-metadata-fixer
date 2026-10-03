@@ -1,5 +1,10 @@
 import type { Candidate, Item, Lookup, Metadata } from "./model";
-import { identifiers, cleanDOI, preprintDOI } from "./identifiers";
+import {
+  identifiers,
+  cleanDOI,
+  preprintDOI,
+  officialPublicationURL,
+} from "./identifiers";
 import { publishedVenue, rankCandidates } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
 import { selectPublication } from "./selection";
@@ -354,9 +359,14 @@ export class PublicationFinder {
       .filter((candidate: Candidate) => candidate.doi);
   }
 
-  async openreview(item: Item): Promise<Candidate[]> {
+  async openreview(
+    item: Pick<Item, "getField">,
+    forum?: string,
+  ): Promise<Candidate[]> {
     const data = await this.net.json(
-      `https://api2.openreview.net/notes/search?term=${encode(item.getField("title"))}&content=title&type=exact&source=forum&limit=25`,
+      forum
+        ? `https://api2.openreview.net/notes?id=${encode(forum)}`
+        : `https://api2.openreview.net/notes/search?term=${encode(item.getField("title"))}&content=title&type=exact&source=forum&limit=25`,
     );
     return list<any>(data.notes).flatMap((note) => {
       const get = (key: string) => openReviewValue(note, key);
@@ -393,12 +403,51 @@ export class PublicationFinder {
     });
   }
 
-  async find(item: Item, usePreprintLinks = true): Promise<Lookup> {
+  async find(
+    item: Item,
+    usePreprintLinks = true,
+    resolveOfficial?: (candidate: Candidate) => Promise<boolean>,
+  ): Promise<Lookup> {
     const warnings: string[] = [];
     let answered = 0;
+    const ids = identifiers(item);
+    const checkedURLs = new Set<string>();
+    const official = async (candidate: Candidate): Promise<boolean> => {
+      if (!resolveOfficial || !officialPublicationURL(candidate.url || ""))
+        return false;
+      if (checkedURLs.has(candidate.url!)) return false;
+      checkedURLs.add(candidate.url!);
+      try {
+        const url = new URL(candidate.url!);
+        // A forum URL alone says nothing about acceptance.
+        if (url.hostname.replace(/^www\./, "") === "openreview.net") {
+          const forum = url.searchParams.get("id")!;
+          const accepted = selectPublication(
+            item,
+            (await this.openreview(item, forum)).filter(
+              (record) => new URL(record.url!).searchParams.get("id") === forum,
+            ),
+          );
+          if (!accepted) return false;
+          candidate = accepted;
+        }
+        return await resolveOfficial(candidate);
+      } catch (error) {
+        warnings.push(`Official publication: ${String(error)}`);
+        return false;
+      }
+    };
+    const current: Candidate = {
+      source: "URL",
+      title: item.getField("title"),
+      url: ids.URL,
+    };
+    if (await official(current))
+      return { candidates: [current], warnings, answered: 1 };
     let linked: Candidate[] = [];
     try {
-      linked = usePreprintLinks ? await this.related(item) : [];
+      // Retained arXiv provenance can also supply a missing published DOI.
+      linked = usePreprintLinks || ids.arXiv ? await this.related(item) : [];
       answered++;
     } catch (error) {
       warnings.push(`Preprint server: ${String(error)}`);
@@ -412,6 +461,8 @@ export class PublicationFinder {
       answered++;
       const selected = selectPublication(item, scholar);
       if (selected?.doi) return { candidates: scholar, warnings, answered };
+      if (selected && (await official(selected)))
+        return { candidates: scholar, warnings, answered };
     } catch (error) {
       warnings.push(`Google Scholar: ${String(error)}`);
     }
@@ -423,7 +474,7 @@ export class PublicationFinder {
       ["OpenReview", () => this.openreview(item)],
     ] as const;
     const results = await Promise.allSettled(sources.map(([, run]) => run()));
-    // Keep DOI-free Scholar matches while other sources try to resolve a DOI.
+    // Unknown or unavailable pages still need independent publication evidence.
     const candidates: Candidate[] = [...scholar];
     results.forEach((result, index) => {
       if (result.status === "fulfilled") {

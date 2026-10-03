@@ -960,3 +960,86 @@ test("successful retrieval still repairs a proceedings value misplaced in the ol
     }
   }
 });
+
+test("official DOI-free publication metadata updates in place without broad search", async () => {
+  const item = new FakeItem();
+  item.data.url = "https://openreview.net/forum?id=accepted";
+  const { runtime, win, state } = lintFixture(item);
+  const { PublicationFinder } = await import("../.tests-build/providers.js");
+  runtime.finder = new PublicationFinder({});
+  runtime.finder.openreview = async () => [
+    {
+      source: "OpenReview",
+      title: item.getField("title"),
+      authors: ["Zhi Lu"],
+      venue: "ICLR 2026",
+      url: item.getField("url"),
+      bibtex: "@inproceedings{accepted}",
+    },
+  ];
+  runtime.finder.googleScholar = async () => {
+    throw new Error("Must not search");
+  };
+  let translated = 0;
+  runtime.retriever.candidate = async () => {
+    translated++;
+    return {
+      ...published,
+      itemType: "conferencePaper",
+      DOI: undefined,
+      proceedingsTitle: "ICLR 2026",
+    };
+  };
+  await runtime.run(win, "lint");
+  assert.equal(translated, 1);
+  assert.equal(item.itemType, "conferencePaper");
+  assert.equal(item.getField("DOI"), "");
+  assert.equal(item.id, 42);
+  assert.equal(state.progress.rows[0].status, "Updated");
+});
+
+test("an exact PMID is retrieved before title search when DOI is missing", async () => {
+  const { runtime, win, item, calls } = lintFixture();
+  item.data.extra += "\nPMID: 123456";
+  runtime.retriever.retrieve = async (_, source) => {
+    calls.push(source);
+    return published;
+  };
+  await runtime.run(win, "lint");
+  assert.deepEqual(calls, ["PMID"]);
+  assert.equal(item.getField("DOI"), published.DOI);
+  assert.equal(item.itemType, "journalArticle");
+});
+
+test("unaccepted or mismatched official records cannot bypass publication validation", async () => {
+  for (const change of [
+    { proceedingsTitle: "Submitted to ICLR 2026", publicationTitle: "" },
+    { creators: [{ lastName: "Smith", creatorType: "author" }] },
+    { title: "Unrelated official paper" },
+  ]) {
+    const item = new FakeItem();
+    item.data.url = "https://ieeexplore.ieee.org/document/12345678";
+    const { runtime, win } = lintFixture(item);
+    const { PublicationFinder } = await import("../.tests-build/providers.js");
+    const finder = new PublicationFinder({});
+    finder.related = async () => [];
+    finder.googleScholar = async () => [];
+    finder.semanticScholar =
+      finder.crossref =
+      finder.dblp =
+      finder.pubmed =
+      finder.openreview =
+        async () => [];
+    runtime.finder = finder;
+    runtime.retriever.candidate = async () => ({
+      ...published,
+      DOI: undefined,
+      itemType: "conferencePaper",
+      proceedingsTitle: "ICLR 2026",
+      ...change,
+    });
+    await runtime.run(win, "lint");
+    assert.equal(item.itemType, "preprint");
+    assert.equal(item.getField("DOI"), "");
+  }
+});

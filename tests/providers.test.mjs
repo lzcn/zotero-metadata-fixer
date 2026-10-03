@@ -589,3 +589,202 @@ test("DOI lookup fills an omitted DOI without creating a saved item", async () =
     published.DOI,
   );
 });
+
+test("verified official records stop DOI hunting, while failed or unverified pages fall back", async () => {
+  const item = new FakeItem();
+  item.data.url =
+    "https://proceedings.neurips.cc/paper_files/paper/2023/hash/paper-Abstract-Conference.html";
+  const finder = new PublicationFinder({});
+  const calls = [];
+  finder.related = async () => [];
+  finder.googleScholar = async () => {
+    calls.push("Scholar");
+    return [
+      { source: "Scholar", title: item.getField("title"), doi: published.DOI },
+    ];
+  };
+  const complete = await finder.find(item, false, async (candidate) => {
+    calls.push(candidate.url);
+    return true;
+  });
+  assert.deepEqual(calls, [item.data.url]);
+  assert.equal(complete.candidates[0].source, "URL");
+  calls.length = 0;
+  const failed = await finder.find(item, false, async () => {
+    throw new Error("Rejected author match");
+  });
+  assert.deepEqual(calls, ["Scholar"]);
+  assert.equal(failed.candidates[0].doi, published.DOI);
+  assert.match(failed.warnings[0], /Rejected author/);
+});
+
+test("a DOI-free Scholar official page is verified before querying extra sources", async () => {
+  const item = new FakeItem();
+  const finder = new PublicationFinder({});
+  finder.related = async () => [];
+  const candidate = {
+    source: "Scholar",
+    title: item.getField("title"),
+    authors: ["Zhi Lu"],
+    venue: "ICLR 2026",
+    url: "https://openreview.net/forum?id=accepted",
+  };
+  finder.googleScholar = async () => [candidate];
+  finder.openreview = async () => [candidate];
+  finder.crossref = async () => {
+    throw new Error("Must not run");
+  };
+  let verified = 0;
+  const lookup = await finder.find(item, true, async (found) => {
+    assert.equal(found.url, candidate.url);
+    verified++;
+    return true;
+  });
+  assert.equal(verified, 1);
+  assert.equal(lookup.candidates[0].url, candidate.url);
+  assert.deepEqual(lookup.warnings, []);
+});
+
+test("retained arXiv identifiers supply published DOIs even outside preprint upgrades", async () => {
+  const item = new FakeItem();
+  item.data.itemType = "conferencePaper";
+  item.data.proceedingsTitle = "CVPR";
+  const finder = new PublicationFinder({});
+  finder.related = async () => [
+    {
+      source: "arXiv",
+      title: item.getField("title"),
+      linked: true,
+      doi: published.DOI,
+    },
+  ];
+  finder.googleScholar = async () => {
+    throw new Error("Must not run");
+  };
+  const lookup = await finder.find(item, false);
+  assert.equal(lookup.candidates[0].doi, published.DOI);
+  assert.deepEqual(lookup.warnings, []);
+});
+
+test("official URL shortcuts reject venue indexes, PDF files and lookalike hosts", async () => {
+  const { officialPublicationURL } = await import(
+    "../.tests-build/identifiers.js"
+  );
+  for (const url of [
+    "https://ieeexplore.ieee.org/document/123",
+    "https://proceedings.neurips.cc/paper/2023/hash/abc-Abstract-Conference.html",
+    "https://proceedings.mlr.press/v202/test23a.html",
+    "https://openaccess.thecvf.com/content/CVPR2025/html/test.html",
+    "https://dl.acm.org/doi/10.1145/123",
+    "https://link.springer.com/chapter/10.1007/test",
+    "https://openreview.net/forum?id=accepted",
+  ])
+    assert.equal(officialPublicationURL(url), true, url);
+  for (const url of [
+    "https://proceedings.neurips.cc/paper/2023",
+    "https://proceedings.neurips.cc/paper/2023/hash/abc-Paper.pdf",
+    "https://openreview.net/group?id=ICLR",
+    "https://ieeexplore.ieee.org.evil.example/document/123",
+    "https://arxiv.org/abs/2501.01234",
+    "javascript:alert(1)",
+  ])
+    assert.equal(officialPublicationURL(url), false, url);
+});
+
+test("article DOI metadata is used first, with official web fallback and no reference DOI guessing", async () => {
+  const url =
+    "https://proceedings.neurips.cc/paper/2023/hash/abc-Abstract-Conference.html";
+  const calls = [];
+  let metas = [{ getAttribute: () => published.DOI }];
+  let linkLabel = "References";
+  const doc = {
+    querySelectorAll: (selector) =>
+      selector.startsWith("meta")
+        ? metas
+        : [
+            {
+              parentElement: { textContent: linkLabel },
+              getAttribute: () => "https://doi.org/" + published.DOI,
+            },
+          ],
+  };
+  class Web {
+    setDocument() {}
+    getTranslators() {
+      return ["web"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate(options) {
+      assert.deepEqual(options, { libraryID: false, saveAttachments: false });
+      calls.push("Web");
+      return [{ ...published, DOI: undefined }];
+    }
+  }
+  const retriever = new MetadataRetriever(
+    { Translate: { Web } },
+    {},
+    {},
+    () => true,
+    async () => doc,
+  );
+  retriever.identifier = async (ids) => {
+    calls.push(ids.DOI);
+    return published;
+  };
+  assert.equal((await retriever.url(url)).DOI, published.DOI);
+  assert.deepEqual(calls, [published.DOI]);
+  calls.length = 0;
+  retriever.identifier = async (ids) => {
+    calls.push(ids.DOI);
+    throw new Error("Unavailable");
+  };
+  assert.equal((await retriever.url(url)).DOI, published.DOI);
+  assert.deepEqual(calls, [published.DOI, "Web"]);
+  calls.length = 0;
+  metas = [];
+  assert.equal((await retriever.url(url)).DOI, undefined);
+  assert.deepEqual(calls, ["Web"]);
+  calls.length = 0;
+  linkLabel = "DOI: 10.1000/published";
+  assert.equal((await retriever.url(url)).DOI, published.DOI);
+  assert.deepEqual(calls, [published.DOI, "Web"]);
+});
+
+test("exact OpenReview lookup rejects submissions even when a web translator could import them", async () => {
+  const item = new FakeItem();
+  item.data.url = "https://openreview.net/forum?id=submitted";
+  const urls = [];
+  let accepted = false;
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      urls.push(url);
+      return {
+        notes: [
+          {
+            id: "submitted",
+            content: {
+              title: { value: item.getField("title") },
+              authors: { value: ["Zhi Lu"] },
+              venue: {
+                value: accepted ? "ICLR 2026" : "Submitted to ICLR 2026",
+              },
+              venueid: {
+                value: accepted
+                  ? "ICLR.cc/2026/Conference"
+                  : "ICLR.cc/2026/Conference/Submission",
+              },
+              _bibtex: { value: "@inproceedings{accepted}" },
+            },
+          },
+        ],
+      };
+    },
+  });
+  const retriever = new MetadataRetriever({}, finder, {});
+  retriever.bibtex = async () => published;
+  await assert.rejects(retriever.url(item.data.url), /No published OpenReview/);
+  assert.deepEqual(urls, ["https://api2.openreview.net/notes?id=submitted"]);
+  accepted = true;
+  assert.deepEqual(await retriever.url(item.data.url), published);
+});

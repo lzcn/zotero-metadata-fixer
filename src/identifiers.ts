@@ -17,6 +17,41 @@ export function preprintDOI(doi: string): boolean {
   );
 }
 
+// Restrict shortcuts to individual publication pages, never venue homepages.
+export function officialPublicationURL(value: string): boolean {
+  try {
+    const { hostname, pathname, searchParams, protocol } = new URL(value);
+    if (!/^https?:$/.test(protocol)) return false;
+    const host = hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "openreview.net")
+      return pathname === "/forum" && Boolean(searchParams.get("id"));
+    if (host === "ieeexplore.ieee.org")
+      return /^\/(?:abstract\/)?document\/\d+\/?$/.test(pathname);
+    if (/^(papers|proceedings)\.n(eur)?ips\.cc$/.test(host))
+      return /^\/(?:paper_files\/)?paper\/\d{4}\/hash\/[^/]+-Abstract(?:-Conference)?\.html$/.test(
+        pathname,
+      );
+    if (host === "proceedings.mlr.press")
+      return /^\/v\d+\/[^/]+\.html$/.test(pathname);
+    if (host === "aclanthology.org") return /^\/[\w.-]+\/?$/.test(pathname);
+    if (host === "openaccess.thecvf.com")
+      return /\/html\/[^/]+\.html$/.test(pathname);
+    if (host === "dl.acm.org") return /^\/doi\/10\./.test(pathname);
+    if (host === "link.springer.com")
+      return /^\/(?:article|chapter)\/10\./.test(pathname);
+    if (host === "nature.com") return /^\/articles\/[^/]+$/.test(pathname);
+    if (host === "sciencedirect.com")
+      return /^\/science\/article\/pii\/[^/]+$/.test(pathname);
+    if (host === "onlinelibrary.wiley.com" || host === "tandfonline.com")
+      return /^\/doi\/(?:[^/]+\/)?10\./.test(pathname);
+    if (host === "ojs.aaai.org")
+      return /^\/index.php\/[^/]+\/article\/view\/\d+\/?$/.test(pathname);
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export function arxivID(value: string): string | undefined {
   const match = value
     .trim()

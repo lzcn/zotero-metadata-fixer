@@ -1,4 +1,10 @@
-import type { Item, Metadata, RetrievalSource, UpdateHost } from "./model";
+import type {
+  Candidate,
+  Item,
+  Metadata,
+  RetrievalSource,
+  UpdateHost,
+} from "./model";
 import { identifiers, isPreprint, preprintDOI } from "./identifiers";
 import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
@@ -286,7 +292,7 @@ export class Runtime {
 
   initializePreferences(doc: any): void {
     doc.getElementById("ml-publication-style").addEventListener(
-      "change",
+      "command",
       (event: any) => {
         this.setPublicationStyle(event.target.value);
       },
@@ -305,8 +311,13 @@ export class Runtime {
       "ml-standard-names": this.s.standardNames,
       "ml-short-names": this.s.shortNames,
       "ml-publication-help": this.s.formatHelp,
-    }))
-      doc.getElementById(id).textContent = text;
+    })) {
+      const element = doc.getElementById(id);
+      if (element.localName === "menuitem") element.setAttribute("label", text);
+      else if (element.localName === "label")
+        element.setAttribute("value", text);
+      else element.textContent = text;
+    }
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
   }
@@ -336,6 +347,42 @@ export class Runtime {
     return parseConferenceSettings(
       Zotero.Prefs?.get(CONFERENCE_SETTINGS_PREF, true),
     );
+  }
+
+  private validatePublication(
+    item: Item,
+    candidate: Candidate,
+    metadata: Metadata,
+  ): void {
+    if (
+      !["journalArticle", "conferencePaper", "bookSection"].includes(
+        metadata.itemType,
+      ) ||
+      (typeof metadata.DOI === "string" && preprintDOI(metadata.DOI)) ||
+      !metadata.creators?.length ||
+      titleScore(item.getField("title"), metadata.title) <
+        (candidate.linked ? 0.75 : 0.9) ||
+      !publishedVenue(
+        String(
+          metadata.publicationTitle ||
+            metadata.proceedingsTitle ||
+            metadata.bookTitle ||
+            candidate.venue ||
+            "",
+        ),
+      ) ||
+      !rankCandidates(item, [
+        {
+          ...candidate,
+          linked: false,
+          title: metadata.title,
+          authors: metadata.creators.map(
+            (author) => `${author.firstName || ""} ${author.lastName}`,
+          ),
+        },
+      ]).length
+    )
+      throw new Error(this.s.unsupported);
   }
 
   async run(win: any, source: RetrievalSource | "lint"): Promise<void> {
@@ -408,11 +455,29 @@ export class Runtime {
           this.cleanup(() => progress.window.renderProgress?.());
         try {
           const preprint = isPreprint(item);
-          const itemDOI = identifiers(item).DOI;
+          const ids = identifiers(item);
+          const itemDOI = ids.DOI;
           const missingDOI = !itemDOI || preprintDOI(itemDOI);
           let metadata: Metadata | undefined;
           let publication = false;
-          if (source === "lint" && (preprint || missingDOI)) {
+          if (source === "lint" && missingDOI && ids.PMID) {
+            try {
+              const resolved = await operation.wait(
+                retriever.retrieve(item, "PMID"),
+              );
+              this.validatePublication(
+                item,
+                { source: "PMID", title: item.getField("title") },
+                resolved,
+              );
+              metadata = resolved;
+              publication = preprint;
+            } catch (error) {
+              if (!host.active()) throw error;
+              row.detail = `PMID: ${String(error)}`;
+            }
+          }
+          if (source === "lint" && !metadata && (preprint || missingDOI)) {
             const lookup = !missingDOI
               ? {
                   candidates: [
@@ -426,9 +491,20 @@ export class Runtime {
                   warnings: [],
                   answered: 1,
                 }
-              : await operation.wait(finder.find(item, preprint));
+              : await operation.wait(
+                  finder.find(item, preprint, async (candidate) => {
+                    const resolved = await operation.wait(
+                      retriever.candidate(candidate, host.active),
+                    );
+                    this.validatePublication(item, candidate, resolved);
+                    metadata = resolved;
+                    return true;
+                  }),
+                );
             if (!host.active()) break;
-            row.detail = lookup.warnings.join("\n");
+            row.detail = [row.detail, ...lookup.warnings]
+              .filter(Boolean)
+              .join("\n");
             if (!lookup.candidates.length) {
               const status = lookup.warnings.length
                 ? this.s.partial
@@ -443,40 +519,10 @@ export class Runtime {
                 row.detail = this.s.ambiguous;
                 continue;
               }
-              metadata = await operation.wait(
+              metadata ??= await operation.wait(
                 retriever.candidate(candidate, host.active),
               );
-              if (
-                !["journalArticle", "conferencePaper", "bookSection"].includes(
-                  metadata.itemType,
-                ) ||
-                (typeof metadata.DOI === "string" &&
-                  preprintDOI(metadata.DOI)) ||
-                !metadata.creators?.length ||
-                titleScore(item.getField("title"), metadata.title) <
-                  (candidate.linked ? 0.75 : 0.9) ||
-                !publishedVenue(
-                  String(
-                    metadata.publicationTitle ||
-                      metadata.proceedingsTitle ||
-                      metadata.bookTitle ||
-                      candidate.venue ||
-                      "",
-                  ),
-                ) ||
-                !rankCandidates(item, [
-                  {
-                    ...candidate,
-                    linked: false,
-                    title: metadata.title,
-                    authors: metadata.creators.map(
-                      (author) =>
-                        `${author.firstName || ""} ${author.lastName}`,
-                    ),
-                  },
-                ]).length
-              )
-                throw new Error(this.s.unsupported);
+              this.validatePublication(item, candidate, metadata);
               publication = preprint;
             }
           }

@@ -8,6 +8,17 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
 const server = createServer((request, response) => {
+  if (request.url.startsWith("/publication")) {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    const withDOI = request.url.includes("with-doi");
+    response.end(`<!doctype html><html><head>
+      <meta name="citation_title" content="Official Host Test Paper">
+    </head><body><h1>Official Host Test Paper</h1>
+      ${withDOI ? '<h2>DOI</h2><p><a href="https://doi.org/10.52202/host-publication">10.52202/host-publication</a></p>' : ""}
+      <p>References: <a href="https://doi.org/10.1000/unrelated">Another paper</a></p>
+    </body></html>`);
+    return;
+  }
   if (request.url === "/scholar") {
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(`<!doctype html><html><div id="gs_res_ccl">
@@ -144,11 +155,11 @@ startup = async function(data) {
       const settings = Zotero.Utilities.Internal.openPreferences('metadata-linter-preferences');
       const select = await wait(() => {
         const element = settings.document.getElementById('ml-publication-style');
-        return element?.options[0]?.textContent && element;
+        return element?.querySelector('menuitem')?.label && element;
       });
-      result.settings = [...select.options].map(option => option.textContent);
+      result.settings = [...select.querySelectorAll('menuitem')].map(option => option.label);
       select.value = 'standard';
-      select.dispatchEvent(new settings.Event('change'));
+      select.dispatchEvent(new settings.Event('command'));
       if (!MLRuntime.preferenceData().settings.formatPublication) throw new Error('Concise setting was not saved');
       const cvpr = new Zotero.Item('conferencePaper');
       cvpr.setField('title', 'My Hand Edited CVPR TITLE');
@@ -173,7 +184,7 @@ startup = async function(data) {
       if (!progressState.rows[0].detail.includes('Access blocked')) throw new Error('Native HTML API response was not classified as blocked');
       result.blockedResponse = true;
       select.value = 'original';
-      select.dispatchEvent(new settings.Event('change'));
+      select.dispatchEvent(new settings.Event('command'));
       cvpr.setField('conferenceName', 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition');
       cvpr.setField('proceedingsTitle', 'Conference on computer vision and pattern recognition 2026');
       await cvpr.saveTx();
@@ -206,6 +217,54 @@ startup = async function(data) {
       MLRuntime.request = scholarRequest;
       for (const window of [...MLRuntime.dialogs]) window.close();
 
+      const originalSearch = Zotero.Translate.Search;
+      const originalWeb = Zotero.Translate.Web;
+      try {
+        result.official = [];
+        for (const withDOI of [true, false]) {
+          const officialItem = new Zotero.Item('preprint');
+          officialItem.setField('title', 'Official Host Test Paper');
+          officialItem.setField('url', 'https://proceedings.neurips.cc/paper/2023/hash/abc-Abstract-Conference.html');
+          officialItem.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+          await officialItem.saveTx();
+          const id = officialItem.id, key = officialItem.key;
+          await win.ZoteroPane.selectItem(id);
+          const officialCalls = [];
+          MLRuntime.request = (url, ...args) => {
+            officialCalls.push(url);
+            if (url !== officialItem.getField('url')) throw new Error('Unexpected broad search: ' + url);
+            return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/publication"))} + (withDOI ? '?with-doi' : ''), ...args);
+          };
+          const metadata = {itemType:'conferencePaper',title:'OFFICIAL HOST TEST PAPER',proceedingsTitle:'Advances in Neural Information Processing Systems',date:'2023',creators:officialItem.getCreators(),abstractNote:'From official publication'};
+          class FixtureTranslation {
+            setIdentifier(ids) {
+              if (!withDOI || ids.DOI !== '10.52202/host-publication') throw new Error('Incorrect article DOI');
+              this.doi = ids.DOI;
+            }
+            setDocument(document) { this.document = document; }
+            async getTranslators() { return ['host-fixture']; }
+            setTranslator() {}
+            setHandler() {}
+            async translate(options) {
+              if (options.libraryID !== false || options.saveAttachments !== false) throw new Error('Translator tried to create a new item');
+              return [{...metadata,DOI:this.doi}];
+            }
+          }
+          Zotero.Translate.Search = FixtureTranslation;
+          Zotero.Translate.Web = FixtureTranslation;
+          MLRuntime.finder = undefined;
+          MLRuntime.retriever = undefined;
+          await MLRuntime.run(win, 'lint');
+          if (officialCalls.length !== 1 || officialItem.id !== id || officialItem.key !== key || officialItem.itemType !== 'conferencePaper' || officialItem.getField('title') !== 'Official Host Test Paper' || officialItem.getField('DOI') !== (withDOI ? '10.52202/host-publication' : '') || officialItem.getField('abstractNote') !== metadata.abstractNote) throw new Error('Official source shortcut or DOI-free update failed');
+          result.official.push({withDOI,requests:officialCalls.length,type:officialItem.itemType,DOI:officialItem.getField('DOI')});
+          for (const window of [...MLRuntime.dialogs]) window.close();
+        }
+      } finally {
+        Zotero.Translate.Search = originalSearch;
+        Zotero.Translate.Web = originalWeb;
+        MLRuntime.request = scholarRequest;
+      }
+
       const batch = [];
       for (let i = 0; i < 3; i++) {
         const paper = new Zotero.Item('journalArticle');
@@ -227,10 +286,10 @@ startup = async function(data) {
       if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.rows !== 3 || result.batch.buttons !== 1 || batchDoc.querySelector('details,progress') || batchDoc.querySelector('h1,#description') || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native minimal batch UI or failure isolation failed');
       for (const window of [...MLRuntime.dialogs]) window.close();
       select.value = 'short';
-      select.dispatchEvent(new settings.Event('change'));
+      select.dispatchEvent(new settings.Event('command'));
       if (MLRuntime.preferenceData().settings.publicationStyle !== 'short') throw new Error('Short naming setting was not saved');
       select.value = 'original';
-      select.dispatchEvent(new settings.Event('change'));
+      select.dispatchEvent(new settings.Event('command'));
       if (MLRuntime.preferenceData().settings.formatPublication) throw new Error('Retrieved setting was not saved');
       const configured = MLRuntime.preferenceData().settings;
       result.conferenceRules = {count:configured.rules.length,visible:!!settings.document.getElementById('ml-conference-rules')};

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Metadata Fixer",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Upgrade preprints in place, fill missing metadata and fix clear errors while preserving your edits.",
   "author": "Zhi Lu",
   "icons": {
@@ -13,7 +13,7 @@
       "id": "metadata-linter@lzcn",
       "strict_min_version": "10.0",
       "strict_max_version": "10.*",
-      "update_url": "https://github.com/lzcn/zotero-metadata-linter/releases/latest/download/updates.json"
+      "update_url": "https://github.com/lzcn/zotero-metadata-fixer/releases/latest/download/updates.json"
     }
   }
 }
