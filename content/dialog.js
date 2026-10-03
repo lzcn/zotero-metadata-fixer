@@ -24,9 +24,9 @@ function heading(text, description) {
   document.getElementById("heading").textContent = text;
   document.getElementById("description").textContent = description || "";
 }
-function table(columns) {
-  content.replaceChildren();
-  const element = node("table", undefined, content);
+function table(columns, parent) {
+  parent.replaceChildren();
+  const element = node("table", undefined, parent);
   const header = node("tr", undefined, node("thead", undefined, element));
   columns.forEach((column) => node("th", column, header));
   return node("tbody", undefined, element);
@@ -361,22 +361,56 @@ if (data.kind === "conferences") {
     }
   });
 } else {
-  window.renderProgress = () => {
-    heading(
-      data.cancelled ? s.cancelled : data.finished ? s.complete : s.working,
-      data.cancelled ? s.cancelledHelp : "",
-    );
-    const body = table([s.title, s.status]);
+  document.body.classList.add("progress-dialog");
+  document.getElementById("options").hidden = true;
+  document.getElementById("warnings").hidden = true;
+  const progress = node("progress", undefined, content);
+  progress.setAttribute("aria-label", s.working);
+  const current = node("p", undefined, content);
+  current.className = "current-item";
+  const details = node("details", undefined, content);
+  details.className = "results";
+  details.open = false;
+  node("summary", s.warning, details);
+  const results = node("div", undefined, details);
+  const renderRows = () => {
+    const body = table([s.title, s.status], results);
     for (const entry of data.rows) {
       const row = node("tr", undefined, body);
       node("td", entry.title, row);
       const cell = node("td", entry.status, row);
-      if (entry.detail) {
-        const details = node("details", undefined, cell);
-        node("summary", s.warning, details);
-        node("pre", entry.detail, details);
-      }
+      if (entry.detail) node("pre", entry.detail, cell);
     }
+  };
+  details.addEventListener("toggle", () => {
+    if (details.open) renderRows();
+    window.resizeTo(480, details.open ? 480 : 260);
+  });
+  window.renderProgress = () => {
+    const total = data.total ?? data.rows.length;
+    const completed = data.rows.filter(
+      (entry) => entry.status !== s.working && entry.status !== s.cancelled,
+    ).length;
+    const counts = [s.updated, s.noChanges, s.skipped, s.failed]
+      .map((status) => [
+        status,
+        data.rows.filter((entry) => entry.status === status).length,
+      ])
+      .filter(([, count]) => count)
+      .map(([status, count]) => `${status} ${count}`);
+    heading(
+      data.cancelled ? s.cancelled : data.finished ? s.complete : s.working,
+      [`${completed} / ${total}`, ...counts].join(" · "),
+    );
+    progress.max = Math.max(total, 1);
+    progress.value = completed;
+    progress.hidden = data.finished || data.cancelled;
+    const active = data.rows.find((entry) => entry.status === s.working);
+    current.textContent = active?.title || "";
+    current.title = current.textContent;
+    current.hidden = !active || data.finished || data.cancelled;
+    details.hidden = !data.rows.length;
+    if (details.open) renderRows();
     actions.replaceChildren();
     button(data.finished || data.cancelled ? s.close : s.cancel, () => {
       if (!data.finished && !data.cancelled) data.cancel();
@@ -385,6 +419,7 @@ if (data.kind === "conferences") {
   };
   window.renderProgress();
 }
+
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     if (data.kind === "progress" && !data.finished) data.cancel();
@@ -392,6 +427,6 @@ window.addEventListener("keydown", (event) => {
   }
 });
 window.resizeTo(
-  data.kind === "conferences" ? 950 : 780,
-  data.kind === "conferences" ? 680 : 440,
+  data.kind === "conferences" ? 950 : 480,
+  data.kind === "conferences" ? 680 : 260,
 );

@@ -53,7 +53,9 @@ async function dialog(data) {
     addEventListener() {},
     resizeTo() {},
   };
+  elements.window = win;
   const document = {
+    body: { classList: { add() {} } },
     createElementNS: (_, tag) => new Element(tag),
     getElementById: (id) => elements[id],
   };
@@ -183,4 +185,47 @@ test("invalid imported configuration leaves the existing drafts unchanged", asyn
     .click();
   assert.equal(saved.rules.length, 386);
   assert.equal(saved.formatPublication, false);
+});
+
+test("batch progress stays compact with results collapsed and one cancel action", async () => {
+  let cancelled = 0;
+  const state = {
+    kind: "progress",
+    total: 12,
+    finished: false,
+    rows: [
+      { title: "First", status: en.updated },
+      { title: "Second", status: en.failed, detail: "Offline" },
+      { title: "Current paper", status: en.working },
+    ],
+    strings: en,
+    cancel: () => cancelled++,
+    onResult() {},
+  };
+  const elements = await dialog(state);
+  assert.match(elements.description.textContent, /2 \/ 12/);
+  assert.match(elements.description.textContent, /Updated 1/);
+  assert.match(elements.description.textContent, /Failed 1/);
+  const details = elements.content.children.find(
+    (child) => child.tag === "details",
+  );
+  assert.equal(details.open, false);
+  assert.equal(
+    descendants(details).some((child) => child.tag === "table"),
+    false,
+  );
+  assert.equal(elements.actions.children.length, 1);
+  elements.actions.children[0].click();
+  assert.equal(cancelled, 1);
+  details.open = true;
+  details.events.get("toggle")();
+  assert.equal(
+    descendants(details).filter((child) => child.tag === "tbody")[0].children
+      .length,
+    3,
+  );
+  state.finished = true;
+  elements.window.renderProgress();
+  assert.equal(elements.heading.textContent, en.complete);
+  assert.equal(elements.actions.children[0].textContent, en.close);
 });

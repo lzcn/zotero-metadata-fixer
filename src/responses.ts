@@ -12,16 +12,20 @@ export function parseJSONResponse(
   messages = { blocked: "Access blocked", invalid: "Invalid JSON response" },
 ): any {
   const body = text.replace(/^\uFEFF/, "").trim();
-  if (
-    /^</.test(body) &&
-    /making sure you|not a bot|anubis|\.within\.website|captcha|access denied/i.test(
-      body,
-    )
-  )
-    throw new JSONResponseError(messages.blocked, true);
+  checkAccess(body, messages.blocked);
   try {
     return JSON.parse(body);
   } catch {
     throw new JSONResponseError(messages.invalid);
   }
+}
+
+export function checkAccess(text: string, message = "Access blocked"): void {
+  if (
+    /^\s*</.test(text) &&
+    /making sure you|not a bot|not a robot|anubis|\.within\.website|captcha|access denied|unusual traffic|automated queries|systems have detected/i.test(
+      text,
+    )
+  )
+    throw new JSONResponseError(message, true);
 }

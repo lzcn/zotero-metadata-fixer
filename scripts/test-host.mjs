@@ -8,6 +8,15 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
 const server = createServer((request, response) => {
+  if (request.url === "/scholar") {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(`<!doctype html><html><div id="gs_res_ccl">
+      <div class="gs_r" data-cid="arxiv"><h3 class="gs_rt"><a href="https://arxiv.org/abs/2501.01234">[PDF] Scholar Host Test Paper</a></h3><div class="gs_a">Z Lu - arXiv preprint, 2025 - arxiv.org</div></div>
+      <div class="gs_r" data-cid="published"><h3 class="gs_rt"><a href="https://doi.org/10.1000/host-scholar">Scholar Host Test Paper</a></h3><div class="gs_a">Z Lu - CVPR, 2026 - IEEE</div></div>
+      <div class="gs_r" data-cid="other"><h3 class="gs_rt"><a href="https://dl.acm.org/doi/10.1145/9999">A Different Paper</a></h3><div class="gs_a">A Smith - ACM, 2026 - ACM</div></div>
+    </div></html>`);
+    return;
+  }
   if (request.url === "/blocked") {
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(
@@ -168,9 +177,57 @@ startup = async function(data) {
       cvpr.setField('conferenceName', 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition');
       cvpr.setField('proceedingsTitle', 'Conference on computer vision and pattern recognition 2026');
       await cvpr.saveTx();
+      MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:{itemType:'conferencePaper',title:cvpr.getField('title').toLowerCase(),DOI:cvpr.getField('DOI'),proceedingsTitle:'Conference on computer vision and pattern recognition 2026',conferenceName:'CVPR'},source:'DOI',warnings:[]})};
       await MLRuntime.run(win, 'lint');
       result.proceedingsRepair = cvpr.getField('proceedingsTitle') === cvpr.getField('conferenceName');
       if (!result.proceedingsRepair) throw new Error('Misplaced proceedings value did not repair the publication field');
+      for (const window of [...MLRuntime.dialogs]) window.close();
+      const scholarItem = new Zotero.Item('preprint');
+      scholarItem.setField('title', 'Scholar Host Test Paper');
+      scholarItem.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+      await scholarItem.saveTx();
+      const scholarID = scholarItem.id;
+      await win.ZoteroPane.selectItem(scholarID);
+      const scholarRequest = MLRuntime.request.bind(MLRuntime);
+      const scholarCalls = [];
+      MLRuntime.request = (url, ...args) => {
+        scholarCalls.push(url);
+        if (url.startsWith('https://scholar.google.com/')) return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/scholar"))}, ...args);
+        throw new Error('Unexpected fallback request: ' + url);
+      };
+      MLRuntime.finder = undefined;
+      MLRuntime.retriever = {candidate:async candidate => {
+        if (candidate.source !== 'Google Scholar' || candidate.doi !== '10.1000/host-scholar') throw new Error('Scholar did not resolve the published DOI');
+        return {itemType:'conferencePaper',title:'SCHOLAR HOST TEST PAPER',DOI:candidate.doi,proceedingsTitle:'CVPR 2026',creators:scholarItem.getCreators()};
+      }};
+      await MLRuntime.run(win, 'lint');
+      result.scholar = {requests:scholarCalls.length,type:scholarItem.itemType,DOI:scholarItem.getField('DOI'),id:scholarItem.id};
+      if (result.scholar.requests !== 1 || result.scholar.type !== 'conferencePaper' || result.scholar.DOI !== '10.1000/host-scholar' || scholarItem.id !== scholarID || scholarItem.getField('title') !== 'Scholar Host Test Paper') throw new Error('Native Scholar discovery or in-place DOI upgrade failed');
+      MLRuntime.request = scholarRequest;
+      for (const window of [...MLRuntime.dialogs]) window.close();
+
+      const batch = [];
+      for (let i = 0; i < 3; i++) {
+        const paper = new Zotero.Item('journalArticle');
+        paper.setField('title', 'Batch Host Paper ' + i);
+        paper.setField('DOI', '10.1000/batch-' + i);
+        await paper.saveTx();
+        batch.push(paper);
+      }
+      await win.ZoteroPane.itemsView.selectItems(batch.map(paper => paper.id));
+      MLRuntime.retriever = {retrieveCurrent:async paper => {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        if (paper.id === batch[1].id) throw new Error('Fixture failure');
+        return {metadata:{...paper.toJSON(),abstractNote:'Filled in batch'},source:'DOI',warnings:[]};
+      }};
+      await MLRuntime.run(win, 'lint');
+      const batchDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.querySelector('.results')));
+      const batchDoc = batchDialog.document;
+      result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),collapsed:!batchDoc.querySelector('.results').open,buttons:batchDoc.querySelectorAll('#actions button').length,width:batchDialog.outerWidth,height:batchDialog.outerHeight};
+      if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || !result.batch.collapsed || result.batch.buttons !== 1 || batchDoc.querySelector('table') || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native compact batch UI or failure isolation failed');
+      batchDoc.querySelector('.results').open = true;
+      await wait(() => batchDoc.querySelectorAll('tbody tr').length === 3);
+      if (batchDoc.querySelectorAll('#actions button').length !== 1) throw new Error('Batch results introduced extra actions');
       for (const window of [...MLRuntime.dialogs]) window.close();
       select.value = 'short';
       select.dispatchEvent(new settings.Event('change'));

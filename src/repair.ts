@@ -31,9 +31,10 @@ export function buildRepairPlan(
       : {};
   if (
     overrides?.fields?.proceedingsTitle &&
-    /^proceedings of\b/i.test(String(metadata.conferenceName || "")) &&
-    normalize(String(metadata.conferenceName)) ===
-      normalize(item.getField("conferenceName"))
+    /^proceedings of\b/i.test(item.getField("conferenceName")) &&
+    (venuePolicy?.preserve ||
+      normalize(String(metadata.conferenceName || "")) ===
+        normalize(item.getField("conferenceName")))
   )
     fields.proceedingsTitle = overrides.fields.proceedingsTitle;
   if (!publication) {

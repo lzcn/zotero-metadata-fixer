@@ -1,4 +1,4 @@
-Metadata Linter is a new implementation inspired by these projects:
+Metadata Fixer is a new implementation inspired by these projects:
 
 arXiv Workflow for Zotero (AllanChain and contributors)
 https://github.com/AllanChain/zotero-arxiv-workflow
@@ -10,13 +10,20 @@ Linter for Zotero (northword and contributors)
 https://github.com/northword/zotero-format-metadata
 Inspected commit: 2b747409e8c3df866fca327a8ad859d770694a5b
 Upstream license: AGPL-3.0
-Design reference: no-save Zotero translators and blank/replace metadata modes.
+Design reference: DOI-first no-save Zotero translators and blank/replace metadata modes.
 
 Zotero Metadata Hunter (Federico Torrielli and contributors)
 https://github.com/federicotorrielli/zotero-metadata-hunter
 Inspected commit: 017cc64c5599e553c179f63fb75c80cea8cad2f4
 Upstream license: EUPL-1.2
-Design reference: multiple discovery sources, DBLP mirrors and DOI-free OpenReview records.
+Design reference: DOI enrichment, multiple discovery sources, DBLP mirrors and DOI-free OpenReview records.
 
 The three upstream plugins are not bundled or required at runtime.
 Build-time dependencies and their licenses are recorded in package-lock.json.
+
+Zotero Google Scholar translator (Zotero contributors)
+https://github.com/zotero/translators/blob/master/Google%20Scholar.js
+Inspected installed translator: 57a00950-f0d1-4b41-b6ba-44ff0fc30289, updated 2025-12-11
+Upstream license: AGPL-3.0-or-later
+Design reference: result row selectors and paced Google Scholar queries.
+The translator source is not bundled.

@@ -803,3 +803,140 @@ test("pending preference registration is deduplicated and unregistered after sto
     delete globalThis.Zotero.PreferencePanes;
   }
 });
+
+test("one batch updates selected editable papers and continues after an item fails", async () => {
+  const items = Array.from({ length: 4 }, (_, index) => {
+    const item = new FakeItem();
+    item.id = index + 1;
+    item.key = `BATCH${index}`;
+    Object.assign(item.data, published);
+    item.itemTypeID = 2;
+    delete item.data.abstractNote;
+    return item;
+  });
+  items[3].editable = false;
+  const { runtime, win, state } = runFixture(items[0]);
+  win.ZoteroPane.getSelectedItems = () => items;
+  const calls = [];
+  runtime.retriever = {
+    retrieveCurrent: async (item) => {
+      calls.push(item.id);
+      if (item.id === 2) throw new Error("Offline");
+      return {
+        metadata: { ...item.toJSON(), abstractNote: "Filled" },
+        source: "DOI",
+        warnings: [],
+      };
+    },
+  };
+  await runtime.run(win, "lint");
+  assert.deepEqual(calls, [1, 2, 3]);
+  assert.deepEqual(
+    items.map((item) => item.saved),
+    [1, 0, 1, 0],
+  );
+  assert.equal(state.progress.total, 3);
+  assert.deepEqual(
+    state.progress.rows.map((row) => row.status),
+    ["Updated", "Failed", "Updated"],
+  );
+  assert.equal(state.previews, 0);
+  assert.equal(state.progress.finished, true);
+});
+
+test("cancelling a batch stops unstarted papers and ignores the pending result", async () => {
+  const items = [new FakeItem(), new FakeItem(), new FakeItem()];
+  const { runtime, win, state } = runFixture(items[0]);
+  win.ZoteroPane.getSelectedItems = () => items;
+  let finish,
+    calls = 0;
+  runtime.retriever.retrieve = () => {
+    calls++;
+    return new Promise((resolve) => {
+      finish = resolve;
+    });
+  };
+  const running = runtime.run(win, "DOI");
+  runtime.cancel();
+  await running;
+  finish(published);
+  await Promise.resolve();
+  assert.equal(calls, 1);
+  assert.equal(state.progress.total, 3);
+  assert.deepEqual(
+    items.map((item) => item.saved),
+    [0, 0, 0],
+  );
+  assert.equal(runtime.busy, false);
+});
+
+test("a preprint already carrying a published DOI skips title discovery and upgrades in place", async () => {
+  const { runtime, win, calls, item } = lintFixture();
+  item.data.DOI = published.DOI;
+  runtime.retriever.candidate = async (candidate) => {
+    assert.equal(candidate.doi, published.DOI);
+    calls.push("DOI");
+    return published;
+  };
+  await runtime.run(win, "lint");
+  assert.deepEqual(calls, ["DOI"]);
+  assert.equal(item.itemType, "journalArticle");
+  assert.equal(item.id, 42);
+});
+
+test("successful retrieval still repairs a proceedings value misplaced in the old conference field", async () => {
+  for (const publicationStyle of ["original", "standard", "short"]) {
+    const item = new FakeItem();
+    Object.assign(item.data, {
+      itemType: "conferencePaper",
+      DOI: published.DOI,
+      proceedingsTitle:
+        "Conference on computer vision and pattern recognition 2026",
+      conferenceName:
+        "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+      date: "2026",
+    });
+    item.itemTypeID = 3;
+    const { runtime, win, state } = runFixture(item);
+    runtime.retriever = {
+      retrieveCurrent: async () => ({
+        metadata: {
+          itemType: "conferencePaper",
+          title: item.getField("title").toUpperCase(),
+          DOI: published.DOI,
+          proceedingsTitle:
+            "Conference on computer vision and pattern recognition 2026",
+          conferenceName: "CVPR",
+          creators: item.getCreators(),
+        },
+        warnings: [],
+        source: "DOI",
+      }),
+    };
+    globalThis.Zotero.Prefs = {
+      get: () =>
+        JSON.stringify({
+          rules: DEFAULT_CONFERENCE_RULES,
+          formatPublication: publicationStyle !== "original",
+          publicationStyle,
+        }),
+    };
+    try {
+      await runtime.run(win, "lint");
+      assert.equal(
+        item.getField("proceedingsTitle"),
+        publicationStyle === "short"
+          ? "CVPR"
+          : "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+      );
+      assert.equal(
+        item.getField("conferenceName"),
+        "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+      );
+      assert.equal(item.getField("title"), "Learning useful representations");
+      assert.equal(state.progress.rows[0].status, "Updated");
+    } finally {
+      delete globalThis.Zotero.Prefs;
+    }
+  }
+});

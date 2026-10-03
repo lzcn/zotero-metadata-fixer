@@ -1,5 +1,5 @@
 import type { Candidate, Item, Metadata, RetrievalSource } from "./model";
-import { identifiers, isPreprint } from "./identifiers";
+import { identifiers, isPreprint, preprintDOI } from "./identifiers";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -97,7 +97,7 @@ export class MetadataRetriever {
   }> {
     const ids = identifiers(item);
     const sources: RetrievalSource[] =
-      isPreprint(item) && ids.arXiv
+      isPreprint(item) && ids.arXiv && (!ids.DOI || preprintDOI(ids.DOI))
         ? ["arXiv", "DOI", "PMID", "URL"]
         : ["DOI", "PMID", "URL"];
     const warnings: string[] = [];
@@ -122,8 +122,19 @@ export class MetadataRetriever {
     candidate: Candidate,
     active: () => boolean = () => true,
   ): Promise<Metadata> {
-    // DBLP can provide the official IEEE article URL even when its DOI is absent.
-    // Use Zotero's IEEE translator before falling back to DOI/BibTeX retrieval.
+    if (!active()) throw new Error("Operation cancelled");
+    const complete = (metadata: Metadata): Metadata =>
+      candidate.doi && !metadata.DOI
+        ? { ...metadata, DOI: candidate.doi }
+        : metadata;
+    if (candidate.doi) {
+      try {
+        return complete(await this.identifier({ DOI: candidate.doi }));
+      } catch (error) {
+        if (!active() || (!candidate.url && !candidate.bibtex)) throw error;
+      }
+    }
+    // An official article page can recover metadata when DOI resolution fails.
     if (
       candidate.url &&
       /^https:\/\/ieeexplore\.ieee\.org\/(?:document|abstract\/document)\/\d+/i.test(
@@ -131,15 +142,14 @@ export class MetadataRetriever {
       )
     ) {
       try {
-        return await this.url(candidate.url);
+        return complete(await this.url(candidate.url));
       } catch (error) {
-        if (!active() || (!candidate.doi && !candidate.bibtex)) throw error;
+        if (!active() || !candidate.bibtex) throw error;
       }
     }
     if (!active()) throw new Error("Operation cancelled");
-    if (candidate.doi) return this.identifier({ DOI: candidate.doi });
-    if (candidate.bibtex) return this.bibtex(candidate.bibtex);
-    if (candidate.url) return this.url(candidate.url);
+    if (candidate.bibtex) return complete(await this.bibtex(candidate.bibtex));
+    if (candidate.url) return complete(await this.url(candidate.url));
     throw new Error("Candidate has no retrievable identifier");
   }
 }

@@ -41,6 +41,7 @@ export class Runtime {
   private progressState?: any;
   private s = String(Zotero.locale).startsWith("zh") ? zh : en;
   private lastArxivRequest = 0;
+  private lastScholarRequest = 0;
   private finder?: PublicationFinder;
   private retriever?: MetadataRetriever;
 
@@ -52,6 +53,13 @@ export class Runtime {
           invalid: this.s.apiInvalid,
         }),
       text: (url) => this.request(url, operation),
+      html: (text) => {
+        if (!operation.active()) throw new Error(this.s.cancelled);
+        return new (Zotero.getMainWindow().DOMParser)().parseFromString(
+          text,
+          "text/html",
+        );
+      },
       xml: (text) => {
         if (!operation.active()) throw new Error(this.s.cancelled);
         const doc = new (Zotero.getMainWindow().DOMParser)().parseFromString(
@@ -82,6 +90,11 @@ export class Runtime {
       if (wait > 0) await operation.delay(wait);
       this.lastArxivRequest = Date.now();
     }
+    if (url.startsWith("https://scholar.google.com/")) {
+      const wait = 2000 - (Date.now() - this.lastScholarRequest);
+      if (wait > 0) await operation.delay(wait);
+      this.lastScholarRequest = Date.now();
+    }
     if (!operation.active()) throw new Error(this.s.cancelled);
     let release = () => {};
     try {
@@ -90,7 +103,8 @@ export class Runtime {
           responseType,
           headers: {
             Accept:
-              responseType === "document"
+              responseType === "document" ||
+              url.startsWith("https://scholar.google.com/")
                 ? "text/html"
                 : "application/json, application/xml;q=0.9, text/plain;q=0.8",
           },
@@ -414,7 +428,12 @@ export class Runtime {
         () => this.alive && operation.active(),
         (url) => this.request(url, operation, "document"),
       );
-    const state: any = { kind: "progress", rows: [], finished: false };
+    const state: any = {
+      kind: "progress",
+      total: selected.length,
+      rows: [],
+      finished: false,
+    };
     let progress: ReturnType<Runtime["open"]>;
     try {
       progress = this.open(win, state);
@@ -451,7 +470,20 @@ export class Runtime {
           let metadata: Metadata | undefined;
           let publication = false;
           if (source === "lint" && (preprint || missingDOI)) {
-            const lookup = await operation.wait(finder.find(item, preprint));
+            const lookup = !missingDOI
+              ? {
+                  candidates: [
+                    {
+                      source: "DOI",
+                      title: item.getField("title"),
+                      doi: itemDOI,
+                      linked: true,
+                    },
+                  ],
+                  warnings: [],
+                  answered: 1,
+                }
+              : await operation.wait(finder.find(item, preprint));
             if (!host.active()) break;
             row.detail = lookup.warnings.join("\n");
             if (!lookup.candidates.length) {
@@ -550,6 +582,16 @@ export class Runtime {
             settings.rules,
             "original",
           );
+          // Translators may omit the old event field; use the baseline to repair misplaced proceedings.
+          if (
+            settings.publicationStyle === "original" &&
+            conference.rule?.id === existingConference.rule?.id &&
+            /^proceedings of\b/i.test(item.getField("conferenceName")) &&
+            conference.overrides?.fields &&
+            existingConference.overrides?.fields?.proceedingsTitle
+          )
+            conference.overrides.fields.proceedingsTitle =
+              existingConference.overrides.fields.proceedingsTitle;
           const plan = buildRepairPlan(
             item,
             metadata,

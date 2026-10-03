@@ -1,12 +1,14 @@
 import type { Candidate, Item, Lookup, Metadata } from "./model";
 import { identifiers, cleanDOI, preprintDOI } from "./identifiers";
 import { publishedVenue, rankCandidates } from "./matching";
-import { JSONResponseError } from "./responses";
+import { checkAccess, JSONResponseError } from "./responses";
+import { selectPublication } from "./selection";
 
 export interface Network {
   json(url: string): Promise<any>;
   text(url: string): Promise<string>;
   xml(text: string): Document;
+  html(text: string): Document;
 }
 
 const encode = encodeURIComponent;
@@ -19,7 +21,70 @@ export function openReviewValue(note: any, key: string): any {
 
 export class PublicationFinder {
   private dblpUnavailable?: Error;
+  private scholarUnavailable?: Error;
   constructor(private net: Network) {}
+
+  async googleScholar(item: Item): Promise<Candidate[]> {
+    if (this.scholarUnavailable) throw this.scholarUnavailable;
+    try {
+      const text = await this.net.text(
+        `https://scholar.google.com/scholar?hl=en&num=10&q=${encode(`"${item.getField("title")}"`)}`,
+      );
+      checkAccess(text);
+      const doc = this.net.html(text);
+      const rows = Array.from(doc.querySelectorAll(".gs_r[data-cid]"));
+      if (!rows.length && !doc.querySelector("#gs_res_ccl"))
+        throw new Error("Unexpected Google Scholar response");
+      return rows.flatMap((row) => {
+        const heading = row.querySelector(".gs_rt");
+        const link = heading?.querySelector("a");
+        const title = (link?.textContent || heading?.textContent || "")
+          .replace(/^\s*\[[^\]]+\]\s*/, "")
+          .trim();
+        const href = link?.getAttribute("href");
+        if (!title || !href) return [];
+        let url: URL;
+        try {
+          url = new URL(href, "https://scholar.google.com");
+        } catch {
+          return [];
+        }
+        if (
+          !/^https?:$/.test(url.protocol) ||
+          /(^|\.)(scholar\.google\.com|arxiv\.org)$/.test(url.hostname)
+        )
+          return [];
+        const byline = row.querySelector(".gs_a")?.textContent || "";
+        const parts = byline.split(/\s+[–-]\s+/);
+        const venue = parts[1]?.trim() || "";
+        if (!publishedVenue(venue)) return [];
+        const doi =
+          cleanDOI(url.href) ||
+          cleanDOI(url.pathname.match(/\/(10\.\d{4,9}\/[^?#]+)/)?.[1] || "");
+        return [
+          {
+            source: "Google Scholar",
+            title,
+            authors: (parts[0] || "")
+              .split(/[,，]/)
+              .map((name) => name.trim())
+              .filter(Boolean),
+            venue,
+            year: Number(venue.match(/\b(\d{4})\b/)?.[1]) || undefined,
+            doi,
+            url: url.href,
+          },
+        ];
+      });
+    } catch (error) {
+      if (
+        (error as JSONResponseError)?.blocked ||
+        [403, 429].includes((error as any)?.status)
+      )
+        this.scholarUnavailable = error as Error;
+      throw error;
+    }
+  }
 
   async arxiv(
     id: string,
@@ -52,7 +117,13 @@ export class PublicationFinder {
       .filter(Boolean);
     const doi = cleanDOI(
       entry.getElementsByTagNameNS("http://arxiv.org/schemas/atom", "doi")[0]
-        ?.textContent || "",
+        ?.textContent ||
+        Array.from(
+          entry.getElementsByTagNameNS("http://www.w3.org/2005/Atom", "link"),
+        )
+          .find((link) => link.getAttribute("title") === "doi")
+          ?.getAttribute("href") ||
+        "",
     );
     const version = atom("id").split("/abs/")[1] || id;
     const url = `https://arxiv.org/abs/${version}`;
@@ -335,6 +406,15 @@ export class PublicationFinder {
     const rankedLinked = rankCandidates(item, linked);
     if (rankedLinked.length)
       return { candidates: rankedLinked, warnings, answered };
+    let scholar: Candidate[] = [];
+    try {
+      scholar = rankCandidates(item, await this.googleScholar(item));
+      answered++;
+      const selected = selectPublication(item, scholar);
+      if (selected?.doi) return { candidates: scholar, warnings, answered };
+    } catch (error) {
+      warnings.push(`Google Scholar: ${String(error)}`);
+    }
     const sources = [
       ["Semantic Scholar", () => this.semanticScholar(item)],
       ["Crossref", () => this.crossref(item)],
@@ -343,7 +423,8 @@ export class PublicationFinder {
       ["OpenReview", () => this.openreview(item)],
     ] as const;
     const results = await Promise.allSettled(sources.map(([, run]) => run()));
-    const candidates: Candidate[] = [];
+    // Keep DOI-free Scholar matches while other sources try to resolve a DOI.
+    const candidates: Candidate[] = [...scholar];
     results.forEach((result, index) => {
       if (result.status === "fulfilled") {
         answered++;

@@ -4,35 +4,35 @@ import { PublicationFinder } from "../.tests-build/providers.js";
 import { MetadataRetriever } from "../.tests-build/translate.js";
 import { FakeItem, published } from "./helpers.mjs";
 
-test("CVPR candidates resolve metadata through their official IEEE URL, with DOI fallback on source failure", async () => {
+test("DOI metadata is preferred over IEEE, with official URL fallback", async () => {
   const retriever = new MetadataRetriever({}, {}, {});
   const candidate = {
     source: "DBLP",
     title: published.title,
-    venue: "CVPR",
     doi: published.DOI,
     url: "https://ieeexplore.ieee.org/document/12345678",
   };
   const calls = [];
-  retriever.url = async (url) => {
-    calls.push(url);
-    return published;
-  };
   retriever.identifier = async () => {
     calls.push("DOI");
     return published;
   };
-  assert.equal(await retriever.candidate(candidate), published);
-  assert.deepEqual(calls, [candidate.url]);
-  retriever.url = async () => {
-    throw new Error("IEEE unavailable");
+  retriever.url = async (url) => {
+    calls.push(url);
+    return { ...published, DOI: undefined };
   };
-  await retriever.candidate(candidate);
-  assert.equal(calls.at(-1), "DOI");
+  assert.deepEqual(await retriever.candidate(candidate), published);
+  assert.deepEqual(calls, ["DOI"]);
+  retriever.identifier = async () => {
+    calls.push("DOI");
+    throw new Error("DOI unavailable");
+  };
+  assert.equal((await retriever.candidate(candidate)).DOI, candidate.doi);
+  assert.deepEqual(calls.slice(1), ["DOI", candidate.url]);
   calls.length = 0;
   await assert.rejects(
     retriever.candidate(candidate, () => false),
-    /IEEE unavailable/,
+    /cancelled/,
   );
   assert.equal(calls.length, 0);
 });
@@ -41,6 +41,7 @@ test("publication search keeps successful matches and reports failed sources sep
   const finder = new PublicationFinder({});
   const item = new FakeItem();
   finder.related = async () => [];
+  finder.googleScholar = async () => [];
   finder.semanticScholar = async () => {
     throw new Error("429 rate limited");
   };
@@ -59,7 +60,7 @@ test("publication search keeps successful matches and reports failed sources sep
   const lookup = await finder.find(item);
   assert.equal(lookup.candidates[0].doi, published.DOI);
   assert.match(lookup.warnings[0], /429/);
-  assert.equal(lookup.answered, 5);
+  assert.equal(lookup.answered, 6);
 });
 
 test("linked preprint DOI wins without querying title-based sources", async () => {
@@ -93,15 +94,23 @@ test("arXiv retrieves latest metadata and ignores affiliation text in author nam
     getElementsByTagNameNS: (namespace, field) =>
       namespace === atom && field === "name" ? [element("Zhi Lu")] : [],
   };
+  let linkFallback = false;
   const entry = {
     getElementsByTagNameNS: (namespace, field) =>
-      field === "author"
-        ? [author]
-        : field === "doi"
-          ? [element(published.DOI)]
-          : values[field]
-            ? [element(values[field])]
-            : [],
+      field === "link" && linkFallback
+        ? [
+            {
+              getAttribute: (name) =>
+                name === "title" ? "doi" : "https://doi.org/" + published.DOI,
+            },
+          ]
+        : field === "author"
+          ? [author]
+          : field === "doi" && !linkFallback
+            ? [element(published.DOI)]
+            : values[field]
+              ? [element(values[field])]
+              : [],
   };
   const document = { getElementsByTagNameNS: () => [entry] };
   const finder = new PublicationFinder({
@@ -113,6 +122,8 @@ test("arXiv retrieves latest metadata and ignores affiliation text in author nam
   assert.equal(found.metadata.creators[0].lastName, "Lu");
   assert.equal(found.metadata.DOI, "10.48550/arXiv.2501.01234");
   assert.equal(found.candidate.doi, published.DOI);
+  linkFallback = true;
+  assert.equal((await finder.arxiv("2501.01234")).candidate.doi, published.DOI);
 });
 
 test("OpenReview supports DOI-free BibTeX and excludes submissions, DBLP mirrors and anonymous records", async () => {
@@ -414,6 +425,7 @@ test("a DBLP blocked response does not discard verified results from other sourc
       ),
   });
   finder.related = async () => [];
+  finder.googleScholar = async () => [];
   finder.semanticScholar = async () => [];
   finder.crossref = async () => [
     {
@@ -457,4 +469,123 @@ test("DBLP rate limiting suppresses further requests in the batch", async () => 
   await assert.rejects(finder.dblp(new FakeItem()), /429/);
   await assert.rejects(finder.dblp(new FakeItem()), /429/);
   assert.equal(requests, 1);
+});
+
+test("Google Scholar resolves a verified DOI before title-based fallback sources", async () => {
+  const calls = [];
+  const finder = new PublicationFinder({});
+  finder.related = async () => [];
+  finder.googleScholar = async () => {
+    calls.push("Scholar");
+    return [
+      {
+        source: "Google Scholar",
+        title: new FakeItem().getField("title"),
+        authors: ["Zhi Lu"],
+        doi: published.DOI,
+        venue: "ICLR 2026",
+        year: 2026,
+      },
+    ];
+  };
+  finder.crossref = async () => {
+    throw new Error("must not query Crossref");
+  };
+  const found = await finder.find(new FakeItem(), false);
+  assert.deepEqual(calls, ["Scholar"]);
+  assert.equal(found.candidates[0].doi, published.DOI);
+  assert.equal(found.warnings.length, 0);
+});
+
+test("DOI discovery runs before using a DOI-free Scholar match", async () => {
+  const finder = new PublicationFinder({});
+  const noDOI = {
+    source: "Google Scholar",
+    title: new FakeItem().getField("title"),
+    authors: ["Zhi Lu"],
+    venue: "ICLR 2026",
+    url: "https://openreview.net/forum?id=paper",
+  };
+  const calls = [];
+  finder.googleScholar = async () => {
+    calls.push("Scholar");
+    return [noDOI];
+  };
+  finder.crossref = async () => {
+    calls.push("Crossref");
+    return [{ ...noDOI, source: "Crossref", doi: published.DOI }];
+  };
+  finder.semanticScholar =
+    finder.dblp =
+    finder.pubmed =
+    finder.openreview =
+      async () => [];
+  const lookup = await finder.find(new FakeItem(), false);
+  const { selectPublication } = await import("../.tests-build/selection.js");
+  assert.deepEqual(calls, ["Scholar", "Crossref"]);
+  assert.equal(
+    selectPublication(new FakeItem(), lookup.candidates).doi,
+    published.DOI,
+  );
+  finder.crossref = async () => [];
+  const withoutDOI = await finder.find(new FakeItem(), false);
+  assert.equal(
+    selectPublication(new FakeItem(), withoutDOI.candidates).url,
+    noDOI.url,
+  );
+});
+
+test("Scholar bot checks and HTTP rate limits stop further Scholar queries in a batch", async () => {
+  for (const blocked of [
+    "<!doctype html><html>Our systems have detected unusual traffic</html>",
+    429,
+  ]) {
+    let calls = 0;
+    const finder = new PublicationFinder({
+      text: async () => {
+        calls++;
+        if (typeof blocked === "number")
+          throw Object.assign(new Error("HTTP 429"), { status: 429 });
+        return blocked;
+      },
+    });
+    await assert.rejects(
+      finder.googleScholar(new FakeItem()),
+      /Access blocked|429/,
+    );
+    await assert.rejects(
+      finder.googleScholar(new FakeItem()),
+      /Access blocked|429/,
+    );
+    assert.equal(calls, 1);
+  }
+});
+
+test("preprints with a published DOI resolve that identifier before arXiv metadata", async () => {
+  const item = new FakeItem();
+  item.data.DOI = published.DOI;
+  const retriever = new MetadataRetriever({}, {}, {});
+  const calls = [];
+  retriever.retrieve = async (_, source) => {
+    calls.push(source);
+    return published;
+  };
+  const result = await retriever.retrieveCurrent(item);
+  assert.equal(result.source, "DOI");
+  assert.deepEqual(calls, ["DOI"]);
+});
+
+test("DOI lookup fills an omitted DOI without creating a saved item", async () => {
+  const retriever = new MetadataRetriever({}, {}, {});
+  retriever.identifier = async () => ({ ...published, DOI: undefined });
+  assert.equal(
+    (
+      await retriever.candidate({
+        source: "Crossref",
+        title: new FakeItem().getField("title"),
+        doi: published.DOI,
+      })
+    ).DOI,
+    published.DOI,
+  );
 });
