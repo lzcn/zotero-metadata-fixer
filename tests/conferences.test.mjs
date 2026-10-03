@@ -462,3 +462,50 @@ test("one naming setting offers original, standard and short names and migrates 
     /naming style/,
   );
 });
+
+test("CVPR standard mode supplies the official IEEE/CVF full name without the source year", () => {
+  const metadata = {
+    itemType: "conferencePaper",
+    title: "Paper",
+    date: "2026",
+    conferenceName: "My existing CVPR event",
+    proceedingsTitle:
+      "Conference on computer vision and pattern recognition 2026 .",
+  };
+  const original = normalizeConference(
+    metadata,
+    DEFAULT_CONFERENCE_RULES,
+    "original",
+  );
+  assert.equal(original.rule.id, "cvpr");
+  assert.equal(original.metadata.proceedingsTitle, metadata.proceedingsTitle);
+  const standard = normalizeConference(
+    metadata,
+    DEFAULT_CONFERENCE_RULES,
+    "standard",
+  );
+  const fullName =
+    "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition";
+  assert.equal(standard.metadata.proceedingsTitle, fullName);
+  assert.equal(standard.metadata.conferenceName, metadata.conferenceName);
+  assert.equal(standard.metadata.date, "2026");
+  const short = normalizeConference(
+    metadata,
+    DEFAULT_CONFERENCE_RULES,
+    "short",
+  );
+  assert.equal(short.metadata.proceedingsTitle, "CVPR");
+  assert.equal(short.metadata.conferenceName, metadata.conferenceName);
+  const legacy = parseConferenceSettings(
+    JSON.stringify({
+      rules: DEFAULT_CONFERENCE_RULES,
+      formatPublication: true,
+      catalogVersion: "CCF-2026-7",
+    }),
+  );
+  assert.equal(
+    normalizeConference(metadata, legacy.rules, legacy.publicationStyle)
+      .metadata.proceedingsTitle,
+    fullName,
+  );
+});

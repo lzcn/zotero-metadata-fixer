@@ -388,3 +388,73 @@ test("cancelling translator detection prevents the actual translation from start
   );
   assert.equal(translated, false);
 });
+
+test("a DBLP bot-check stops mirror retries and later requests in the same batch", async () => {
+  const { parseJSONResponse } = await import("../.tests-build/responses.js");
+  let requests = 0;
+  const finder = new PublicationFinder({
+    json: async () => {
+      requests++;
+      return parseJSONResponse(
+        "<html><title>Making sure you are not a bot!</title></html>",
+      );
+    },
+  });
+  await assert.rejects(finder.dblp(new FakeItem()), /Access blocked/);
+  await assert.rejects(finder.dblp(new FakeItem()), /Access blocked/);
+  assert.equal(requests, 1);
+});
+
+test("a DBLP blocked response does not discard verified results from other sources", async () => {
+  const { parseJSONResponse } = await import("../.tests-build/responses.js");
+  const finder = new PublicationFinder({
+    json: async () =>
+      parseJSONResponse(
+        "<html><title>Making sure you are not a bot!</title></html>",
+      ),
+  });
+  finder.related = async () => [];
+  finder.semanticScholar = async () => [];
+  finder.crossref = async () => [
+    {
+      source: "Crossref",
+      title: published.title,
+      authors: ["Zhi Lu"],
+      doi: published.DOI,
+      venue: published.publicationTitle,
+      year: 2026,
+    },
+  ];
+  finder.pubmed = async () => [];
+  finder.openreview = async () => [];
+  const item = new FakeItem();
+  item.data.title = published.title;
+  const lookup = await finder.find(item);
+  assert.equal(lookup.candidates.length, 1);
+  assert.match(lookup.warnings[0], /DBLP: Error: Access blocked/);
+});
+
+test("an unrelated JSON object from DBLP is not treated as an empty search result", async () => {
+  let requests = 0;
+  const finder = new PublicationFinder({
+    json: async () => {
+      requests++;
+      return { message: "service unavailable" };
+    },
+  });
+  await assert.rejects(finder.dblp(new FakeItem()), /Unexpected DBLP response/);
+  assert.equal(requests, 3);
+});
+
+test("DBLP rate limiting suppresses further requests in the batch", async () => {
+  let requests = 0;
+  const finder = new PublicationFinder({
+    json: async () => {
+      requests++;
+      throw Object.assign(new Error("HTTP 429"), { status: 429 });
+    },
+  });
+  await assert.rejects(finder.dblp(new FakeItem()), /429/);
+  await assert.rejects(finder.dblp(new FakeItem()), /429/);
+  assert.equal(requests, 1);
+});

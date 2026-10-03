@@ -236,3 +236,99 @@ test("a preprint DOI incorrectly left on a published item is fixed and retained 
     /Preprint DOI: 10.48550\/arXiv.2501.01234/,
   );
 });
+
+test("CVPR name normalization repairs missing IEEE/CVF and removes the year while preserving casing-only edits", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, {
+    itemType: "conferencePaper",
+    title: "My Hand Edited TITLE",
+    date: "2026",
+    DOI: "10.1000/cvpr",
+    conferenceName:
+      "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+    proceedingsTitle:
+      "Conference on computer vision and pattern recognition 2026 .",
+  });
+  item.itemTypeID = 3;
+  const metadata = { ...item.toJSON(), title: "MY HAND EDITED TITLE" };
+  const standard = normalizeConference(
+    metadata,
+    DEFAULT_CONFERENCE_RULES,
+    "standard",
+  );
+  await applyPlan(
+    item,
+    buildRepairPlan(
+      item,
+      standard.metadata,
+      hostFor(item),
+      standard.overrides,
+      false,
+      true,
+    ),
+    hostFor(item),
+  );
+  assert.equal(
+    item.getField("proceedingsTitle"),
+    "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+  );
+  assert.equal(
+    item.getField("conferenceName"),
+    "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+  );
+  assert.equal(item.getField("title"), "My Hand Edited TITLE");
+  assert.equal(item.getField("date"), "2026");
+  item.data.proceedingsTitle =
+    "proceedings of the ieee/cvf conference on computer vision and pattern recognition";
+  item.data.conferenceName = item.data.proceedingsTitle;
+  const equivalent = normalizeConference(
+    item.toJSON(),
+    DEFAULT_CONFERENCE_RULES,
+    "standard",
+  );
+  assert.equal(
+    buildRepairPlan(
+      item,
+      equivalent.metadata,
+      hostFor(item),
+      equivalent.overrides,
+      false,
+      true,
+    ).changes.length,
+    0,
+  );
+});
+
+test("a proceedings title misplaced in Conference Name repairs Proceedings Title even when formatting is off", async () => {
+  const item = new FakeItem();
+  const misplaced =
+    "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition";
+  Object.assign(item.data, {
+    itemType: "conferencePaper",
+    proceedingsTitle:
+      "Conference on computer vision and pattern recognition 2026",
+    conferenceName: misplaced,
+    DOI: "10.1000/cvpr",
+  });
+  item.itemTypeID = 3;
+  const normalized = normalizeConference(
+    item.toJSON(),
+    DEFAULT_CONFERENCE_RULES,
+    "original",
+  );
+  const plan = buildRepairPlan(
+    item,
+    normalized.metadata,
+    hostFor(item),
+    normalized.overrides,
+    false,
+    false,
+  );
+  assert.deepEqual(
+    plan.changes.map((change) => change.field),
+    ["proceedingsTitle"],
+  );
+  await applyPlan(item, plan, hostFor(item));
+  assert.equal(item.getField("proceedingsTitle"), misplaced);
+  assert.equal(item.getField("conferenceName"), misplaced);
+});

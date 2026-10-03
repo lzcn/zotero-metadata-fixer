@@ -7,7 +7,14 @@ import { join } from "node:path";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
-const server = createServer((request) => {
+const server = createServer((request, response) => {
+  if (request.url === "/blocked") {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(
+      "<!doctype html><html><title>Making sure you are not a bot!</title></html>",
+    );
+    return;
+  }
   request.on("aborted", () => abortedRequests++);
 });
 await new Promise((resolve, reject) => {
@@ -134,6 +141,37 @@ startup = async function(data) {
       select.value = 'standard';
       select.dispatchEvent(new settings.Event('change'));
       if (!MLRuntime.preferenceData().settings.formatPublication) throw new Error('Concise setting was not saved');
+      const cvpr = new Zotero.Item('conferencePaper');
+      cvpr.setField('title', 'My Hand Edited CVPR TITLE');
+      cvpr.setField('DOI', '10.1000/host-cvpr');
+      cvpr.setField('proceedingsTitle', 'Conference on computer vision and pattern recognition 2026 .');
+      cvpr.setField('date', '2026');
+      cvpr.setField('conferenceName', 'My existing CVPR event');
+      await cvpr.saveTx();
+      await win.ZoteroPane.selectItem(cvpr.id);
+      MLRuntime.open = (owner, state) => {
+        const opened = originalOpen(owner, state);
+        if (state.kind === 'progress') progressState = state;
+        return opened;
+      };
+      MLRuntime.retriever = {retrieveCurrent:async () => {
+        await MLRuntime.network(MLRuntime.operation).json(${JSON.stringify(slowURL.replace("/pending", "/blocked"))});
+        throw new Error('Expected a blocked JSON response');
+      }};
+      await MLRuntime.run(win, 'lint');
+      result.cvpr = {publication:cvpr.getField('proceedingsTitle'),conference:cvpr.getField('conferenceName'),date:cvpr.getField('date')};
+      if (result.cvpr.publication !== 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition' || result.cvpr.conference !== 'My existing CVPR event' || result.cvpr.date !== '2026' || cvpr.getField('title') !== 'My Hand Edited CVPR TITLE') throw new Error('CVPR full-name normalization failed');
+      if (!progressState.rows[0].detail.includes('Access blocked')) throw new Error('Native HTML API response was not classified as blocked');
+      result.blockedResponse = true;
+      select.value = 'original';
+      select.dispatchEvent(new settings.Event('change'));
+      cvpr.setField('conferenceName', 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition');
+      cvpr.setField('proceedingsTitle', 'Conference on computer vision and pattern recognition 2026');
+      await cvpr.saveTx();
+      await MLRuntime.run(win, 'lint');
+      result.proceedingsRepair = cvpr.getField('proceedingsTitle') === cvpr.getField('conferenceName');
+      if (!result.proceedingsRepair) throw new Error('Misplaced proceedings value did not repair the publication field');
+      for (const window of [...MLRuntime.dialogs]) window.close();
       select.value = 'short';
       select.dispatchEvent(new settings.Event('change'));
       if (MLRuntime.preferenceData().settings.publicationStyle !== 'short') throw new Error('Short naming setting was not saved');
@@ -141,7 +179,7 @@ startup = async function(data) {
       select.dispatchEvent(new settings.Event('change'));
       if (MLRuntime.preferenceData().settings.formatPublication) throw new Error('Retrieved setting was not saved');
       await MLRuntime.configureConferences(settings);
-      const dialog = await wait(() => [...Services.wm.getEnumerator(null)].find(window => window.document?.location.href === 'chrome://metadata-linter/content/dialog.xhtml' && window.document?.getElementById('actions')?.children.length));
+      const dialog = await wait(() => [...Services.wm.getEnumerator(null)].find(window => !window.closed && window.arguments?.[0]?.kind === 'conferences' && window.document?.location.href === 'chrome://metadata-linter/content/dialog.xhtml' && window.document?.getElementById('actions')?.children.length));
       result.conferenceDialog = !!dialog.document.querySelector('.rule-card');
       if (!result.conferenceDialog) throw new Error('Conference rules dialog did not initialize');
       const search = dialog.document.querySelector('input[type="search"]');

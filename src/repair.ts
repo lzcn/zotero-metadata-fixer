@@ -29,6 +29,13 @@ export function buildRepairPlan(
     publication || formatPublication || venuePolicy?.repair
       ? { ...overrides?.fields }
       : {};
+  if (
+    overrides?.fields?.proceedingsTitle &&
+    /^proceedings of\b/i.test(String(metadata.conferenceName || "")) &&
+    normalize(String(metadata.conferenceName)) ===
+      normalize(item.getField("conferenceName"))
+  )
+    fields.proceedingsTitle = overrides.fields.proceedingsTitle;
   if (!publication) {
     // Type conversion maps the existing venue before filling from another source.
     const targetType = overrides?.itemType || metadata.itemType;

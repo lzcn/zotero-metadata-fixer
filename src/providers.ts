@@ -1,6 +1,7 @@
 import type { Candidate, Item, Lookup, Metadata } from "./model";
 import { identifiers, cleanDOI, preprintDOI } from "./identifiers";
 import { publishedVenue, rankCandidates } from "./matching";
+import { JSONResponseError } from "./responses";
 
 export interface Network {
   json(url: string): Promise<any>;
@@ -17,6 +18,7 @@ export function openReviewValue(note: any, key: string): any {
 }
 
 export class PublicationFinder {
+  private dblpUnavailable?: Error;
   constructor(private net: Network) {}
 
   async arxiv(
@@ -198,6 +200,7 @@ export class PublicationFinder {
   }
 
   async dblp(item: Item): Promise<Candidate[]> {
+    if (this.dblpUnavailable) throw this.dblpUnavailable;
     const query = `${item.getField("title")} ${item.getCreators()[0]?.lastName || ""}`;
     let data: any;
     let resolvedHost = "dblp.org";
@@ -207,13 +210,22 @@ export class PublicationFinder {
         data = await this.net.json(
           `https://${host}/search/publ/api?q=${encode(query)}&format=json&h=25`,
         );
+        if (!data?.result?.hits || typeof data.result.hits !== "object")
+          throw new JSONResponseError("Unexpected DBLP response");
         resolvedHost = host;
         break;
       } catch (error) {
+        if (
+          (error as JSONResponseError)?.blocked === true ||
+          (error as any)?.status === 429
+        ) {
+          this.dblpUnavailable = error as Error;
+          throw error;
+        }
         failures.push(`${host}: ${String(error)}`);
       }
     }
-    if (!data) throw new Error(failures.join("; "));
+    if (failures.length === 3) throw new Error(failures.join("; "));
     return list<any>(data.result?.hits?.hit).flatMap((hit) => {
       const info = hit.info;
       if (!info || !publishedVenue(info.venue || "")) return [];

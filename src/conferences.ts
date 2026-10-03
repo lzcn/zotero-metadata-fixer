@@ -229,9 +229,15 @@ export function normalizeConference(
           : commonPublicationTitle(rule.id))
       : "";
   if (rule.itemType === "conferencePaper") {
-    fields.conferenceName =
-      style === "short" ? commonTitle || rule.name : rule.name;
+    // Name formatting targets the proceedings, not the separate conference event field.
+    if (!normalized.conferenceName) normalized.conferenceName = rule.name;
+    const misplacedProceedings =
+      typeof metadata.conferenceName === "string" &&
+      /^proceedings of\b/i.test(metadata.conferenceName)
+        ? metadata.conferenceName
+        : "";
     const proceedings =
+      misplacedProceedings ||
       metadata.proceedingsTitle ||
       metadata.bookTitle ||
       metadata.publicationTitle;

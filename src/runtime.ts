@@ -4,6 +4,7 @@ import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
+import { parseJSONResponse } from "./responses";
 import { buildRepairPlan } from "./repair";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { selectPublication } from "./selection";
@@ -45,7 +46,11 @@ export class Runtime {
 
   private network(operation: Operation): Network {
     return {
-      json: async (url) => JSON.parse(await this.request(url, operation)),
+      json: async (url) =>
+        parseJSONResponse(await this.request(url, operation), {
+          blocked: this.s.apiBlocked,
+          invalid: this.s.apiInvalid,
+        }),
       text: (url) => this.request(url, operation),
       xml: (text) => {
         if (!operation.active()) throw new Error(this.s.cancelled);
@@ -83,6 +88,12 @@ export class Runtime {
       const response: any = await operation.wait(
         Zotero.HTTP.request("GET", url, {
           responseType,
+          headers: {
+            Accept:
+              responseType === "document"
+                ? "text/html"
+                : "application/json, application/xml;q=0.9, text/plain;q=0.8",
+          },
           timeout: 20000,
           cancellerReceiver: (cancel: () => void) => {
             release();
