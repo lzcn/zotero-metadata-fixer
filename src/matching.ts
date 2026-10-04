@@ -1,5 +1,5 @@
 import type { Candidate, Item } from "./model";
-import { preprintDOI } from "./identifiers";
+import { cleanDOI, preprintDOI } from "./identifiers";
 
 export function normalize(value: string): string {
   return value
@@ -28,11 +28,20 @@ export function titleScore(a: string, b: string): number {
 export function publishedVenue(venue: string): boolean {
   return (
     Boolean(venue.trim()) &&
-    !/\b(?:arxiv|corr|biorxiv|medrxiv|ssrn|preprint|submitted|under review|rejected|withdrawn|desk_rejected|research square)\b/i.test(
+    !/\b(?:arxiv|corr|biorxiv|medrxiv|ssrn|pre-?prints?|submitted|under\s+review|rejected|withdrawn|desk_rejected|research\s*square)\b/i.test(
       venue,
     )
   );
 }
+export function matchesAuthor(surname: string, authors?: string[]): boolean {
+  const name = normalize(surname);
+  return (
+    !name ||
+    !authors?.length ||
+    authors.some((author) => ` ${normalize(author)} `.includes(` ${name} `))
+  );
+}
+
 export function rankCandidates(
   item: Pick<Item, "getField" | "getCreators">,
   candidates: Candidate[],
@@ -49,14 +58,7 @@ export function rankCandidates(
       if (!candidate.title || titleScore(title, candidate.title) < 0.75)
         return false;
       if (year && candidate.year && candidate.year < year) return false;
-      if (
-        surname &&
-        candidate.authors?.length &&
-        !candidate.authors.some((name) =>
-          ` ${normalize(name)} `.includes(` ${surname} `),
-        )
-      )
-        return false;
+      if (!matchesAuthor(surname, candidate.authors)) return false;
       return true;
     })
     .map((candidate) => ({
@@ -66,12 +68,16 @@ export function rankCandidates(
     .sort((a, b) => b.score - a.score || (b.year || 0) - (a.year || 0));
   const seen = new Set<string>();
   return ranked.filter((candidate) => {
-    const key = (
-      candidate.doi ||
-      candidate.url ||
-      candidate.bibtex ||
-      candidate.title
-    ).toLowerCase();
+    // Canonical keys fold case, DOI prefixes/URLs and title typography so that
+    // the same record from different sources is not processed twice.
+    const doi = candidate.doi ? cleanDOI(candidate.doi) : undefined;
+    const key = doi
+      ? `doi:${doi.toLowerCase()}`
+      : candidate.url
+        ? `url:${candidate.url.trim().toLowerCase()}`
+        : candidate.bibtex
+          ? `bibtex:${normalize(candidate.bibtex)}`
+          : `title:${normalize(candidate.title)}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

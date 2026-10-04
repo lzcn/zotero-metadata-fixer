@@ -16,7 +16,9 @@
 
 ## 更新行为
 
-使用 DOI、PMID、arXiv ID、URL 及 Extra 中的标识符检索。优先使用已有发表标识符和官方论文页面，再查预印本发表关联及标题。来源包括 Zotero 翻译器、Google Scholar、Crossref、Semantic Scholar、DBLP、PubMed 和 OpenReview。经过验证的发表记录有无 DOI 都可更新；匹配冲突时跳过。来源被限制时，其他来源继续。
+使用 DOI、PMID、arXiv ID、URL 及 Extra 中的标识符检索。优先使用已有发表标识符和官方论文页面，再查预印本发表关联及标题。来源包括 Zotero 翻译器、Google Scholar、Crossref、Semantic Scholar、DBLP、PubMed 和 OpenReview。经过验证的发表记录有无 DOI 都可更新；匹配冲突时跳过。来源被限制时，其他来源继续。arXiv 的发表链接及参考信息、备注用于引导检索，备注本身不作为发表证明。OpenReview 检索允许标题变更，但仍要求已接收的记录；无 DOI 的索引记录也可参与匹配。通用索引无匹配时，最后尝试 USENIX 站内搜索。
+
+官方论文页的 BibTeX 在核对标题、作者及 DOI 后补充翻译器遗漏的字段。Zotero 的容器标题字段统一映射到 Proceedings Title 或 Book Title，会议不在名称目录里也适用。DOI 记录不完整时，可从条目的官方 URL 补充。
 
 已发表条目只补空字段和修正明确错误。仅大小写、空格或排版不同的值保持原样，预印本升级也遵循此规则。保留条目身份、附件、批注、笔记、集合、标签及关系。空结果不清空已有值，旧预印本标识符保留在 Extra。并发修改会阻止过期结果写入；取消和退出 Zotero 会停止待处理更新。
 
@@ -40,6 +42,8 @@
 - `npm run release`：完整检查后，在 `release/v<版本>/` 准备 XPI、`SHA256SUMS` 和 `updates.json`。
 
 `npm run test:host` 使用临时配置及网络测试数据，检查取消本地 HTTP 请求和 Zotero 正常退出。真实在线检索仍需在测试文献库中验证。本地发布准备不创建 tag 或上传文件。共同开发规范见工作区根目录 `AGENTS.md`。
+
+`src/providers.ts` 负责发现正式版本，返回候选记录；`src/translate.ts` 通过 Zotero 翻译器取回记录，通用页面线索、字段映射及补全位于 `src/metadata.ts`；`src/conferences.ts` 在取回后应用名称规则。出版社专用检索作为兜底，不替代翻译器和名称规则。
 
 ## 许可证
 

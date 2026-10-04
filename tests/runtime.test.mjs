@@ -389,6 +389,26 @@ test("preferences only expose naming style while internal conference rules remai
   }
 });
 
+test("conference settings are cached and refresh when the stored preference changes", () => {
+  const runtime = new Runtime();
+  let stored;
+  globalThis.Zotero.Prefs = {
+    get: () => stored,
+    set: (_key, value) => {
+      stored = value;
+    },
+  };
+  try {
+    const first = runtime.conferenceSettings();
+    assert.equal(first.publicationStyle, "original");
+    assert.equal(runtime.conferenceSettings(), first);
+    runtime.setPublicationStyle("short");
+    assert.equal(runtime.conferenceSettings().publicationStyle, "short");
+  } finally {
+    delete globalThis.Zotero.Prefs;
+  }
+});
+
 test("runtime directly applies retrieval without confirmation and reports completion", async () => {
   const item = new FakeItem();
   const { runtime, win, state } = runFixture(item);

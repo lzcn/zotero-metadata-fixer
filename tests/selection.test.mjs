@@ -51,6 +51,14 @@ test("conflicting DOI records are skipped; a server-linked publication takes pre
   );
 });
 
+test("the same DOI in different wrappers is not treated as conflicting records", () => {
+  const selected = selectPublication(item, [
+    { ...candidate, doi: "https://doi.org/10.1000/paper" },
+    { ...candidate, source: "DBLP", doi: "10.1000/PAPER" },
+  ]);
+  assert.equal(selected.doi, "https://doi.org/10.1000/paper");
+});
+
 test("DMLNet compound-word typography matches without weakening author or DOI checks", () => {
   const paper = new FakeItem();
   paper.data.title =

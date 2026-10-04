@@ -5,7 +5,7 @@ import {
   preprintDOI,
   officialPublicationURL,
 } from "./identifiers";
-import { publishedVenue, rankCandidates } from "./matching";
+import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
 import { selectPublication } from "./selection";
 
@@ -91,9 +91,11 @@ export class PublicationFinder {
     }
   }
 
-  async arxiv(
-    id: string,
-  ): Promise<{ candidate?: Candidate; metadata?: Metadata }> {
+  async arxiv(id: string): Promise<{
+    candidate?: Candidate;
+    metadata?: Metadata;
+    publicationHint?: string;
+  }> {
     const text = await this.net.text(
       `https://export.arxiv.org/api/query?id_list=${encode(id.replace(/v\d+$/, ""))}`,
     );
@@ -130,12 +132,37 @@ export class PublicationFinder {
           ?.getAttribute("href") ||
         "",
     );
+    const publicationURL = Array.from(
+      entry.getElementsByTagNameNS("http://www.w3.org/2005/Atom", "link"),
+    )
+      .map((link) => link.getAttribute("href") || "")
+      .find(officialPublicationURL);
+    const journalRef =
+      entry
+        .getElementsByTagNameNS(
+          "http://arxiv.org/schemas/atom",
+          "journal_ref",
+        )[0]
+        ?.textContent?.trim() || "";
     const version = atom("id").split("/abs/")[1] || id;
     const url = `https://arxiv.org/abs/${version}`;
+    const comment =
+      entry
+        .getElementsByTagNameNS("http://arxiv.org/schemas/atom", "comment")[0]
+        ?.textContent?.trim() || "";
     return {
+      publicationHint: journalRef || comment || undefined,
       candidate:
-        doi && !preprintDOI(doi)
-          ? { source: "arXiv", title, authors, doi, linked: true }
+        (doi && !preprintDOI(doi)) || publicationURL
+          ? {
+              source: "arXiv",
+              title,
+              authors,
+              doi: doi && !preprintDOI(doi) ? doi : undefined,
+              url: publicationURL,
+              venue: journalRef || undefined,
+              linked: true,
+            }
           : undefined,
       metadata: {
         itemType: "preprint",
@@ -159,11 +186,18 @@ export class PublicationFinder {
     };
   }
 
-  async related(item: Item): Promise<Candidate[]> {
+  async related(
+    item: Item,
+    publicationHint?: (hint: string) => void,
+  ): Promise<Candidate[]> {
     const ids = identifiers(item);
     if (ids.arXiv) {
       try {
-        const { candidate } = await this.arxiv(ids.arXiv);
+        const { candidate, publicationHint: hint } = await this.arxiv(
+          ids.arXiv,
+        );
+        // Comments and journal references guide discovery, never establish acceptance.
+        publicationHint?.(hint || "");
         return candidate ? [candidate] : [];
       } catch (error) {
         const html = await this.net.text(
@@ -229,7 +263,13 @@ export class PublicationFinder {
         if (!/404|not found/i.test(String(error))) throw error;
       }
     }
-    if (!data?.externalIds?.DOI || preprintDOI(data.externalIds.DOI)) {
+    if (
+      (!data?.externalIds?.DOI || preprintDOI(data.externalIds.DOI)) &&
+      !(
+        data?.externalIds?.DBLP &&
+        publishedVenue(data.publicationVenue?.name || data.venue || "")
+      )
+    ) {
       data = await this.net.json(
         `${base}/search/match?query=${encode(item.getField("title"))}&fields=${fields}`,
       );
@@ -238,7 +278,14 @@ export class PublicationFinder {
       .map((paper) => ({
         source: "Semantic Scholar",
         title: paper.title || "",
-        doi: cleanDOI(paper.externalIds?.DOI || ""),
+        doi: preprintDOI(paper.externalIds?.DOI || "")
+          ? undefined
+          : cleanDOI(paper.externalIds?.DOI || ""),
+        url:
+          typeof paper.externalIds?.DBLP === "string" &&
+          /^(?:conf|journals)\/[\w/-]+$/.test(paper.externalIds.DBLP)
+            ? `https://dblp.org/rec/${paper.externalIds.DBLP}.bib`
+            : undefined,
         authors: list<any>(paper.authors).map((author) => author.name),
         year: paper.year,
         venue: paper.publicationVenue?.name || paper.venue || "",
@@ -246,15 +293,15 @@ export class PublicationFinder {
       }))
       .filter(
         (candidate) =>
-          candidate.doi &&
+          (candidate.doi || candidate.url) &&
           (candidate.linked || publishedVenue(candidate.venue)),
       );
   }
 
-  async crossref(item: Item): Promise<Candidate[]> {
+  async crossref(item: Item, publicationHint = ""): Promise<Candidate[]> {
     const author = item.getCreators()[0]?.lastName;
     const data = await this.net.json(
-      `https://api.crossref.org/works?query.title=${encode(item.getField("title"))}&rows=20&filter=type:journal-article,type:proceedings-article,type:book-chapter${author ? `&query.author=${encode(author)}` : ""}`,
+      `https://api.crossref.org/works?query.title=${encode(item.getField("title"))}&rows=20&filter=type:journal-article,type:proceedings-article,type:book-chapter${author ? `&query.author=${encode(author)}` : ""}${publicationHint ? `&query.bibliographic=${encode(publicationHint)}` : ""}`,
     );
     return list<any>(data.message?.items)
       .filter((work) =>
@@ -366,7 +413,7 @@ export class PublicationFinder {
     const data = await this.net.json(
       forum
         ? `https://api2.openreview.net/notes?id=${encode(forum)}`
-        : `https://api2.openreview.net/notes/search?term=${encode(item.getField("title"))}&content=title&type=exact&source=forum&limit=25`,
+        : `https://api2.openreview.net/notes/search?term=${encode(item.getField("title"))}&content=title&source=forum&limit=25`,
     );
     return list<any>(data.notes).flatMap((note) => {
       const get = (key: string) => openReviewValue(note, key);
@@ -403,12 +450,40 @@ export class PublicationFinder {
     });
   }
 
+  // Publisher search is a last resort when general indexes have no publication.
+  async usenix(item: Item): Promise<Candidate[]> {
+    const base = `https://www.usenix.org/search/site/${encode(`"${item.getField("title")}"`)}`;
+    const candidates: Candidate[] = [];
+    for (let page = 0; page < 3; page++) {
+      const text = await this.net.text(base + (page ? `?page=${page}` : ""));
+      checkAccess(text);
+      const doc = this.net.html(text);
+      if (!doc.querySelector("#search-form"))
+        throw new Error("Unexpected USENIX search response");
+      for (const link of Array.from(
+        doc.querySelectorAll(".search-results .title a"),
+      )) {
+        const url = new URL(link.getAttribute("href") || "", base);
+        const title = link.textContent?.trim() || "";
+        if (
+          url.hostname === "www.usenix.org" &&
+          officialPublicationURL(url.href) &&
+          titleScore(item.getField("title"), title) >= 0.9
+        )
+          candidates.push({ source: "USENIX", title, url: url.href });
+      }
+      if (!doc.querySelector(".pager-next a")) break;
+    }
+    return rankCandidates(item, candidates);
+  }
+
   async find(
     item: Item,
     usePreprintLinks = true,
     resolveOfficial?: (candidate: Candidate) => Promise<boolean>,
   ): Promise<Lookup> {
     const warnings: string[] = [];
+    let publicationHint = "";
     let answered = 0;
     const ids = identifiers(item);
     const checkedURLs = new Set<string>();
@@ -447,7 +522,12 @@ export class PublicationFinder {
     let linked: Candidate[] = [];
     try {
       // Retained arXiv provenance can also supply a missing published DOI.
-      linked = usePreprintLinks || ids.arXiv ? await this.related(item) : [];
+      linked =
+        usePreprintLinks || ids.arXiv
+          ? await this.related(item, (hint) => {
+              publicationHint = hint;
+            })
+          : [];
       answered++;
     } catch (error) {
       warnings.push(`Preprint server: ${String(error)}`);
@@ -468,7 +548,7 @@ export class PublicationFinder {
     }
     const sources = [
       ["Semantic Scholar", () => this.semanticScholar(item)],
-      ["Crossref", () => this.crossref(item)],
+      ["Crossref", () => this.crossref(item, publicationHint)],
       ["DBLP", () => this.dblp(item)],
       ["PubMed", () => this.pubmed(item)],
       ["OpenReview", () => this.openreview(item)],
@@ -482,6 +562,27 @@ export class PublicationFinder {
         candidates.push(...result.value);
       } else warnings.push(`${sources[index][0]}: ${String(result.reason)}`);
     });
-    return { candidates: rankCandidates(item, candidates), warnings, answered };
+    const ranked = rankCandidates(item, candidates);
+    const selected = selectPublication(item, ranked);
+    if (selected) {
+      if (selected.doi || (await official(selected)))
+        return { candidates: ranked, warnings, answered };
+    }
+    // An additional publisher must not override conflicting strong indexed matches.
+    if (!selected && ranked.some((candidate) => (candidate.score || 0) >= 0.9))
+      return { candidates: ranked, warnings, answered };
+    // Search results locate records; only a verified article can authorize an update.
+    if (!selected && resolveOfficial) {
+      try {
+        const publisher = await this.usenix(item);
+        answered++;
+        const record = selectPublication(item, publisher);
+        if (record && (await official(record)))
+          return { candidates: [record], warnings, answered };
+      } catch (error) {
+        warnings.push(`USENIX: ${String(error)}`);
+      }
+    }
+    return { candidates: ranked, warnings, answered };
   }
 }

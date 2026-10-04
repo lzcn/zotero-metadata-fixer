@@ -11,6 +11,13 @@ export function cleanDOI(value: string): string | undefined {
   return /^10\.\d{4,9}\/\S+$/i.test(text) ? text : undefined;
 }
 
+// DOIs are case-insensitive; compare their canonical form so that prefixes and
+// URL wrappers from different sources do not look like conflicting records.
+export function canonicalDOI(value: string): string | undefined {
+  const doi = cleanDOI(value);
+  return doi?.toLowerCase();
+}
+
 export function preprintDOI(doi: string): boolean {
   return /^(10\.48550\/arxiv\.|10\.1101\/|10\.26434\/chemrxiv|10\.2139\/ssrn|10\.31234\/osf|10\.21203\/rs\.)/i.test(
     doi,
@@ -25,6 +32,14 @@ export function officialPublicationURL(value: string): boolean {
     const host = hostname.toLowerCase().replace(/^www\./, "");
     if (host === "openreview.net")
       return pathname === "/forum" && Boolean(searchParams.get("id"));
+    if (host === "usenix.org")
+      return /^\/conference\/[^/]+\/presentation\/[^/]+\/?$/.test(pathname);
+    if (host === "roboticsproceedings.org")
+      return /^\/rss\d+\/p\d+\.html$/.test(pathname);
+    if (host === "proceedings.iclr.cc")
+      return /^\/paper_files\/paper\/\d{4}\/hash\/[^/]+-Abstract-Conference\.html$/.test(
+        pathname,
+      );
     if (host === "ieeexplore.ieee.org")
       return /^\/(?:abstract\/)?document\/\d+\/?$/.test(pathname);
     if (/^(papers|proceedings)\.n(eur)?ips\.cc$/.test(host))

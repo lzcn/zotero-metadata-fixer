@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   identifiers,
   arxivID,
+  canonicalDOI,
   cleanDOI,
   isPreprint,
 } from "../.tests-build/identifiers.js";
@@ -192,6 +193,53 @@ test("matching excludes old publications, homonyms, preprints, and duplicate DOI
     "Withdrawn",
   ])
     assert.equal(publishedVenue(venue), false);
+});
+
+test("canonical DOI comparisons fold case and URL wrappers", () => {
+  assert.equal(
+    canonicalDOI("https://doi.org/10.1000%2FExample"),
+    "10.1000/example",
+  );
+  assert.equal(canonicalDOI("doi: 10.1000/EXAMPLE"), "10.1000/example");
+  assert.equal(canonicalDOI("not-a-doi"), undefined);
+});
+
+test("duplicate records are folded by canonical DOI and title typography", () => {
+  const item = new FakeItem();
+  const base = {
+    source: "Crossref",
+    title: published.title,
+    doi: published.DOI,
+    authors: ["Zhi Lu"],
+    venue: published.publicationTitle,
+    year: 2026,
+  };
+  const byDOI = rankCandidates(item, [
+    base,
+    { ...base, source: "DBLP", doi: "https://doi.org/10.1000/PUBLISHED" },
+  ]);
+  assert.equal(byDOI.length, 1);
+  assert.equal(byDOI[0].doi, published.DOI);
+  const byTitle = rankCandidates(item, [
+    { ...base, doi: undefined },
+    { ...base, source: "Scholar", doi: undefined, title: `${base.title}.` },
+  ]);
+  assert.equal(byTitle.length, 1);
+});
+
+test("preprint-server wording is never treated as a published venue", () => {
+  for (const venue of [
+    "Preprints",
+    "pre-print",
+    "Pre-Prints",
+    "ResearchSquare",
+    "Under Review",
+  ])
+    assert.equal(publishedVenue(venue), false, venue);
+  assert.equal(
+    publishedVenue("IEEE Geoscience and Remote Sensing Letters"),
+    true,
+  );
 });
 
 test("published items with retained arXiv provenance are not upgraded again", () => {

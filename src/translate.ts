@@ -6,6 +6,12 @@ import {
   cleanDOI,
   officialPublicationURL,
 } from "./identifiers";
+import {
+  articleEvidence,
+  normalizeMetadata,
+  needsContainerTitle,
+  supplementMetadata,
+} from "./metadata";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -41,7 +47,8 @@ export class MetadataRetriever {
     this.checkActive();
     if (records.length !== 1 || !records[0].title)
       throw new Error("Expected one complete metadata record");
-    return records[0] as Metadata;
+    const metadata = records[0] as Metadata;
+    return normalizeMetadata(metadata);
   }
 
   async identifier(identifier: {
@@ -86,37 +93,41 @@ export class MetadataRetriever {
     this.checkActive();
     if (!docs[0]) throw new Error("Unable to load item URL");
     const doc: Document = docs[0];
-    // Read only the article's identifier, not arbitrary DOI links in references.
-    let doi = Array.from(
-      doc.querySelectorAll?.(
-        'meta[name="citation_doi"], meta[name="dc.identifier"], meta[name="DC.Identifier"]',
-      ) || [],
-    )
-      .map((meta) => cleanDOI(meta.getAttribute("content") || ""))
-      .find((value) => value && !preprintDOI(value));
-    if (!doi && officialPublicationURL(url)) {
-      const link = Array.from(doc.querySelectorAll?.("a[href]") || []).find(
-        (anchor) =>
-          (/^DOI\s*:/i.test(anchor.parentElement?.textContent?.trim() || "") ||
-            /^DOI\s*:?$/i.test(
-              anchor.parentElement?.previousElementSibling?.textContent?.trim() ||
-                "",
-            )) &&
-          cleanDOI(anchor.getAttribute("href") || ""),
-      );
-      doi = cleanDOI(link?.getAttribute("href") || "");
-    }
+    const { doi, bibtex } = articleEvidence(doc, url);
+    let identified: Metadata | undefined;
     if (doi && !preprintDOI(doi)) {
       try {
-        return await this.identifier({ DOI: doi });
+        const resolved = await this.identifier({ DOI: doi });
+        if (!needsContainerTitle(resolved)) return resolved;
+        identified = resolved;
       } catch (error) {
         this.checkActive();
         // The official web translator can work when the DOI service cannot.
       }
     }
-    const translate = new this.zotero.Translate.Web();
-    translate.setDocument(doc);
-    const metadata = await this.run(translate);
+    // Embedded BibTeX often contains proceedings/publisher fields omitted by web translators.
+    let bibliography: Metadata | undefined;
+    if (bibtex) {
+      try {
+        bibliography = await this.bibtex(bibtex);
+      } catch (error) {
+        this.checkActive();
+        // A web translator can still retrieve the article when BibTeX is malformed.
+      }
+    }
+    let metadata: Metadata;
+    try {
+      const translate = new this.zotero.Translate.Web();
+      translate.setDocument(doc);
+      metadata = await this.run(translate);
+    } catch (error) {
+      this.checkActive();
+      if (!bibliography && !identified) throw error;
+      metadata = bibliography || identified!;
+    }
+    if (bibliography) metadata = supplementMetadata(metadata, bibliography);
+    if (identified) metadata = supplementMetadata(identified, metadata);
+    if (!metadata.url) metadata.url = url;
     return doi && !preprintDOI(doi) && !metadata.DOI
       ? { ...metadata, DOI: doi }
       : metadata;
@@ -158,8 +169,22 @@ export class MetadataRetriever {
       if (!active()) throw new Error("Operation cancelled");
       if (!ids[source]) continue;
       try {
-        const metadata = await this.retrieve(item, source);
+        let metadata = await this.retrieve(item, source);
         if (!active()) throw new Error("Operation cancelled");
+        if (
+          source !== "URL" &&
+          needsContainerTitle(metadata) &&
+          ids.URL &&
+          officialPublicationURL(ids.URL)
+        ) {
+          try {
+            metadata = supplementMetadata(metadata, await this.url(ids.URL));
+            if (!active()) throw new Error("Operation cancelled");
+          } catch (error) {
+            if (!active()) throw error;
+            warnings.push(`Article metadata: ${String(error)}`);
+          }
+        }
         return { metadata, source, warnings };
       } catch (error) {
         if (!active()) throw error;
@@ -180,29 +205,31 @@ export class MetadataRetriever {
       candidate.doi && !metadata.DOI
         ? { ...metadata, DOI: candidate.doi }
         : metadata;
-    if (candidate.doi) {
+    const sources: [string, () => Promise<Metadata>][] = [];
+    if (candidate.doi)
+      sources.push(["DOI", () => this.identifier({ DOI: candidate.doi })]);
+    const official = candidate.url && officialPublicationURL(candidate.url);
+    if (official) sources.push(["Article", () => this.url(candidate.url!)]);
+    if (candidate.bibtex)
+      sources.push(["BibTeX", () => this.bibtex(candidate.bibtex!)]);
+    if (candidate.url && !official)
+      sources.push(["URL", () => this.url(candidate.url!)]);
+    const errors: string[] = [];
+    for (const [source, retrieve] of sources) {
+      if (!active()) throw new Error("Operation cancelled");
+      this.checkActive();
       try {
-        return complete(await this.identifier({ DOI: candidate.doi }));
+        const metadata = complete(await retrieve());
+        if (!active()) throw new Error("Operation cancelled");
+        return metadata;
       } catch (error) {
-        if (!active() || (!candidate.url && !candidate.bibtex)) throw error;
+        if (!active()) throw error;
+        this.checkActive();
+        errors.push(`${source}: ${String(error)}`);
       }
     }
-    // An official article page can recover metadata when DOI resolution fails.
-    if (
-      candidate.url &&
-      /^https:\/\/ieeexplore\.ieee\.org\/(?:document|abstract\/document)\/\d+/i.test(
-        candidate.url,
-      )
-    ) {
-      try {
-        return complete(await this.url(candidate.url));
-      } catch (error) {
-        if (!active() || !candidate.bibtex) throw error;
-      }
-    }
-    if (!active()) throw new Error("Operation cancelled");
-    if (candidate.bibtex) return complete(await this.bibtex(candidate.bibtex));
-    if (candidate.url) return complete(await this.url(candidate.url));
-    throw new Error("Candidate has no retrievable identifier");
+    throw new Error(
+      errors.join("\n") || "Candidate has no retrievable identifier",
+    );
   }
 }

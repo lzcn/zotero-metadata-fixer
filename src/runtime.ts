@@ -35,6 +35,7 @@ export class Runtime {
   private dialogs = new Set<any>();
   private preferencePane?: string;
   private registeringPreferences = false;
+  private settingsCache?: { raw?: string; value: ConferenceSettings };
   private operation?: Operation;
   private operationWindow?: any;
   private dialogOwners = new Map<any, any>();
@@ -343,12 +344,21 @@ export class Runtime {
       }),
       true,
     );
+    this.settingsCache = undefined;
   }
 
   private conferenceSettings(): ConferenceSettings {
-    return parseConferenceSettings(
-      Zotero.Prefs?.get(CONFERENCE_SETTINGS_PREF, true),
+    // Parsing validates hundreds of rules, so reuse the result until the raw
+    // preference changes (for example after the naming style is saved).
+    const raw: string | undefined = Zotero.Prefs?.get(
+      CONFERENCE_SETTINGS_PREF,
+      true,
     );
+    const cached = this.settingsCache;
+    if (cached && cached.raw === raw) return cached.value;
+    const value = parseConferenceSettings(raw);
+    this.settingsCache = { raw, value };
+    return value;
   }
 
   private validatePublication(

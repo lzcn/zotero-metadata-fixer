@@ -16,7 +16,9 @@ Requires Zotero 10. Install `dist/zotero-metadata-fixer.xpi` through **Tools →
 
 ## Update behavior
 
-Retrieval uses DOI, PMID, arXiv ID, URL and Extra identifiers. Existing publication identifiers and official article pages take priority, followed by preprint publication links and title searches. Sources include Zotero translators, Google Scholar, Crossref, Semantic Scholar, DBLP, PubMed and OpenReview. Verified published records can be updated with or without a DOI; conflicting matches are skipped. Blocked sources do not stop other sources.
+Retrieval uses DOI, PMID, arXiv ID, URL and Extra identifiers. Existing publication identifiers and official article pages take priority, followed by preprint publication links and title searches. Sources include Zotero translators, Google Scholar, Crossref, Semantic Scholar, DBLP, PubMed and OpenReview. Verified published records can be updated with or without a DOI; conflicting matches are skipped. Blocked sources do not stop other sources. arXiv publication links and reference/comment hints guide discovery; comments alone do not establish publication. OpenReview searches allow title changes and still require an accepted record. DOI-free indexed records remain eligible. When general indexes have no match, USENIX site search provides a final fallback.
+
+Official article BibTeX supplements fields omitted by translators after title, author and DOI checks. Zotero container fields are mapped to Proceedings Title or Book Title even for conferences outside the naming catalog. Incomplete DOI records can be supplemented from the item's official URL.
 
 Published items receive missing values and clear repairs. Differences only in casing, spacing or typography preserve the existing value, including during preprint upgrades. Item identity, attachments, annotations, notes, collections, tags and relations remain. Empty results do not erase existing values; old preprint identifiers remain in Extra. Concurrent edits prevent stale writes. Cancellation and Zotero quit stop pending updates.
 
@@ -40,6 +42,8 @@ Use Node.js 22.13+ (22.x) or 24+. Run `npm ci`, then `npm run check`.
 - `npm run release`: full checks, then prepare the XPI, `SHA256SUMS` and `updates.json` under `release/v<version>/`.
 
 `npm run test:host` uses temporary profiles and fixture responses, including cancellation of a local HTTP request and normal Zotero quit. Live retrieval still needs validation in a test library. Release preparation does not create a tag or upload files. Shared working rules live in the workspace's root `AGENTS.md`.
+
+Discovery in `src/providers.ts` returns publication candidates. `src/translate.ts` retrieves records through Zotero translators; shared article evidence, field mapping and supplementation live in `src/metadata.ts`. `src/conferences.ts` applies naming rules after retrieval. Publisher-specific discovery is a fallback; it does not replace translators or naming rules.
 
 ## License
 

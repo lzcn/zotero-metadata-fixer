@@ -27,12 +27,39 @@ export type ConferenceRule = {
   publicationTitleOverride: string;
   preserveJournalArticles: boolean;
 };
+
+const catalogById = new Map(
+  catalog.map((conference) => [conference.id, conference]),
+);
+const SECONDARY_TRACK =
+  /\b(workshops?|companion|findings|demonstrations?|posters?|short papers?)\b/;
+type RuleSignature = {
+  aliases: string[];
+  excludeAliases: string[];
+  secondaryAlias: boolean;
+};
+// Aliases are stable for a validated rule, so their normalized forms are cached
+// instead of being recomputed for every venue of every item.
+const signatures = new WeakMap<ConferenceRule, RuleSignature>();
+function signature(rule: ConferenceRule): RuleSignature {
+  let value = signatures.get(rule);
+  if (!value) {
+    const aliases = rule.aliases.map(normalize);
+    value = {
+      aliases,
+      excludeAliases: rule.excludeAliases.map(normalize),
+      secondaryAlias: aliases.some((alias) => SECONDARY_TRACK.test(alias)),
+    };
+    signatures.set(rule, value);
+  }
+  return value;
+}
 export const CONFERENCE_SETTINGS_PREF =
   "extensions.zotero.metadata-linter.conferences";
 export const DEFAULT_CONFERENCE_RULES = validateConferenceRules(catalog);
 export const CONFERENCE_CATALOG_VERSION = `${catalogInfo.id}+${supplements.id}`;
 export function conferenceInfo(id: string) {
-  const conference = catalog.find((conference) => conference.id === id);
+  const conference = catalogById.get(id);
   return conference
     ? {
         ...conference,
@@ -108,9 +135,7 @@ export function parseConferenceSettings(stored?: string): ConferenceSettings {
 }
 
 export function commonPublicationTitle(id: string): string {
-  return (
-    catalog.find((conference) => conference.id === id)?.publicationTitle || ""
-  );
+  return catalogById.get(id)?.publicationTitle || "";
 }
 
 export function validateConferenceRules(value: unknown): ConferenceRule[] {
@@ -210,30 +235,23 @@ export function normalizeConference(
           .replace(/\b\d+(?:st|nd|rd|th)\b/g, " ")
           .replace(/\s+/g, " ")} `,
     );
-  const secondaryTrack =
-    /\b(workshops?|companion|findings|demonstrations?|posters?|short papers?)\b/;
-  const hasSecondaryTrack = venues.some((venue) => secondaryTrack.test(venue));
+  const hasSecondaryTrack = venues.some((venue) => SECONDARY_TRACK.test(venue));
   const matches = rules
     .flatMap((rule) => {
+      if (!rule.enabled) return [];
+      const sig = signature(rule);
+      if (hasSecondaryTrack && !sig.secondaryAlias) return [];
       if (
-        !rule.enabled ||
-        rule.excludeAliases.some((alias) =>
-          venues.some((venue) => venue.includes(` ${normalize(alias)} `)),
+        sig.excludeAliases.some((alias) =>
+          venues.some((venue) => venue.includes(` ${alias} `)),
         )
       )
         return [];
       let score = 0;
-      for (const alias of rule.aliases) {
-        const normalizedAlias = normalize(alias);
-        const match = ` ${normalizedAlias} `;
+      for (const alias of sig.aliases) {
+        const match = ` ${alias} `;
         for (const venue of venues) {
-          if (
-            hasSecondaryTrack &&
-            !rule.aliases.some((alias) => secondaryTrack.test(normalize(alias)))
-          )
-            continue;
-          if (venue.includes(match))
-            score = Math.max(score, normalizedAlias.length);
+          if (venue.includes(match)) score = Math.max(score, alias.length);
         }
       }
       return score ? [{ rule, score }] : [];

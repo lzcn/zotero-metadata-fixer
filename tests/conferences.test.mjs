@@ -515,13 +515,10 @@ test("CVPR standard mode supplies the official IEEE/CVF full name without the so
 
 test("the library's previously unmatched venues recognize verified conferences and retain ambiguous records", async () => {
   const { readFile } = await import("node:fs/promises");
-  const fixtures = JSON.parse(
-    await readFile(
-      new URL("./fixtures/conference-venues.json", import.meta.url),
-      "utf8",
-    ),
+  const cases = JSON.parse(
+    await readFile(new URL("./conference-cases.json", import.meta.url), "utf8"),
   );
-  for (const { venue, rule } of fixtures) {
+  for (const { venue, rule } of cases) {
     const original = { ...bookSection(), bookTitle: venue };
     const result = normalizeConference(
       original,

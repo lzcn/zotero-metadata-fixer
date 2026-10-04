@@ -1,5 +1,6 @@
+import { canonicalDOI, officialPublicationURL } from "./identifiers";
 import type { Candidate, Item } from "./model";
-import { normalize, rankCandidates } from "./matching";
+import { normalize, rankCandidates, matchesAuthor } from "./matching";
 import { DEFAULT_CONFERENCE_RULES, normalizeConference } from "./conferences";
 
 function venueKey(candidate: Candidate): string {
@@ -29,9 +30,8 @@ export function selectPublication(
       (!surname ||
         (!candidate.authors?.length &&
           normalize(candidate.title) === normalize(item.getField("title"))) ||
-        candidate.authors?.some((name) =>
-          ` ${normalize(name)} `.includes(` ${surname} `),
-        ))
+        (Boolean(candidate.authors?.length) &&
+          matchesAuthor(surname, candidate.authors)))
     );
   });
   const first = ranked[0];
@@ -41,8 +41,12 @@ export function selectPublication(
   );
   const samePublication = peers.every((candidate) => {
     if (candidate === first) return true;
-    if (first.doi && candidate.doi)
+    if (first.doi && candidate.doi) {
+      const left = canonicalDOI(first.doi);
+      const right = canonicalDOI(candidate.doi);
+      if (left && right) return left === right;
       return normalize(first.doi) === normalize(candidate.doi);
+    }
     if (first.url && candidate.url && first.url === candidate.url) return true;
     return (
       normalize(first.title) === normalize(candidate.title) &&
@@ -51,10 +55,10 @@ export function selectPublication(
     );
   });
   if (!samePublication) return;
-  // A DOI record is the most useful representative; retain its official IEEE URL if another source provides it.
+  // Prefer an identifier record, retaining an official article URL from equivalent sources.
   const selected = peers.find((candidate) => candidate.doi) || first;
-  const ieee = peers.find((candidate) =>
-    candidate.url?.startsWith("https://ieeexplore.ieee.org/"),
+  const official = peers.find((candidate) =>
+    officialPublicationURL(candidate.url || ""),
   );
-  return ieee ? { ...selected, url: ieee.url } : selected;
+  return official ? { ...selected, url: official.url } : selected;
 }
