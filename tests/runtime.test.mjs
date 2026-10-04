@@ -23,7 +23,13 @@ function runFixture(item) {
     if (data.kind === "progress") {
       state.progress = data;
       return {
-        window: { closed: false, renderProgress() {} },
+        window: {
+          closed: false,
+          renderProgress() {},
+          close() {
+            this.closed = true;
+          },
+        },
         result: new Promise(() => {}),
       };
     }
@@ -368,7 +374,7 @@ test("preferences only expose naming style while internal conference rules remai
     const stored = JSON.parse(saved[0][1]);
     assert.equal(saved[0][0], CONFERENCE_SETTINGS_PREF);
     assert.equal(stored.publicationStyle, "short");
-    assert.equal(stored.rules.length, 386);
+    assert.equal(stored.rules.length, DEFAULT_CONFERENCE_RULES.length);
     assert.equal(
       stored.rules.find((rule) => rule.id === "eccv").name,
       "Maintained ECCV name",
@@ -866,6 +872,9 @@ test("one batch updates selected editable papers and continues after an item fai
 
 test("cancelling a batch stops unstarted papers and ignores the pending result", async () => {
   const items = [new FakeItem(), new FakeItem(), new FakeItem()];
+  items.forEach((item, index) => {
+    item.id = index + 1;
+  });
   const { runtime, win, state } = runFixture(items[0]);
   win.ZoteroPane.getSelectedItems = () => items;
   let finish,
@@ -882,6 +891,10 @@ test("cancelling a batch stops unstarted papers and ignores the pending result",
   finish(published);
   await Promise.resolve();
   assert.equal(calls, 1);
+  assert.deepEqual(
+    state.progress.rows.map((row) => row.status),
+    ["Cancelled", "Cancelled", "Cancelled"],
+  );
   assert.equal(state.progress.total, 3);
   assert.deepEqual(
     items.map((item) => item.saved),
@@ -1042,4 +1055,143 @@ test("unaccepted or mismatched official records cannot bypass publication valida
     assert.equal(item.itemType, "preprint");
     assert.equal(item.getField("DOI"), "");
   }
+});
+
+test("new selections share one queue and completed results remain until the window closes", async () => {
+  const items = [new FakeItem(), new FakeItem(), new FakeItem()];
+  items.forEach((item, index) => {
+    item.id = index + 1;
+    Object.assign(item.data, published);
+    item.itemTypeID = 2;
+    delete item.data.abstractNote;
+  });
+  const { runtime, win, state } = runFixture(items[0]);
+  runtime.host = (token) => ({
+    ...hostFor(items[0]),
+    active: () => runtime.alive && runtime.generation === token,
+  });
+  let opened = 0,
+    dialog,
+    release;
+  const originalOpen = runtime.open;
+  runtime.open = (...args) => {
+    opened++;
+    const result = originalOpen(...args);
+    dialog = result.window;
+    let resolveClose;
+    result.result = new Promise((resolve) => {
+      resolveClose = resolve;
+    });
+    result.window.close = () => {
+      result.window.closed = true;
+      resolveClose();
+    };
+    return result;
+  };
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const calls = [];
+  runtime.retriever = {
+    retrieveCurrent: async (item) => {
+      calls.push(item.id);
+      if (item.id === 1) await gate;
+      if (item.id === 3) {
+        assert.deepEqual(
+          state.progress.rows.map((row) => row.status),
+          ["Updated", "Updated", "Updating…"],
+        );
+        assert.equal(dialog.closed, false);
+      }
+      return {
+        metadata: { ...item.toJSON(), abstractNote: "Filled" },
+        source: "DOI",
+        warnings: [],
+      };
+    },
+  };
+  const running = runtime.run(win, "lint");
+  const otherWindow = { ZoteroPane: { getSelectedItems: () => items } };
+  await runtime.run(otherWindow, "lint");
+  await runtime.run(otherWindow, "lint");
+  assert.equal(opened, 1);
+  assert.equal(state.progress.total, 3);
+  assert.deepEqual(
+    state.progress.rows.map((row) => row.status),
+    ["Updating…", "Waiting", "Waiting"],
+  );
+  release();
+  await running;
+  assert.deepEqual(calls, [1, 2, 3]);
+  assert.equal(dialog.closed, false);
+  assert.equal(runtime.progressWindow, dialog);
+  await runtime.run(win, "lint");
+  assert.equal(opened, 1);
+  assert.equal(dialog.closed, false);
+  assert.equal(state.progress.rows.length, 4);
+  assert.equal(state.progress.rows[3].status, "No changes");
+  assert.deepEqual(
+    state.progress.rows.slice(0, 3).map((row) => row.status),
+    ["Updated", "Updated", "Updated"],
+  );
+  dialog.close();
+  await runtime.run(win, "lint");
+  assert.equal(opened, 2);
+  assert.equal(state.progress.rows.length, 1);
+  runtime.retriever.retrieveCurrent = () => new Promise(() => {});
+  const cancelling = runtime.run(win, "lint");
+  assert.equal(opened, 2);
+  dialog.close();
+  await cancelling;
+  assert.equal(state.progress.rows[1].status, "Cancelled");
+  assert.equal(runtime.busy, false);
+  assert.equal(runtime.progressWindow, undefined);
+});
+
+test("DMLNet official IEEE metadata fills DOI despite compound-word title differences", async () => {
+  const paper = new FakeItem();
+  Object.assign(paper.data, {
+    itemType: "journalArticle",
+    title:
+      "DMLNet: Differential Saliency with Multi-Domain Learning Network for Moving Infrared Small Target Detection",
+    date: "2026-00-00 2026",
+    url: "https://ieeexplore.ieee.org/abstract/document/11592444/",
+    archiveID: "",
+    extra: "",
+    publicationTitle: "IEEE Geoscience and Remote Sensing Letters",
+    creators: [
+      { firstName: "Zhenming", lastName: "Peng", creatorType: "author" },
+    ],
+  });
+  paper.itemTypeID = 2;
+  const originalTitle = paper.data.title;
+  const { runtime, win, state } = runFixture(paper);
+  runtime.finder = {
+    find: async (item, preprint, resolve) => {
+      const candidate = {
+        source: "URL",
+        title: item.getField("title"),
+        url: item.getField("url"),
+      };
+      assert.equal(await resolve(candidate), true);
+      return { candidates: [candidate], warnings: [], answered: 1 };
+    },
+  };
+  runtime.retriever = {
+    candidate: async () => ({
+      itemType: "journalArticle",
+      title:
+        "DMLNet: Differential Saliency With Multidomain Learning Network for Moving Infrared Small-Target Detection",
+      DOI: "10.1109/LGRS.2026.3708839",
+      publicationTitle: paper.data.publicationTitle,
+      creators: [
+        { firstName: "Yi", lastName: "Rong", creatorType: "author" },
+        ...paper.getCreators(),
+      ],
+    }),
+  };
+  await runtime.run(win, "lint");
+  assert.equal(paper.getField("DOI"), "10.1109/LGRS.2026.3708839");
+  assert.equal(paper.getField("title"), originalTitle);
+  assert.equal(state.progress.rows[0].status, "Updated");
 });

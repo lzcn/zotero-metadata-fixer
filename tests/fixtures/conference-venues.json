@@ -1,0 +1,1006 @@
+[
+  {
+    "venue": "IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "2024 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "2021 IEEE International Geoscience and Remote Sensing Symposium IGARSS",
+    "rule": "igarss"
+  },
+  {
+    "venue": "WACV",
+    "rule": "wacv"
+  },
+  {
+    "venue": "CVPRW",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2023 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "ICCVW",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "2021 Computing in Cardiology (CinC)",
+    "rule": "cinc"
+  },
+  {
+    "venue": "2022 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "NeurIPS Workshop",
+    "rule": "neurips-workshops"
+  },
+  {
+    "venue": "2025 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "Mathematical Aspects of Deep Learning",
+    "rule": null
+  },
+  {
+    "venue": "ICLR Workshop",
+    "rule": "iclr-workshops"
+  },
+  {
+    "venue": "ICCV Workshop",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "2011 IEEE MTT-S International Microwave Symposium",
+    "rule": "ims"
+  },
+  {
+    "venue": "2020 IEEE Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "Forty-First International Conference on Machine Learnin",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of the 26th International Conference on World Wide Web",
+    "rule": "www"
+  },
+  {
+    "venue": "UMAP",
+    "rule": "umap"
+  },
+  {
+    "venue": "2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of The 35th Uncertainty in Artificial Intelligence Conference",
+    "rule": "uai"
+  },
+  {
+    "venue": "2023 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "2024 46th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2020 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision",
+    "rule": "wacv"
+  },
+  {
+    "venue": "ICML Workshop",
+    "rule": "icml-workshops"
+  },
+  {
+    "venue": "ICCE",
+    "rule": null
+  },
+  {
+    "venue": "KDD Cup and Workshop",
+    "rule": "kdd-cup-workshop"
+  },
+  {
+    "venue": "International World Wide Web Conferences",
+    "rule": "www"
+  },
+  {
+    "venue": "EACL",
+    "rule": "eacl"
+  },
+  {
+    "venue": "2022 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "Neural Networks: Tricks of the Trade",
+    "rule": null
+  },
+  {
+    "venue": "AAAI Workshop",
+    "rule": "aaai-workshops"
+  },
+  {
+    "venue": "MIPR",
+    "rule": "mipr"
+  },
+  {
+    "venue": "BigMM",
+    "rule": "bigmm"
+  },
+  {
+    "venue": "Proceedings of the 31st ACM International Conference on Information & Knowledge Management",
+    "rule": "cikm"
+  },
+  {
+    "venue": "Recommender Systems Handbook",
+    "rule": null
+  },
+  {
+    "venue": "2023 Computing in Cardiology Conference",
+    "rule": "cinc"
+  },
+  {
+    "venue": "Machine Learning and Knowledge Discovery in Databases",
+    "rule": "ecml-pkdd"
+  },
+  {
+    "venue": "Proceedings of the 3rd International on Multimodal Sentiment Analysis Workshop and Challenge",
+    "rule": "muse"
+  },
+  {
+    "venue": "Atlas of Sleep Medicine",
+    "rule": null
+  },
+  {
+    "venue": "2022 44th Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "IEEE/CVF Winter Conference on Applications of Computer Vision",
+    "rule": "wacv"
+  },
+  {
+    "venue": "2021 43rd Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2019 10th International Workshop on the Analysis of Multitemporal Remote Sensing Images (MultiTemp)",
+    "rule": "multitemp"
+  },
+  {
+    "venue": "2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2021 IEEE/CVF International Conference on Computer Vision Workshops (ICCVW)",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2017 IEEE Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "ICDMW",
+    "rule": "icdm-workshops"
+  },
+  {
+    "venue": "ITCS",
+    "rule": "itcs"
+  },
+  {
+    "venue": "2018 52nd Asilomar Conference on Signals, Systems, and Computers",
+    "rule": "asilomar"
+  },
+  {
+    "venue": "IEEE Data Science Workshop",
+    "rule": "dsw"
+  },
+  {
+    "venue": "BIOSIG",
+    "rule": "biosig"
+  },
+  {
+    "venue": "AICS",
+    "rule": "aics"
+  },
+  {
+    "venue": "Proceedings of the 2018 \\textbraceleftIEEE\\textbraceright International Conference on Acoustics",
+    "rule": null
+  },
+  {
+    "venue": "International Conference on User Modeling",
+    "rule": "umap"
+  },
+  {
+    "venue": "Large Scale Kernel Machines",
+    "rule": null
+  },
+  {
+    "venue": "ICEC",
+    "rule": "icec"
+  },
+  {
+    "venue": "Proceedings of the \\textbraceleftIEEE\\textbraceright International Conference on Acoustics",
+    "rule": null
+  },
+  {
+    "venue": "CIARP",
+    "rule": "ciarp"
+  },
+  {
+    "venue": "Computer Vision, Pattern Recognition, Image Processing, and Graphics",
+    "rule": "ncvpripg"
+  },
+  {
+    "venue": "Predicting Structured Data",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of the Machine Learning and Knowledge Discovery in Databases - European Conference",
+    "rule": "ecml-pkdd"
+  },
+  {
+    "venue": "NeurIPS Autodiff Workshop",
+    "rule": "neurips-autodiff"
+  },
+  {
+    "venue": "ICVGIP",
+    "rule": "icvgip"
+  },
+  {
+    "venue": "International Conference on Genetic Algorithms",
+    "rule": "icga"
+  },
+  {
+    "venue": "OTM",
+    "rule": "otm"
+  },
+  {
+    "venue": "PVLDB",
+    "rule": null
+  },
+  {
+    "venue": "Summer School on Machine Learning",
+    "rule": null
+  },
+  {
+    "venue": "SPAWC",
+    "rule": "spawc"
+  },
+  {
+    "venue": "International Conference on Neural Networks",
+    "rule": "icnn"
+  },
+  {
+    "venue": "Optimal Transport",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of the 21st Annual Conference on Learning Theory",
+    "rule": "colt"
+  },
+  {
+    "venue": "Neural Information Processing Systems",
+    "rule": "neurips"
+  },
+  {
+    "venue": "CNIOT",
+    "rule": "cniot"
+  },
+  {
+    "venue": "Proceedings of the 2021 International Conference on Multimedia Retrieval",
+    "rule": "icmr"
+  },
+  {
+    "venue": "PCM",
+    "rule": "pcm"
+  },
+  {
+    "venue": "ICMEW",
+    "rule": "icme-workshops"
+  },
+  {
+    "venue": "CODS-COMAD",
+    "rule": "cods-comad"
+  },
+  {
+    "venue": "FUSION",
+    "rule": "fusion"
+  },
+  {
+    "venue": "ISBI",
+    "rule": "isbi"
+  },
+  {
+    "venue": "2022 the 6th International Conference on Innovation in Artificial Intelligence (ICIAI)",
+    "rule": "iciai"
+  },
+  {
+    "venue": "Proceedings of the 25th International Conference on World Wide Web",
+    "rule": "www"
+  },
+  {
+    "venue": "Parallel Distributed Processing: Explorations in the Microstructure of Cognition: Foundations",
+    "rule": null
+  },
+  {
+    "venue": "EMNLP Workshop",
+    "rule": "emnlp-workshops"
+  },
+  {
+    "venue": "SIGIR Workshop",
+    "rule": "sigir-workshops"
+  },
+  {
+    "venue": "ICPARM",
+    "rule": "icpram"
+  },
+  {
+    "venue": "IMPR",
+    "rule": null
+  },
+  {
+    "venue": "RecSys Workshop",
+    "rule": "recsys-workshops"
+  },
+  {
+    "venue": "Pattern Recognition",
+    "rule": null
+  },
+  {
+    "venue": "Companion Proceedings of the Web Conference 2021",
+    "rule": "www-companion"
+  },
+  {
+    "venue": "KDD Workshop",
+    "rule": "kdd-workshops"
+  },
+  {
+    "venue": "2020 IEEE Conference on Telecommunications, Optics and Computer Science (TOCS)",
+    "rule": "tocs"
+  },
+  {
+    "venue": "2014 8th International Symposium on Medical Information and Communication Technology (ISMICT)",
+    "rule": "ismict"
+  },
+  {
+    "venue": "2018 IEEE International Conference on Internet of Things and Intelligence System (IOTAIS)",
+    "rule": "iotais"
+  },
+  {
+    "venue": "2016 38th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshop",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "The 9th ISCA Speech Synthesis Workshop, SSW 2016, Sunnyvale, CA, USA, September 13-15, 2016",
+    "rule": "ssw"
+  },
+  {
+    "venue": "2019 IEEE/CVF International Conference on Computer Vision Workshop (ICCVW)",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "2008 European Radar Conference",
+    "rule": "eurad"
+  },
+  {
+    "venue": "Proceeding of the 11th Annual International Conference on Mobile Systems, Applications, and Services",
+    "rule": "mobisys"
+  },
+  {
+    "venue": "2019 Computing in Cardiology Conference",
+    "rule": "cinc"
+  },
+  {
+    "venue": "ISMIR",
+    "rule": "ismir"
+  },
+  {
+    "venue": "2006 3rd Annual IEEE Communications Society on Sensor and Ad Hoc Communications and Networks",
+    "rule": "secon"
+  },
+  {
+    "venue": "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops, CVPR Workshops 2022, New Orleans, LA, USA, June 19-20, 2022",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "IEEE/CVF International Conference on Computer Vision Workshops, ICCVW 2021, Montreal, BC, Canada, October 11-17, 2021",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "Proceedings of the 1st Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and the 10th International Joint Conference on Natural Language Processing: System Demonstrations",
+    "rule": "aacl-ijcnlp-demos"
+  },
+  {
+    "venue": "2007 IEEE Radio and Wireless Symposium",
+    "rule": "rws"
+  },
+  {
+    "venue": "2022 16th European Conference on Antennas and Propagation (EuCAP)",
+    "rule": "eucap"
+  },
+  {
+    "venue": "2021 IEEE 17th International Conference on Wearable and Implantable Body Sensor Networks (BSN)",
+    "rule": "bsn"
+  },
+  {
+    "venue": "Proceedings of the 12th USENIX Conference on Networked Systems Design and Implementation",
+    "rule": "nsdi"
+  },
+  {
+    "venue": "2022 IEEE 24th International Workshop on Multimedia Signal Processing (MMSP)",
+    "rule": "mmsp"
+  },
+  {
+    "venue": "42nd Annual International Conference of the IEEE Engineering in Medicine & Biology Society, EMBC 2020, Montreal, QC, Canada, July 20-24, 2020",
+    "rule": "embc"
+  },
+  {
+    "venue": "The Blizzard Challenge 2021",
+    "rule": "blizzard"
+  },
+  {
+    "venue": "Machine Learning for Health",
+    "rule": "ml4h"
+  },
+  {
+    "venue": "2018 IEEE International Conference on Healthcare Informatics (ICHI)",
+    "rule": "ichi"
+  },
+  {
+    "venue": "2019 11th International Conference on Wireless Communications and Signal Processing (WCSP)",
+    "rule": "wcsp"
+  },
+  {
+    "venue": "2017 Computing in Cardiology Conference",
+    "rule": "cinc"
+  },
+  {
+    "venue": "2018 Computing in Cardiology Conference (CinC)",
+    "rule": "cinc"
+  },
+  {
+    "venue": "First Conference on Language Modeling",
+    "rule": "colm"
+  },
+  {
+    "venue": "Findings of the Association for Computational Linguistics: EMNLP 2023",
+    "rule": "emnlp-findings"
+  },
+  {
+    "venue": "Proceedings of the Simplifying Medical Ultrasound - 4th International Workshop",
+    "rule": "smu"
+  },
+  {
+    "venue": "2023 International Conference on Microelectronics (ICM)",
+    "rule": "icm-microelectronics"
+  },
+  {
+    "venue": "2022 12th International Conference on Bioscience, Biochemistry and Bioinformatics",
+    "rule": "icbbb"
+  },
+  {
+    "venue": "USENIX",
+    "rule": null
+  },
+  {
+    "venue": "Advances in Information Retrieval",
+    "rule": "ecir"
+  },
+  {
+    "venue": "Companion Proceedings of the Web Conference",
+    "rule": "www-companion"
+  },
+  {
+    "venue": "2012 6th European Conference on Antennas and Propagation (EUCAP)",
+    "rule": "eucap"
+  },
+  {
+    "venue": "2012 World Congress on Information and Communication Technologies",
+    "rule": "wict"
+  },
+  {
+    "venue": "Machine Learning in Medical Imaging",
+    "rule": "mlmi"
+  },
+  {
+    "venue": "IEEE/CVF Winter Conference on Applications of Computer Vision, WACV 2024, Waikoloa, HI, USA, January 3-8, 2024",
+    "rule": "wacv"
+  },
+  {
+    "venue": "2020 Computing in Cardiology",
+    "rule": "cinc"
+  },
+  {
+    "venue": "Proceedings of the Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support - Third International Workshop",
+    "rule": "dlmia-ml-cds"
+  },
+  {
+    "venue": "IEEE/CVF International Conference on Computer Vision, ICCV 2023 - Workshops, Paris, France, October 2-6, 2023",
+    "rule": "iccv-workshops"
+  },
+  {
+    "venue": "2015 IEEE Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2018 Information Theory and Applications Workshop, ITA 2018, San Diego, CA, USA, February 11-16, 2018",
+    "rule": "ita"
+  },
+  {
+    "venue": "2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "Proceedings of the 1st International Workshop on Affect & Sentiment in Multimedia",
+    "rule": "asm"
+  },
+  {
+    "venue": "2020 International Conference on Emerging Trends in Smart Technologies (ICETST)",
+    "rule": "icetst"
+  },
+  {
+    "venue": "MuSe@MM 2022: Proceedings of the 3rd International on Multimodal Sentiment Analysis Workshop and Challenge, Lisboa, Portugal, 10 October 2022",
+    "rule": "muse"
+  },
+  {
+    "venue": "2008 IEEE MTT-S International Microwave Symposium Digest",
+    "rule": "ims"
+  },
+  {
+    "venue": "Medical Imaging with Deep Learning",
+    "rule": "midl"
+  },
+  {
+    "venue": "2024 IEEE/MTT-S International Microwave Symposium - IMS 2024",
+    "rule": "ims"
+  },
+  {
+    "venue": "Proceedings of the 19th USENIX Conference on Security",
+    "rule": "usenix-security"
+  },
+  {
+    "venue": "2020 42nd Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "Image Analysis and Recognition",
+    "rule": "iciar"
+  },
+  {
+    "venue": "Targets and Backgrounds: Characterization and Representation V",
+    "rule": "targets-backgrounds"
+  },
+  {
+    "venue": "2015 37th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2019 International Conference on Engineering and Telecommunication (EnT)",
+    "rule": "ent"
+  },
+  {
+    "venue": "2024 8th International Conference on Communication and Information Systems (ICCIS)",
+    "rule": "iccis"
+  },
+  {
+    "venue": "2024 16th International Conference on Wireless Communications and Signal Processing (WCSP)",
+    "rule": "wcsp"
+  },
+  {
+    "venue": "International Conference on Wireless Communications and Signal Processing",
+    "rule": "wcsp"
+  },
+  {
+    "venue": "2020 IEEE International Conference on Electronics, Computing and Communication Technologies (CONECCT)",
+    "rule": "conecct"
+  },
+  {
+    "venue": "2009 International Conference on Intelligent Sensors, Sensor Networks and Information Processing (ISSNIP)",
+    "rule": "issnip"
+  },
+  {
+    "venue": "2019 International Conference on Robotics,Electrical and Signal Processing Techniques (ICREST)",
+    "rule": "icrest"
+  },
+  {
+    "venue": "IEEE International Conference on Multimedia and Expo",
+    "rule": "icme"
+  },
+  {
+    "venue": "2005 IEEE Engineering in Medicine and Biology 27th Annual Conference",
+    "rule": "embc"
+  },
+  {
+    "venue": "2018 IEEE/MTT-S International Microwave Symposium - IMS",
+    "rule": "ims"
+  },
+  {
+    "venue": "2006 International Conference of the IEEE Engineering in Medicine and Biology Society",
+    "rule": "embc"
+  },
+  {
+    "venue": "2007 IEEE/MTT-S International Microwave Symposium",
+    "rule": "ims"
+  },
+  {
+    "venue": "2006 IEEE Radio and Wireless Symposium",
+    "rule": "rws"
+  },
+  {
+    "venue": "2015 49th Annual Conference on Information Sciences and Systems (CISS)",
+    "rule": "ciss"
+  },
+  {
+    "venue": "Findings of the Association for Computational Linguistics, ACL 2025, Vienna, Austria, July 27 - August 1, 2025",
+    "rule": "acl-findings"
+  },
+  {
+    "venue": "2022 IEEE MTT-S International Microwave Biomedical Conference",
+    "rule": "imbioc"
+  },
+  {
+    "venue": "2011 IEEE Sensors Applications Symposium",
+    "rule": "sensors-applications"
+  },
+  {
+    "venue": "IEEE Conference on Computer Communications",
+    "rule": "infocom"
+  },
+  {
+    "venue": "2024 IEEE Radio and Wireless Symposium (RWS)",
+    "rule": "rws"
+  },
+  {
+    "venue": "2023 IEEE EMBS International Conference on Biomedical and Health Informatics (BHI)",
+    "rule": "bhi"
+  },
+  {
+    "venue": "Proceedings of the Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+    "rule": "embc"
+  },
+  {
+    "venue": "Proceedings of the SIGCHI Conference on Human Factors in Computing Systems",
+    "rule": "chi"
+  },
+  {
+    "venue": "2020 IEEE 9th International Conference on Communication Systems and Network Technologies (CSNT)",
+    "rule": "csnt"
+  },
+  {
+    "venue": "IEEE MTT-S International Microwave Symposium Digest, 2003",
+    "rule": "ims"
+  },
+  {
+    "venue": "2001 IEEE MTT-S International Microwave Sympsoium Digest (Cat. No.01CH37157)",
+    "rule": "ims"
+  },
+  {
+    "venue": "The Record of the 1993 IEEE National Radar Conference",
+    "rule": "radar"
+  },
+  {
+    "venue": "2006 IEEE MTT-S International Microwave Symposium Digest",
+    "rule": "ims"
+  },
+  {
+    "venue": "2009 IEEE Radar Conference",
+    "rule": "radar"
+  },
+  {
+    "venue": "2013 35th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2019 20th International Radar Symposium (IRS)",
+    "rule": "irs"
+  },
+  {
+    "venue": "2001 Conference Proceedings of the 23rd Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+    "rule": "embc"
+  },
+  {
+    "venue": "2008 IEEE Region 8 International Conference on Computational Technologies in Electrical and Electronics Engineering",
+    "rule": "sibircon"
+  },
+  {
+    "venue": "2019 93rd ARFTG Microwave Measurement Conference (ARFTG)",
+    "rule": "arftg"
+  },
+  {
+    "venue": "2020 IEEE Radio and Wireless Symposium (RWS)",
+    "rule": "rws"
+  },
+  {
+    "venue": "2007 29th Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+    "rule": "embc"
+  },
+  {
+    "venue": "2023 11th International IEEE/EMBS Conference on Neural Engineering (NER)",
+    "rule": "ner"
+  },
+  {
+    "venue": "Proceedings of the 3rd Machine Learning for Health Symposium",
+    "rule": "ml4h"
+  },
+  {
+    "venue": "2018 40th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "Proceedings of the 4th Machine Learning for Healthcare Conference",
+    "rule": "mlhc"
+  },
+  {
+    "venue": "2024 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "2018 IEEE Spoken Language Technology Workshop (SLT)",
+    "rule": "slt"
+  },
+  {
+    "venue": "9th International Conference on Learning RepreseaInternational Conference on Learning Representationsntations",
+    "rule": null
+  },
+  {
+    "venue": "5th International Conference on Consumer Electronics and Computer Engineering",
+    "rule": "iccece"
+  },
+  {
+    "venue": "Proceedings of the 10th ACM Workshop on Artificial Intelligence and Security",
+    "rule": "aisec"
+  },
+  {
+    "venue": "Conference on Health, Inference, and Learning, UC Berkeley, Berkeley, USA, 25-27 June 2025",
+    "rule": "chil"
+  },
+  {
+    "venue": "Kalman Filtering and Neural Networks",
+    "rule": null
+  },
+  {
+    "venue": "Proceedings of the Machine Learning for Health NeurIPS Workshop",
+    "rule": "ml4h-workshop"
+  },
+  {
+    "venue": "Proceedings of the Machine Learning for Health Workshop",
+    "rule": "ml4h-workshop"
+  },
+  {
+    "venue": "2021 18th European Radar Conference (EuRAD)",
+    "rule": "eurad"
+  },
+  {
+    "venue": "2021 13th International Symposium on Antennas, Propagation and EM Theory (ISAPE)",
+    "rule": "isape"
+  },
+  {
+    "venue": "2022 IEEE International Instrumentation and Measurement Technology Conference (I2MTC)",
+    "rule": "i2mtc"
+  },
+  {
+    "venue": "2024 International Conference on Communication, Computer Sciences and Engineering (IC3SE)",
+    "rule": "ic3se"
+  },
+  {
+    "venue": "2023 45th Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "2023 IEEE MTT-S International Wireless Symposium (IWS)",
+    "rule": "iws"
+  },
+  {
+    "venue": "2023 IEEE Statistical Signal Processing Workshop (SSP)",
+    "rule": "ssp"
+  },
+  {
+    "venue": "2024 IEEE International Symposium on Medical Measurements and Applications (MeMeA)",
+    "rule": "memea"
+  },
+  {
+    "venue": "Proceedings of the 22nd Annual International Conference on Mobile Systems, Applications and Services",
+    "rule": "mobisys"
+  },
+  {
+    "venue": "2025 47th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+    "rule": "embc"
+  },
+  {
+    "venue": "Proceedings of the 5th Machine Learning for Healthcare Conference",
+    "rule": "mlhc"
+  },
+  {
+    "venue": "Proceedings of the 5th International Conference on Artificial Intelligence and Computer Engineering",
+    "rule": "aice"
+  },
+  {
+    "venue": "2019 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "MIPPR 2013: PATTERN RECOGNITION AND COMPUTER VISION",
+    "rule": "mippr"
+  },
+  {
+    "venue": "2019 IEEE Custom Integrated Circuits Conference (CICC)",
+    "rule": "cicc"
+  },
+  {
+    "venue": "2021 IEEE 11th Annual Computing and Communication Workshop and Conference (CCWC)",
+    "rule": "ccwc"
+  },
+  {
+    "venue": "2020 International SAUPEC/RobMech/PRASA Conference",
+    "rule": "saupec-robmech-prasa"
+  },
+  {
+    "venue": "2020 IEEE Southwest Symposium on Image Analysis and Interpretation (SSIAI)",
+    "rule": "ssiai"
+  },
+  {
+    "venue": "Eleventh International Conference on Machine Vision (ICMV 2018)",
+    "rule": "icmv"
+  },
+  {
+    "venue": "Proceedings of the IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "2019 International Conference on Data Mining Workshops (ICDMW)",
+    "rule": "icdm-workshops"
+  },
+  {
+    "venue": "2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2023 IEEE Conference on Artificial Intelligence (CAI)",
+    "rule": "cai"
+  },
+  {
+    "venue": "2021 IEEE 11th International Conference on Electronics Information and Emergency Communication (ICEIEC)2021 IEEE 11th International Conference on Electronics Information and Emergency Communication (ICEIEC)",
+    "rule": "iceiec"
+  },
+  {
+    "venue": "2021 International Conference on Information and Communication Technology Convergence (ICTC)",
+    "rule": "ictc"
+  },
+  {
+    "venue": "Proceedings of the 2022 4th International Conference on Video, Signal and Image Processing",
+    "rule": "vsip"
+  },
+  {
+    "venue": "2020 International Conference on Artificial Intelligence and Signal Processing (AISP)",
+    "rule": "aisp"
+  },
+  {
+    "venue": "2024 IEEE Space, Aerospace and Defence Conference (SPACE)",
+    "rule": "space"
+  },
+  {
+    "venue": "International Conference on Content-Based Multimedia Indexing",
+    "rule": "cbmi"
+  },
+  {
+    "venue": "2021 IEEE International Geoscience and Remote Sensing Symposium",
+    "rule": "igarss"
+  },
+  {
+    "venue": "2024 IEEE Aerospace Conference",
+    "rule": "aerospace"
+  },
+  {
+    "venue": "2024 5th International Conference on Geology, Mapping and Remote Sensing (ICGMRS)",
+    "rule": "icgmrs"
+  },
+  {
+    "venue": "2024 IEEE International Conference on Electronics, Computing and Communication Technologies (CONECCT)",
+    "rule": "conecct"
+  },
+  {
+    "venue": "2024 27th International Conference on Information Fusion (FUSION)",
+    "rule": "fusion"
+  },
+  {
+    "venue": "2022 IEEE International Conference on Electronics, Computing and Communication Technologies (CONECCT)",
+    "rule": "conecct"
+  },
+  {
+    "venue": "Fourth International Conference on Photonics and Optical Engineering",
+    "rule": "icpoe"
+  },
+  {
+    "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "2023 IEEE 13th International Conference on CYBER Technology in Automation, Control, and Intelligent Systems (CYBER)",
+    "rule": "cyber"
+  },
+  {
+    "venue": "2023 28th International Conference on Automation and Computing",
+    "rule": "icac-automation"
+  },
+  {
+    "venue": "Probabilistic and Causal Inference: The Works of Judea Pearl",
+    "rule": null
+  },
+  {
+    "venue": "2025 10th International Conference on Cloud Computing and Big Data Analytics (ICCCBDA)",
+    "rule": "icccbda"
+  },
+  {
+    "venue": "Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support",
+    "rule": "dlmia-ml-cds"
+  },
+  {
+    "venue": "2025 21st IEEE International Conference on Mechatronic and Embedded Systems and Applications (MESA)",
+    "rule": "mesa"
+  },
+  {
+    "venue": "2025 IEEE/CIC International Conference on Communications in China (ICCC)",
+    "rule": "iccc-china"
+  },
+  {
+    "venue": "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops",
+    "rule": "cvpr-workshops"
+  },
+  {
+    "venue": "CoLM",
+    "rule": "colm"
+  },
+  {
+    "venue": "Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+    "rule": "wacv"
+  },
+  {
+    "venue": "ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences",
+    "rule": null
+  },
+  {
+    "venue": "2016 IEEE International Geoscience and Remote Sensing Symposium (IGARSS)",
+    "rule": "igarss"
+  },
+  {
+    "venue": "2023 IEEE 26th International Conference on Intelligent Transportation Systems (ITSC)",
+    "rule": "itsc"
+  },
+  {
+    "venue": "2020 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+    "rule": "cvpr-workshops"
+  }
+]

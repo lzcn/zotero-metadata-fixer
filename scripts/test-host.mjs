@@ -137,6 +137,14 @@ startup = async function(data) {
       await cancelling;
       result.cancellation = {cancelled: progressState.cancelled, status: progressState.rows[0].status};
       if (!result.cancellation.cancelled || result.cancellation.status !== 'Cancelled') throw new Error('Closing a running dialog did not cancel');
+      const buttonCancelling = MLRuntime.run(win, 'lint');
+      const cancelDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.getElementById('actions')?.children.length));
+      cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
+      await buttonCancelling;
+      result.nativeCancellation = progressState.cancelled && !cancelDialog.closed;
+      if (!result.nativeCancellation) throw new Error('Native Cancel command did not retain cancelled results');
+      cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
+      await wait(() => cancelDialog.closed);
       const preprint = new Zotero.Item('preprint');
       preprint.setField('title', 'Host Test Preprint');
       preprint.setField('DOI', '10.48550/arXiv.2501.01234');
@@ -273,18 +281,75 @@ startup = async function(data) {
         await paper.saveTx();
         batch.push(paper);
       }
-      await win.ZoteroPane.itemsView.selectItems(batch.map(paper => paper.id));
+      await win.ZoteroPane.selectItem(batch[0].id);
       MLRuntime.retriever = {retrieveCurrent:async paper => {
         await new Promise(resolve => setTimeout(resolve, 200));
         if (paper.id === batch[1].id) throw new Error('Fixture failure');
         return {metadata:{...paper.toJSON(),abstractNote:'Filled in batch'},source:'DOI',warnings:[]};
       }};
-      await MLRuntime.run(win, 'lint');
+      const batchRunning = MLRuntime.run(win, 'lint');
       const batchDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.querySelector('tbody')));
+      await win.ZoteroPane.itemsView.selectItems(batch.map(paper => paper.id));
+      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'lint');
       const batchDoc = batchDialog.document;
-      result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),rows:batchDoc.querySelectorAll('tbody tr').length,buttons:batchDoc.querySelectorAll('#actions button').length,width:batchDialog.outerWidth,height:batchDialog.outerHeight};
-      if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.rows !== 3 || result.batch.buttons !== 1 || batchDoc.querySelector('details,progress') || batchDoc.querySelector('h1,#description') || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native minimal batch UI or failure isolation failed');
-      for (const window of [...MLRuntime.dialogs]) window.close();
+      const cancelButton = batchDoc.getElementById('actions').firstElementChild;
+      result.queue = {total:progressState.total,windows:[...MLRuntime.dialogs].filter(window => !window.closed).length,waiting:progressState.rows.filter(row => row.status === 'Waiting').length,native:cancelButton.namespaceURI === 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',appearance:batchDialog.getComputedStyle(cancelButton).MozAppearance};
+      if (result.queue.total !== 3 || result.queue.windows !== 1 || !result.queue.waiting || !result.queue.native || cancelButton.getAttribute('label') !== 'Cancel' || cancelButton.getBoundingClientRect().width < 40) throw new Error('Shared queue or native Cancel button failed');
+      await wait(() => progressState.rows[0].status === 'Updated' && !batchDialog.closed);
+      if (batchDoc.querySelectorAll('tbody tr').length !== 3) throw new Error('Queue did not retain completed and waiting rows');
+      await batchRunning;
+      result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),closed:batchDialog.closed};
+      if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
+      if (batchDoc.getElementById('actions').firstElementChild.getAttribute('label') !== 'Close') throw new Error('Finished queue did not offer Close');
+      await win.ZoteroPane.selectItem(batch[0].id);
+      await MLRuntime.run(win, 'lint');
+      if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('tbody tr').length !== 4) throw new Error('Completed window was not reused with history retained');
+      batchDoc.getElementById('actions').firstElementChild.dispatchEvent(new batchDialog.Event('command'));
+      await wait(() => batchDialog.closed);
+      const dmlnet = new Zotero.Item('journalArticle');
+      const dmlTitle = 'DMLNet: Differential Saliency with Multi-Domain Learning Network for Moving Infrared Small Target Detection';
+      dmlnet.setField('title', dmlTitle);
+      dmlnet.setField('url', 'https://ieeexplore.ieee.org/abstract/document/11592444/');
+      dmlnet.setField('publicationTitle', 'IEEE Geoscience and Remote Sensing Letters');
+      dmlnet.setField('date', '2026');
+      dmlnet.setCreators([{firstName:'Zhenming',lastName:'Peng',creatorType:'author'}]);
+      await dmlnet.saveTx();
+      await win.ZoteroPane.selectItem(dmlnet.id);
+      MLRuntime.finder = {find:async (paper, preprint, resolve) => {
+        const candidate = {source:'URL',title:dmlTitle,url:dmlnet.getField('url')};
+        if (!await resolve(candidate)) throw new Error('DMLNet metadata rejected');
+        return {candidates:[candidate],warnings:[],answered:1};
+      }};
+      MLRuntime.retriever = {candidate:async () => ({itemType:'journalArticle',title:'DMLNet: Differential Saliency With Multidomain Learning Network for Moving Infrared Small-Target Detection',DOI:'10.1109/LGRS.2026.3708839',publicationTitle:dmlnet.getField('publicationTitle'),creators:[{firstName:'Yi',lastName:'Rong',creatorType:'author'},...dmlnet.getCreators()]})};
+      await MLRuntime.run(win, 'lint');
+      result.dmlnet = {DOI:dmlnet.getField('DOI'),titlePreserved:dmlnet.getField('title') === dmlTitle,status:progressState.rows[0].status};
+      if (result.dmlnet.DOI !== '10.1109/LGRS.2026.3708839' || !result.dmlnet.titlePreserved || result.dmlnet.status !== 'Updated') throw new Error('DMLNet compound-word DOI repair failed');
+      select.value = 'standard';
+      select.dispatchEvent(new settings.Event('command'));
+      result.supplementaryConferences = [];
+      for (const [venue, expected] of [
+        ['2024 IEEE International Geoscience and Remote Sensing Symposium', 'IEEE International Geoscience and Remote Sensing Symposium'],
+        ['2025 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)', 'IEEE/CVF Winter Conference on Applications of Computer Vision'],
+        ['2024 46th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)', 'Annual International Conference of the IEEE Engineering in Medicine and Biology Society'],
+        ['CVPRW', 'IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops'],
+        ['ICCV 2023 Workshops', 'IEEE/CVF International Conference on Computer Vision Workshops'],
+        ['EACL', 'Conference of the European Chapter of the Association for Computational Linguistics'],
+      ]) {
+        const paper = new Zotero.Item('bookSection');
+        paper.setField('title', 'Supplementary Conference Host Paper');
+        paper.setField('bookTitle', venue);
+        paper.setField('DOI', '10.1000/supplementary');
+        paper.setField('date', '2024');
+        paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'},{firstName:'Volume',lastName:'Editor',creatorType:'editor'}]);
+        await paper.saveTx();
+        const id = paper.id, key = paper.key;
+        await win.ZoteroPane.selectItem(id);
+        MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:paper.toJSON(),source:'DOI',warnings:[]})};
+        await MLRuntime.run(win, 'lint');
+        if (paper.id !== id || paper.key !== key || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expected || paper.getCreators().some(creator => creator.creatorTypeID === Zotero.CreatorTypes.getID('editor')) || paper.getField('date') !== '2024') throw new Error('Supplementary conference repair failed: ' + venue);
+        result.supplementaryConferences.push(paper.getField('proceedingsTitle'));
+      }
       select.value = 'short';
       select.dispatchEvent(new settings.Event('command'));
       if (MLRuntime.preferenceData().settings.publicationStyle !== 'short') throw new Error('Short naming setting was not saved');
@@ -293,7 +358,7 @@ startup = async function(data) {
       if (MLRuntime.preferenceData().settings.formatPublication) throw new Error('Retrieved setting was not saved');
       const configured = MLRuntime.preferenceData().settings;
       result.conferenceRules = {count:configured.rules.length,visible:!!settings.document.getElementById('ml-conference-rules')};
-      if (result.conferenceRules.count !== 386 || result.conferenceRules.visible) throw new Error('Internal conference rules are missing or advanced configuration is exposed');
+      if (result.conferenceRules.count !== 513 || result.conferenceRules.visible) throw new Error('Internal conference rules are missing or advanced configuration is exposed');
       await win.ZoteroPane.selectItem(item.id);
       const originalRequest = MLRuntime.request.bind(MLRuntime);
       let requested = false;

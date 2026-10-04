@@ -50,3 +50,46 @@ test("conflicting DOI records are skipped; a server-linked publication takes pre
     candidate.doi,
   );
 });
+
+test("DMLNet compound-word typography matches without weakening author or DOI checks", () => {
+  const paper = new FakeItem();
+  paper.data.title =
+    "DMLNet: Differential Saliency with Multi-Domain Learning Network for Moving Infrared Small Target Detection";
+  paper.data.date = "2026-00-00 2026";
+  paper.data.creators = [
+    { firstName: "Zhenming", lastName: "Peng", creatorType: "author" },
+  ];
+  const record = {
+    source: "Crossref",
+    title:
+      "DMLNet: Differential Saliency With Multidomain Learning Network for Moving Infrared Small-Target Detection",
+    authors: ["Yi Rong", "Junhai Luo", "Zhenming Peng"],
+    venue: "IEEE Geoscience and Remote Sensing Letters",
+    year: 2026,
+    doi: "10.1109/LGRS.2026.3708839",
+  };
+  assert.equal(selectPublication(paper, [record]).doi, record.doi);
+  assert.equal(
+    selectPublication(paper, [{ ...record, authors: ["Someone Else"] }]),
+    undefined,
+  );
+  assert.equal(
+    selectPublication(paper, [
+      record,
+      { ...record, doi: "10.1109/LGRS.2026.9999999" },
+    ]),
+    undefined,
+  );
+  assert.equal(
+    selectPublication(paper, [
+      {
+        ...record,
+        title: record.title.replace(
+          "Moving Infrared Small-Target",
+          "Visible Large-Object",
+        ),
+      },
+    ]),
+    undefined,
+  );
+});

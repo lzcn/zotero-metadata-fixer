@@ -11,8 +11,14 @@ export function normalize(value: string): string {
     .trim();
 }
 export function titleScore(a: string, b: string): number {
-  const left = new Set(normalize(a).split(/\s+/).filter(Boolean));
-  const right = new Set(normalize(b).split(/\s+/).filter(Boolean));
+  const normalizedA = normalize(a);
+  const normalizedB = normalize(b);
+  // Publishers can join compound words (Multi-Domain -> Multidomain).
+  // Accept this only when the entire title has the same letters and numbers.
+  const compactA = normalizedA.replace(/\s+/g, "");
+  if (compactA && compactA === normalizedB.replace(/\s+/g, "")) return 1;
+  const left = new Set(normalizedA.split(/\s+/).filter(Boolean));
+  const right = new Set(normalizedB.split(/\s+/).filter(Boolean));
   if (!left.size || !right.size) return 0;
   return (
     (2 * [...left].filter((word) => right.has(word)).length) /

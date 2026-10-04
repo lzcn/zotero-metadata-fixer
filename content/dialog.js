@@ -14,8 +14,13 @@ function done() {
   window.close();
 }
 function button(text, run) {
-  const entry = node("button", text, actions);
-  entry.addEventListener("click", run, false, true);
+  const entry = document.createElementNS(
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    "button",
+  );
+  entry.setAttribute("label", text);
+  actions.appendChild(entry);
+  entry.addEventListener("command", run, false, true);
 }
 function table(columns, parent) {
   const element = node("table", undefined, parent);

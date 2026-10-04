@@ -1,0 +1,2420 @@
+{
+  "id": "library-2026-10-04",
+  "checkedOn": "2026-10-04",
+  "additions": [
+    {
+      "id": "igarss",
+      "acronym": "IGARSS",
+      "name": "IEEE International Geoscience and Remote Sensing Symposium",
+      "aliases": [
+        "IGARSS",
+        "IEEE International Geoscience and Remote Sensing Symposium"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Geoscience and Remote Sensing Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/igarss46834.2022.9883686",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "wacv",
+      "acronym": "WACV",
+      "name": "IEEE/CVF Winter Conference on Applications of Computer Vision",
+      "aliases": [
+        "WACV",
+        "IEEE/CVF Winter Conference on Applications of Computer Vision",
+        "IEEE Winter Conference on Applications of Computer Vision",
+        "Winter Conference on Applications of Computer Vision"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE/CVF Winter Conference on Applications of Computer Vision",
+      "publicationTitleOverride": "",
+      "source": "https://wacv.thecvf.com/Conferences/2026",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cvpr-workshops",
+      "acronym": "CVPRW",
+      "name": "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops",
+      "aliases": [
+        "CVPRW",
+        "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops",
+        "CVPR Workshop",
+        "CVPR Workshops",
+        "Conference on Computer Vision and Pattern Recognition Workshop",
+        "Conference on Computer Vision and Pattern Recognition Workshops"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/cvprw53098.2021.00423",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iccv-workshops",
+      "acronym": "ICCVW",
+      "name": "IEEE/CVF International Conference on Computer Vision Workshops",
+      "aliases": [
+        "ICCVW",
+        "IEEE/CVF International Conference on Computer Vision Workshops",
+        "ICCV Workshop",
+        "ICCV Workshops",
+        "International Conference on Computer Vision Workshop",
+        "International Conference on Computer Vision Workshops"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE/CVF International Conference on Computer Vision Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iccvw.2019.00387",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cinc",
+      "acronym": "CinC",
+      "name": "Computing in Cardiology",
+      "aliases": [
+        "CinC",
+        "Computing in Cardiology",
+        "Computing in Cardiology Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Computing in Cardiology",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.23919/cinc53138.2021.9662687",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "neurips-workshops",
+      "acronym": "NeurIPS Workshops",
+      "name": "Conference on Neural Information Processing Systems Workshops",
+      "aliases": [
+        "NeurIPS Workshops",
+        "NeurIPS Workshop",
+        "NIPS Workshop",
+        "NIPS Workshops",
+        "Conference on Neural Information Processing Systems Workshops"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference on Neural Information Processing Systems Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://neurips.cc/virtual/2024/events/workshop",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iclr-workshops",
+      "acronym": "ICLR Workshops",
+      "name": "International Conference on Learning Representations Workshops",
+      "aliases": [
+        "ICLR Workshops",
+        "International Conference on Learning Representations Workshops",
+        "ICLR Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Learning Representations Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://iclr.cc/Conferences/2024/CallForWorkshops",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ims",
+      "acronym": "IMS",
+      "name": "IEEE MTT-S International Microwave Symposium",
+      "aliases": [
+        "IMS",
+        "IEEE MTT-S International Microwave Symposium",
+        "IEEE/MTT-S International Microwave Symposium",
+        "International Microwave Symposium",
+        "International Microwave Sympsoium"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE MTT-S International Microwave Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/mwsym.2011.5973283",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "umap",
+      "acronym": "UMAP",
+      "name": "ACM Conference on User Modeling, Adaptation and Personalization",
+      "aliases": [
+        "UMAP",
+        "ACM Conference on User Modeling, Adaptation and Personalization",
+        "International Conference on User Modeling"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ACM Conference on User Modeling, Adaptation and Personalization",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3320435.3320464",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "embc",
+      "acronym": "EMBC",
+      "name": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+      "aliases": [
+        "EMBC",
+        "Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+        "Annual International Conference of the IEEE Engineering in Medicine & Biology Society",
+        "International Conference of the IEEE Engineering in Medicine and Biology Society",
+        "IEEE Engineering in Medicine and Biology Annual Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/EMBC53108.2024.10782643",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icml-workshops",
+      "acronym": "ICML Workshops",
+      "name": "International Conference on Machine Learning Workshops",
+      "aliases": [
+        "ICML Workshops",
+        "International Conference on Machine Learning Workshops",
+        "ICML Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Machine Learning Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://icml.cc/Conferences/2024/CallForWorkshops",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "kdd-cup-workshop",
+      "acronym": "KDD Cup and Workshop",
+      "name": "KDD Cup and Workshop",
+      "aliases": ["KDD Cup and Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "KDD Cup and Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://www.kdd.org/kdd-cup",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "eacl",
+      "acronym": "EACL",
+      "name": "Conference of the European Chapter of the Association for Computational Linguistics",
+      "aliases": [
+        "EACL",
+        "Conference of the European Chapter of the Association for Computational Linguistics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference of the European Chapter of the Association for Computational Linguistics",
+      "publicationTitleOverride": "",
+      "source": "https://eacl.org/conferences/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aaai-workshops",
+      "acronym": "AAAI Workshops",
+      "name": "AAAI Conference on Artificial Intelligence Workshops",
+      "aliases": [
+        "AAAI Workshops",
+        "AAAI Workshop",
+        "AAAI Conference on Artificial Intelligence Workshops"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "AAAI Conference on Artificial Intelligence Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://aaai.org/conference/aaai/aaai-25/workshops/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mipr",
+      "acronym": "MIPR",
+      "name": "IEEE Conference on Multimedia Information Processing and Retrieval",
+      "aliases": [
+        "MIPR",
+        "IEEE Conference on Multimedia Information Processing and Retrieval"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Conference on Multimedia Information Processing and Retrieval",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/mipr.2019.00095",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "bigmm",
+      "acronym": "BigMM",
+      "name": "IEEE International Conference on Multimedia Big Data",
+      "aliases": [
+        "BigMM",
+        "IEEE International Conference on Multimedia Big Data"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Multimedia Big Data",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/bigmm50055.2020.00043",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "multitemp",
+      "acronym": "MultiTemp",
+      "name": "International Workshop on the Analysis of Multitemporal Remote Sensing Images",
+      "aliases": [
+        "MultiTemp",
+        "International Workshop on the Analysis of Multitemporal Remote Sensing Images"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Workshop on the Analysis of Multitemporal Remote Sensing Images",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/multi-temp.2019.8866943",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icdm-workshops",
+      "acronym": "ICDMW",
+      "name": "IEEE International Conference on Data Mining Workshops",
+      "aliases": [
+        "ICDMW",
+        "IEEE International Conference on Data Mining Workshops",
+        "International Conference on Data Mining Workshops"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Data Mining Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icdmw.2009.54",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "itcs",
+      "acronym": "ITCS",
+      "name": "Innovations in Theoretical Computer Science",
+      "aliases": ["ITCS", "Innovations in Theoretical Computer Science"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Innovations in Theoretical Computer Science",
+      "publicationTitleOverride": "",
+      "source": "https://drops.dagstuhl.de/entities/volume/LIPIcs-volume-94",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "asilomar",
+      "acronym": "Asilomar",
+      "name": "Asilomar Conference on Signals, Systems, and Computers",
+      "aliases": [
+        "Asilomar",
+        "Asilomar Conference on Signals, Systems, and Computers"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Asilomar Conference on Signals, Systems, and Computers",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/acssc.2018.8645416",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "dsw",
+      "acronym": "DSW",
+      "name": "IEEE Data Science Workshop",
+      "aliases": ["DSW", "IEEE Data Science Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Data Science Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/dsw.2019.8755595",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "biosig",
+      "acronym": "BIOSIG",
+      "name": "International Conference of the Biometrics Special Interest Group",
+      "aliases": [
+        "BIOSIG",
+        "International Conference of the Biometrics Special Interest Group"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference of the Biometrics Special Interest Group",
+      "publicationTitleOverride": "",
+      "source": "https://biosig.de/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aics",
+      "acronym": "AICS",
+      "name": "Irish Conference on Artificial Intelligence and Cognitive Science",
+      "aliases": [
+        "AICS",
+        "Irish Conference on Artificial Intelligence and Cognitive Science"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Irish Conference on Artificial Intelligence and Cognitive Science",
+      "publicationTitleOverride": "",
+      "source": "https://publications.scss.tcd.ie/tech-reports/reports.05/TCD-CS-2005-32.pdf",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icec",
+      "acronym": "ICEC",
+      "name": "International Conference on Electronic Commerce",
+      "aliases": ["ICEC", "International Conference on Electronic Commerce"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Electronic Commerce",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10/gjk86s",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ciarp",
+      "acronym": "CIARP",
+      "name": "Iberoamerican Congress on Pattern Recognition",
+      "aliases": ["CIARP", "Iberoamerican Congress on Pattern Recognition"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Iberoamerican Congress on Pattern Recognition",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1007/978-3-642-33275-3_2",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icvgip",
+      "acronym": "ICVGIP",
+      "name": "Indian Conference on Computer Vision, Graphics and Image Processing",
+      "aliases": [
+        "ICVGIP",
+        "Indian Conference on Computer Vision, Graphics and Image Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Indian Conference on Computer Vision, Graphics and Image Processing",
+      "publicationTitleOverride": "",
+      "source": "https://icvgip2024.iiitb.ac.in/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "otm",
+      "acronym": "OTM",
+      "name": "On the Move to Meaningful Internet Systems",
+      "aliases": ["OTM", "On the Move to Meaningful Internet Systems"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "On the Move to Meaningful Internet Systems",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1007/978-3-540-30468-5_31",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icnn",
+      "acronym": "ICNN",
+      "name": "IEEE International Conference on Neural Networks",
+      "aliases": [
+        "ICNN",
+        "IEEE International Conference on Neural Networks",
+        "International Conference on Neural Networks"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Neural Networks",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icnn.1993.298591",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cniot",
+      "acronym": "CNIOT",
+      "name": "International Conference on Computing, Networks and Internet of Things",
+      "aliases": [
+        "CNIOT",
+        "International Conference on Computing, Networks and Internet of Things"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Computing, Networks and Internet of Things",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3398329.3398359",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "pcm",
+      "acronym": "PCM",
+      "name": "Pacific-Rim Conference on Multimedia",
+      "aliases": ["PCM", "Pacific-Rim Conference on Multimedia"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Pacific-Rim Conference on Multimedia",
+      "publicationTitleOverride": "",
+      "source": "https://link.springer.com/book/10.1007/978-3-030-00776-8",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icme-workshops",
+      "acronym": "ICMEW",
+      "name": "IEEE International Conference on Multimedia and Expo Workshops",
+      "aliases": [
+        "ICMEW",
+        "IEEE International Conference on Multimedia and Expo Workshops",
+        "ICME Workshops",
+        "ICME Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Multimedia and Expo Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icmew.2018.8551545",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cods-comad",
+      "acronym": "CODS-COMAD",
+      "name": "Joint International Conference on Data Science and Management of Data",
+      "aliases": [
+        "CODS-COMAD",
+        "Joint International Conference on Data Science and Management of Data"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Joint International Conference on Data Science and Management of Data",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3493700.3493737",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "fusion",
+      "acronym": "FUSION",
+      "name": "International Conference on Information Fusion",
+      "aliases": ["FUSION", "International Conference on Information Fusion"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Information Fusion",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.23919/icif.2018.8455242",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "isbi",
+      "acronym": "ISBI",
+      "name": "IEEE International Symposium on Biomedical Imaging",
+      "aliases": ["ISBI", "IEEE International Symposium on Biomedical Imaging"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Symposium on Biomedical Imaging",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/isbi.2006.1624853",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iciai",
+      "acronym": "ICIAI",
+      "name": "International Conference on Innovation in Artificial Intelligence",
+      "aliases": [
+        "ICIAI",
+        "International Conference on Innovation in Artificial Intelligence"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Innovation in Artificial Intelligence",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3529466.3529472",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "emnlp-workshops",
+      "acronym": "EMNLP Workshops",
+      "name": "Conference on Empirical Methods in Natural Language Processing Workshops",
+      "aliases": [
+        "EMNLP Workshops",
+        "Conference on Empirical Methods in Natural Language Processing Workshops",
+        "EMNLP Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference on Empirical Methods in Natural Language Processing Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://2023.emnlp.org/program/workshops/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "sigir-workshops",
+      "acronym": "SIGIR Workshops",
+      "name": "International ACM SIGIR Conference on Research and Development in Information Retrieval Workshops",
+      "aliases": [
+        "SIGIR Workshops",
+        "International ACM SIGIR Conference on Research and Development in Information Retrieval Workshops",
+        "SIGIR Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International ACM SIGIR Conference on Research and Development in Information Retrieval Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://sigir.org/sigir2024/workshops.html",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icpram",
+      "acronym": "ICPRAM",
+      "name": "International Conference on Pattern Recognition Applications and Methods",
+      "aliases": [
+        "ICPRAM",
+        "International Conference on Pattern Recognition Applications and Methods",
+        "ICPARM"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Pattern Recognition Applications and Methods",
+      "publicationTitleOverride": "",
+      "source": "https://www.scitepress.org/papers/2018/65445/65445.pdf",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "recsys-workshops",
+      "acronym": "RecSys Workshops",
+      "name": "ACM Conference on Recommender Systems Workshops",
+      "aliases": [
+        "RecSys Workshops",
+        "ACM Conference on Recommender Systems Workshops",
+        "RecSys Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ACM Conference on Recommender Systems Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://recsys.acm.org/recsys24/workshops/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "www-companion",
+      "acronym": "WWW Companion",
+      "name": "Companion Proceedings of the Web Conference",
+      "aliases": [
+        "WWW Companion",
+        "Companion Proceedings of the Web Conference",
+        "The Web Conference Companion"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Companion Proceedings of the Web Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3442442.3452327",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "kdd-workshops",
+      "acronym": "KDD Workshops",
+      "name": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining Workshops",
+      "aliases": [
+        "KDD Workshops",
+        "ACM SIGKDD Conference on Knowledge Discovery and Data Mining Workshops",
+        "KDD Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining Workshops",
+      "publicationTitleOverride": "",
+      "source": "https://kdd2024.kdd.org/workshops/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "tocs",
+      "acronym": "TOCS",
+      "name": "IEEE Conference on Telecommunications, Optics and Computer Science",
+      "aliases": [
+        "TOCS",
+        "IEEE Conference on Telecommunications, Optics and Computer Science"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Conference on Telecommunications, Optics and Computer Science",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/tocs50858.2020.9339690",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ismict",
+      "acronym": "ISMICT",
+      "name": "International Symposium on Medical Information and Communication Technology",
+      "aliases": [
+        "ISMICT",
+        "International Symposium on Medical Information and Communication Technology"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Symposium on Medical Information and Communication Technology",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ismict.2014.6825206",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iotais",
+      "acronym": "IOTAIS",
+      "name": "IEEE International Conference on Internet of Things and Intelligence System",
+      "aliases": [
+        "IOTAIS",
+        "IEEE International Conference on Internet of Things and Intelligence System"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Internet of Things and Intelligence System",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iotais.2018.8600891",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ssw",
+      "acronym": "SSW",
+      "name": "ISCA Speech Synthesis Workshop",
+      "aliases": ["SSW", "ISCA Speech Synthesis Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ISCA Speech Synthesis Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://www.isca-archive.org/ssw_2016/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "eurad",
+      "acronym": "EuRAD",
+      "name": "European Radar Conference",
+      "aliases": ["EuRAD", "European Radar Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "European Radar Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.23919/eurad50154.2022.9784585",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ismir",
+      "acronym": "ISMIR",
+      "name": "International Society for Music Information Retrieval Conference",
+      "aliases": [
+        "ISMIR",
+        "International Society for Music Information Retrieval Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Society for Music Information Retrieval Conference",
+      "publicationTitleOverride": "",
+      "source": "https://ismir.net/conferences/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "rws",
+      "acronym": "RWS",
+      "name": "IEEE Radio and Wireless Symposium",
+      "aliases": ["RWS", "IEEE Radio and Wireless Symposium"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Radio and Wireless Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/rws.2007.351823",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "eucap",
+      "acronym": "EuCAP",
+      "name": "European Conference on Antennas and Propagation",
+      "aliases": ["EuCAP", "European Conference on Antennas and Propagation"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "European Conference on Antennas and Propagation",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.23919/eucap53622.2022.9769403",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "bsn",
+      "acronym": "BSN",
+      "name": "IEEE International Conference on Wearable and Implantable Body Sensor Networks",
+      "aliases": [
+        "BSN",
+        "IEEE International Conference on Wearable and Implantable Body Sensor Networks"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Wearable and Implantable Body Sensor Networks",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/bsn51625.2021.9507020",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mmsp",
+      "acronym": "MMSP",
+      "name": "IEEE International Workshop on Multimedia Signal Processing",
+      "aliases": [
+        "MMSP",
+        "IEEE International Workshop on Multimedia Signal Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Workshop on Multimedia Signal Processing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/mmsp55362.2022.9948797",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "blizzard",
+      "acronym": "Blizzard Challenge",
+      "name": "Blizzard Challenge",
+      "aliases": ["Blizzard Challenge"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Blizzard Challenge",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.21437/blizzard.2021-14",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ml4h",
+      "acronym": "ML4H",
+      "name": "Machine Learning for Health",
+      "aliases": [
+        "ML4H",
+        "Machine Learning for Health",
+        "Machine Learning for Health Symposium"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Machine Learning for Health",
+      "publicationTitleOverride": "",
+      "source": "https://ml4h.ahli.cc/about/proceedings/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ichi",
+      "acronym": "ICHI",
+      "name": "IEEE International Conference on Healthcare Informatics",
+      "aliases": [
+        "ICHI",
+        "IEEE International Conference on Healthcare Informatics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Healthcare Informatics",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ichi.2018.00092",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "wcsp",
+      "acronym": "WCSP",
+      "name": "International Conference on Wireless Communications and Signal Processing",
+      "aliases": [
+        "WCSP",
+        "International Conference on Wireless Communications and Signal Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Wireless Communications and Signal Processing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/wcsp.2019.8928024",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "emnlp-findings",
+      "acronym": "EMNLP Findings",
+      "name": "Findings of the Association for Computational Linguistics: EMNLP",
+      "aliases": [
+        "EMNLP Findings",
+        "Findings of the Association for Computational Linguistics: EMNLP",
+        "Findings of the Association for Computational Linguistics EMNLP"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Findings of the Association for Computational Linguistics: EMNLP",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.18653/v1/2023.findings-emnlp.936",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "smu",
+      "acronym": "SMU",
+      "name": "Simplifying Medical Ultrasound",
+      "aliases": [
+        "SMU",
+        "Simplifying Medical Ultrasound",
+        "Simplifying Medical Ultrasound Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Simplifying Medical Ultrasound",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1007/978-3-031-44521-7_4",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icm-microelectronics",
+      "acronym": "ICM",
+      "name": "International Conference on Microelectronics",
+      "aliases": ["ICM", "International Conference on Microelectronics"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Microelectronics",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ICM60448.2023.10378901",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icbbb",
+      "acronym": "ICBBB",
+      "name": "International Conference on Bioscience, Biochemistry and Bioinformatics",
+      "aliases": [
+        "ICBBB",
+        "International Conference on Bioscience, Biochemistry and Bioinformatics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Bioscience, Biochemistry and Bioinformatics",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3510427.3510428",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "wict",
+      "acronym": "WICT",
+      "name": "World Congress on Information and Communication Technologies",
+      "aliases": [
+        "WICT",
+        "World Congress on Information and Communication Technologies"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "World Congress on Information and Communication Technologies",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/wict.2012.6409173",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mlmi",
+      "acronym": "MLMI",
+      "name": "Machine Learning in Medical Imaging",
+      "aliases": [
+        "MLMI",
+        "Machine Learning in Medical Imaging",
+        "Machine Learning in Medical Imaging Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Machine Learning in Medical Imaging",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1007/978-3-319-67389-9_44",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "dlmia-ml-cds",
+      "acronym": "DLMIA/ML-CDS",
+      "name": "Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support",
+      "aliases": [
+        "DLMIA/ML-CDS",
+        "Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support",
+        "Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1007/978-3-319-67558-9_28",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ita",
+      "acronym": "ITA",
+      "name": "Information Theory and Applications Workshop",
+      "aliases": ["ITA", "Information Theory and Applications Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Information Theory and Applications Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ita.2018.8503149",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "asm",
+      "acronym": "ASM",
+      "name": "International Workshop on Affect and Sentiment in Multimedia",
+      "aliases": [
+        "ASM",
+        "International Workshop on Affect and Sentiment in Multimedia",
+        "International Workshop on Affect & Sentiment in Multimedia"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Workshop on Affect and Sentiment in Multimedia",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/2813524.2813527",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icetst",
+      "acronym": "ICETST",
+      "name": "International Conference on Emerging Trends in Smart Technologies",
+      "aliases": [
+        "ICETST",
+        "International Conference on Emerging Trends in Smart Technologies"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Emerging Trends in Smart Technologies",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icetst49965.2020.9080725",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "muse",
+      "acronym": "MuSe",
+      "name": "Multimodal Sentiment Analysis Workshop and Challenge",
+      "aliases": [
+        "MuSe",
+        "Multimodal Sentiment Analysis Workshop and Challenge",
+        "International on Multimodal Sentiment Analysis Workshop and Challenge"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Multimodal Sentiment Analysis Workshop and Challenge",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3551876.3554804",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "midl",
+      "acronym": "MIDL",
+      "name": "Medical Imaging with Deep Learning",
+      "aliases": ["MIDL", "Medical Imaging with Deep Learning"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Medical Imaging with Deep Learning",
+      "publicationTitleOverride": "",
+      "source": "https://proceedings.mlr.press/v172/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "targets-backgrounds",
+      "acronym": "",
+      "name": "Targets and Backgrounds: Characterization and Representation",
+      "aliases": [
+        "Targets and Backgrounds: Characterization and Representation"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Targets and Backgrounds: Characterization and Representation",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1117/12.352956",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ent",
+      "acronym": "EnT",
+      "name": "International Conference on Engineering and Telecommunication",
+      "aliases": [
+        "EnT",
+        "International Conference on Engineering and Telecommunication"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Engineering and Telecommunication",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ent47717.2019.9030571",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iccis",
+      "acronym": "ICCIS",
+      "name": "International Conference on Communication and Information Systems",
+      "aliases": [
+        "ICCIS",
+        "International Conference on Communication and Information Systems"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Communication and Information Systems",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iccis63642.2024.10779418",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "conecct",
+      "acronym": "CONECCT",
+      "name": "IEEE International Conference on Electronics, Computing and Communication Technologies",
+      "aliases": [
+        "CONECCT",
+        "IEEE International Conference on Electronics, Computing and Communication Technologies"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Electronics, Computing and Communication Technologies",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/conecct50063.2020.9198658",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "issnip",
+      "acronym": "ISSNIP",
+      "name": "International Conference on Intelligent Sensors, Sensor Networks and Information Processing",
+      "aliases": [
+        "ISSNIP",
+        "International Conference on Intelligent Sensors, Sensor Networks and Information Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Intelligent Sensors, Sensor Networks and Information Processing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/issnip.2009.5416759",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icrest",
+      "acronym": "ICREST",
+      "name": "International Conference on Robotics, Electrical and Signal Processing Techniques",
+      "aliases": [
+        "ICREST",
+        "International Conference on Robotics, Electrical and Signal Processing Techniques"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Robotics, Electrical and Signal Processing Techniques",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icrest.2019.8644425",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ciss",
+      "acronym": "CISS",
+      "name": "Annual Conference on Information Sciences and Systems",
+      "aliases": [
+        "CISS",
+        "Annual Conference on Information Sciences and Systems"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Annual Conference on Information Sciences and Systems",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ciss.2015.7086899",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "acl-findings",
+      "acronym": "ACL Findings",
+      "name": "Findings of the Association for Computational Linguistics: ACL",
+      "aliases": [
+        "ACL Findings",
+        "Findings of the Association for Computational Linguistics: ACL",
+        "Findings of the Association for Computational Linguistics ACL"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Findings of the Association for Computational Linguistics: ACL",
+      "publicationTitleOverride": "",
+      "source": "https://aclanthology.org/events/acl-2025/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "imbioc",
+      "acronym": "IMBioC",
+      "name": "IEEE MTT-S International Microwave Biomedical Conference",
+      "aliases": [
+        "IMBioC",
+        "IEEE MTT-S International Microwave Biomedical Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE MTT-S International Microwave Biomedical Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/imbioc52515.2022.9790229",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "sensors-applications",
+      "acronym": "SAS",
+      "name": "IEEE Sensors Applications Symposium",
+      "aliases": ["SAS", "IEEE Sensors Applications Symposium"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Sensors Applications Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/sas.2011.5739803",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "bhi",
+      "acronym": "BHI",
+      "name": "IEEE EMBS International Conference on Biomedical and Health Informatics",
+      "aliases": [
+        "BHI",
+        "IEEE EMBS International Conference on Biomedical and Health Informatics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE EMBS International Conference on Biomedical and Health Informatics",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/bhi58575.2023.10313518",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "csnt",
+      "acronym": "CSNT",
+      "name": "International Conference on Communication Systems and Network Technologies",
+      "aliases": [
+        "CSNT",
+        "International Conference on Communication Systems and Network Technologies"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Communication Systems and Network Technologies",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/csnt48778.2020.9115763",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "radar",
+      "acronym": "RadarConf",
+      "name": "IEEE Radar Conference",
+      "aliases": [
+        "RadarConf",
+        "IEEE Radar Conference",
+        "IEEE National Radar Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Radar Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/nrc.1993.270463",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "irs",
+      "acronym": "IRS",
+      "name": "International Radar Symposium",
+      "aliases": ["IRS", "International Radar Symposium"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Radar Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.23919/irs.2019.8768192",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "sibircon",
+      "acronym": "SIBIRCON",
+      "name": "IEEE Region 8 International Conference on Computational Technologies in Electrical and Electronics Engineering",
+      "aliases": [
+        "SIBIRCON",
+        "IEEE Region 8 International Conference on Computational Technologies in Electrical and Electronics Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Region 8 International Conference on Computational Technologies in Electrical and Electronics Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/sibircon.2008.4602570",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "arftg",
+      "acronym": "ARFTG",
+      "name": "ARFTG Microwave Measurement Conference",
+      "aliases": ["ARFTG", "ARFTG Microwave Measurement Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ARFTG Microwave Measurement Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/arftg.2019.8739240",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ner",
+      "acronym": "NER",
+      "name": "International IEEE/EMBS Conference on Neural Engineering",
+      "aliases": [
+        "NER",
+        "International IEEE/EMBS Conference on Neural Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International IEEE/EMBS Conference on Neural Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ner52421.2023.10123888",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mlhc",
+      "acronym": "MLHC",
+      "name": "Machine Learning for Healthcare Conference",
+      "aliases": ["MLHC", "Machine Learning for Healthcare Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Machine Learning for Healthcare Conference",
+      "publicationTitleOverride": "",
+      "source": "https://proceedings.mlr.press/v56/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iccece",
+      "acronym": "ICCECE",
+      "name": "International Conference on Consumer Electronics and Computer Engineering",
+      "aliases": [
+        "ICCECE",
+        "International Conference on Consumer Electronics and Computer Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Consumer Electronics and Computer Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iccece65250.2025.10984605",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aisec",
+      "acronym": "AISec",
+      "name": "ACM Workshop on Artificial Intelligence and Security",
+      "aliases": [
+        "AISec",
+        "ACM Workshop on Artificial Intelligence and Security"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "ACM Workshop on Artificial Intelligence and Security",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3128572.3140448",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "chil",
+      "acronym": "CHIL",
+      "name": "Conference on Health, Inference, and Learning",
+      "aliases": ["CHIL", "Conference on Health, Inference, and Learning"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference on Health, Inference, and Learning",
+      "publicationTitleOverride": "",
+      "source": "https://chil.ahli.cc/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "isape",
+      "acronym": "ISAPE",
+      "name": "International Symposium on Antennas, Propagation and EM Theory",
+      "aliases": [
+        "ISAPE",
+        "International Symposium on Antennas, Propagation and EM Theory"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Symposium on Antennas, Propagation and EM Theory",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/isape54070.2021.9753424",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "i2mtc",
+      "acronym": "I2MTC",
+      "name": "IEEE International Instrumentation and Measurement Technology Conference",
+      "aliases": [
+        "I2MTC",
+        "IEEE International Instrumentation and Measurement Technology Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Instrumentation and Measurement Technology Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/i2mtc48687.2022.9806534",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ic3se",
+      "acronym": "IC3SE",
+      "name": "International Conference on Communication, Computer Sciences and Engineering",
+      "aliases": [
+        "IC3SE",
+        "International Conference on Communication, Computer Sciences and Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Communication, Computer Sciences and Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ic3se62002.2024.10592987",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iws",
+      "acronym": "IWS",
+      "name": "IEEE MTT-S International Wireless Symposium",
+      "aliases": ["IWS", "IEEE MTT-S International Wireless Symposium"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE MTT-S International Wireless Symposium",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iws58240.2023.10223179",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ssp",
+      "acronym": "SSP",
+      "name": "IEEE Statistical Signal Processing Workshop",
+      "aliases": ["SSP", "IEEE Statistical Signal Processing Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Statistical Signal Processing Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ssp53291.2023.10208017",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "memea",
+      "acronym": "MeMeA",
+      "name": "IEEE International Symposium on Medical Measurements and Applications",
+      "aliases": [
+        "MeMeA",
+        "IEEE International Symposium on Medical Measurements and Applications"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Symposium on Medical Measurements and Applications",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/memea60663.2024.10596842",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aice",
+      "acronym": "AICE",
+      "name": "International Conference on Artificial Intelligence and Computer Engineering",
+      "aliases": [
+        "AICE",
+        "International Conference on Artificial Intelligence and Computer Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Artificial Intelligence and Computer Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3716895.3716992",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mippr",
+      "acronym": "MIPPR",
+      "name": "International Symposium on Multispectral Image Processing and Pattern Recognition",
+      "aliases": [
+        "MIPPR",
+        "International Symposium on Multispectral Image Processing and Pattern Recognition"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Symposium on Multispectral Image Processing and Pattern Recognition",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1117/12.2031104",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cicc",
+      "acronym": "CICC",
+      "name": "IEEE Custom Integrated Circuits Conference",
+      "aliases": ["CICC", "IEEE Custom Integrated Circuits Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Custom Integrated Circuits Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/cicc.2019.8780320",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ccwc",
+      "acronym": "CCWC",
+      "name": "IEEE Computing and Communication Workshop and Conference",
+      "aliases": [
+        "CCWC",
+        "IEEE Computing and Communication Workshop and Conference",
+        "Computing and Communication Workshop and Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Computing and Communication Workshop and Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ccwc51732.2021.9376117",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "saupec-robmech-prasa",
+      "acronym": "SAUPEC/RobMech/PRASA",
+      "name": "International SAUPEC/RobMech/PRASA Conference",
+      "aliases": [
+        "SAUPEC/RobMech/PRASA",
+        "International SAUPEC/RobMech/PRASA Conference"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International SAUPEC/RobMech/PRASA Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/saupec/robmech/prasa48453.2020.9041139",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ssiai",
+      "acronym": "SSIAI",
+      "name": "IEEE Southwest Symposium on Image Analysis and Interpretation",
+      "aliases": [
+        "SSIAI",
+        "IEEE Southwest Symposium on Image Analysis and Interpretation"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Southwest Symposium on Image Analysis and Interpretation",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ssiai49293.2020.9094603",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icmv",
+      "acronym": "ICMV",
+      "name": "International Conference on Machine Vision",
+      "aliases": ["ICMV", "International Conference on Machine Vision"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Machine Vision",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1117/12.2523141",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cai",
+      "acronym": "CAI",
+      "name": "IEEE Conference on Artificial Intelligence",
+      "aliases": ["CAI", "IEEE Conference on Artificial Intelligence"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Conference on Artificial Intelligence",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/cai54212.2023.00130",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iceiec",
+      "acronym": "ICEIEC",
+      "name": "International Conference on Electronics Information and Emergency Communication",
+      "aliases": [
+        "ICEIEC",
+        "International Conference on Electronics Information and Emergency Communication"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Electronics Information and Emergency Communication",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ICEIEC51955.2021.9463810",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ictc",
+      "acronym": "ICTC",
+      "name": "International Conference on Information and Communication Technology Convergence",
+      "aliases": [
+        "ICTC",
+        "International Conference on Information and Communication Technology Convergence"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Information and Communication Technology Convergence",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ictc52510.2021.9621009",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "vsip",
+      "acronym": "VSIP",
+      "name": "International Conference on Video, Signal and Image Processing",
+      "aliases": [
+        "VSIP",
+        "International Conference on Video, Signal and Image Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Video, Signal and Image Processing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3577164.3577172",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aisp",
+      "acronym": "AISP",
+      "name": "International Conference on Artificial Intelligence and Signal Processing",
+      "aliases": [
+        "AISP",
+        "International Conference on Artificial Intelligence and Signal Processing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Artificial Intelligence and Signal Processing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/aisp48273.2020.9073131",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "space",
+      "acronym": "SPACE",
+      "name": "IEEE Space, Aerospace and Defence Conference",
+      "aliases": ["SPACE", "IEEE Space, Aerospace and Defence Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Space, Aerospace and Defence Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/space63117.2024.10668347",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cbmi",
+      "acronym": "CBMI",
+      "name": "International Conference on Content-Based Multimedia Indexing",
+      "aliases": [
+        "CBMI",
+        "International Conference on Content-Based Multimedia Indexing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Content-Based Multimedia Indexing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1145/3549555.3549574",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aerospace",
+      "acronym": "AERO",
+      "name": "IEEE Aerospace Conference",
+      "aliases": ["AERO", "IEEE Aerospace Conference"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE Aerospace Conference",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/aero58975.2024.10521440",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icgmrs",
+      "acronym": "ICGMRS",
+      "name": "International Conference on Geology, Mapping and Remote Sensing",
+      "aliases": [
+        "ICGMRS",
+        "International Conference on Geology, Mapping and Remote Sensing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Geology, Mapping and Remote Sensing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icgmrs62107.2024.10581324",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icpoe",
+      "acronym": "ICPOE",
+      "name": "International Conference on Photonics and Optical Engineering",
+      "aliases": [
+        "ICPOE",
+        "International Conference on Photonics and Optical Engineering"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Photonics and Optical Engineering",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1117/12.2586808",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cyber",
+      "acronym": "CYBER",
+      "name": "International Conference on CYBER Technology in Automation, Control, and Intelligent Systems",
+      "aliases": [
+        "CYBER",
+        "International Conference on CYBER Technology in Automation, Control, and Intelligent Systems"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on CYBER Technology in Automation, Control, and Intelligent Systems",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/cyber59472.2023.10256594",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icac-automation",
+      "acronym": "ICAC",
+      "name": "International Conference on Automation and Computing",
+      "aliases": [
+        "ICAC",
+        "International Conference on Automation and Computing"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Automation and Computing",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icac57885.2023.10275306",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icccbda",
+      "acronym": "ICCCBDA",
+      "name": "International Conference on Cloud Computing and Big Data Analytics",
+      "aliases": [
+        "ICCCBDA",
+        "International Conference on Cloud Computing and Big Data Analytics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Cloud Computing and Big Data Analytics",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/icccbda64898.2025.11030485",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mesa",
+      "acronym": "MESA",
+      "name": "IEEE International Conference on Mechatronic and Embedded Systems and Applications",
+      "aliases": [
+        "MESA",
+        "IEEE International Conference on Mechatronic and Embedded Systems and Applications"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Mechatronic and Embedded Systems and Applications",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/MESA68091.2025.11278876",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iccc-china",
+      "acronym": "ICCC",
+      "name": "IEEE/CIC International Conference on Communications in China",
+      "aliases": [
+        "ICCC",
+        "IEEE/CIC International Conference on Communications in China"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE/CIC International Conference on Communications in China",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/iccc65529.2025.11149314",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "colm",
+      "acronym": "COLM",
+      "name": "Conference on Language Modeling",
+      "aliases": ["COLM", "Conference on Language Modeling"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference on Language Modeling",
+      "publicationTitleOverride": "",
+      "source": "https://colmweb.org/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "itsc",
+      "acronym": "ITSC",
+      "name": "IEEE International Conference on Intelligent Transportation Systems",
+      "aliases": [
+        "ITSC",
+        "IEEE International Conference on Intelligent Transportation Systems"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Intelligent Transportation Systems",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/itsc57777.2023.10422289",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ml4h-workshop",
+      "acronym": "ML4H Workshop",
+      "name": "Machine Learning for Health Workshop",
+      "aliases": [
+        "ML4H Workshop",
+        "Machine Learning for Health Workshop",
+        "Machine Learning for Health NeurIPS Workshop"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Machine Learning for Health Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://proceedings.mlr.press/v116/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "neurips-autodiff",
+      "acronym": "NeurIPS Autodiff Workshop",
+      "name": "NeurIPS Autodiff Workshop",
+      "aliases": ["NeurIPS Autodiff Workshop", "NIPS Autodiff Workshop"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "NeurIPS Autodiff Workshop",
+      "publicationTitleOverride": "",
+      "source": "https://gbaydin.github.io/publications/index.html",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icga",
+      "acronym": "ICGA",
+      "name": "International Conference on Genetic Algorithms",
+      "aliases": ["ICGA", "International Conference on Genetic Algorithms"],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Genetic Algorithms",
+      "publicationTitleOverride": "",
+      "source": "https://www.cs.cmu.edu/Groups/AI/html/faqs/ai/genetic/part4/faq-doc-14.html",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "spawc",
+      "acronym": "SPAWC",
+      "name": "IEEE International Workshop on Signal Processing Advances in Wireless Communications",
+      "aliases": [
+        "SPAWC",
+        "IEEE International Workshop on Signal Processing Advances in Wireless Communications"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Workshop on Signal Processing Advances in Wireless Communications",
+      "publicationTitleOverride": "",
+      "source": "https://www.spawc2023.signalprocessingsociety.org/2023spawc.aconf.org/registration.html",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "aacl-ijcnlp-demos",
+      "acronym": "AACL-IJCNLP Demos",
+      "name": "Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and International Joint Conference on Natural Language Processing: System Demonstrations",
+      "aliases": [
+        "AACL-IJCNLP Demos",
+        "Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and International Joint Conference on Natural Language Processing: System Demonstrations",
+        "Association for Computational Linguistics and the International Joint Conference on Natural Language Processing System Demonstrations"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and International Joint Conference on Natural Language Processing: System Demonstrations",
+      "publicationTitleOverride": "",
+      "source": "https://aclanthology.org/2020.aacl-demos.0/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "iciar",
+      "acronym": "ICIAR",
+      "name": "International Conference on Image Analysis and Recognition",
+      "aliases": [
+        "ICIAR",
+        "International Conference on Image Analysis and Recognition",
+        "Image Analysis and Recognition"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "International Conference on Image Analysis and Recognition",
+      "publicationTitleOverride": "",
+      "source": "https://link.springer.com/book/10.1007/978-3-319-93000-8",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ncvpripg",
+      "acronym": "NCVPRIPG",
+      "name": "National Conference on Computer Vision, Pattern Recognition, Image Processing, and Graphics",
+      "aliases": [
+        "NCVPRIPG",
+        "National Conference on Computer Vision, Pattern Recognition, Image Processing, and Graphics",
+        "Computer Vision, Pattern Recognition, Image Processing, and Graphics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "National Conference on Computer Vision, Pattern Recognition, Image Processing, and Graphics",
+      "publicationTitleOverride": "",
+      "source": "https://link.springer.com/book/10.1007/978-981-15-8697-2",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icce",
+      "acronym": "ICCE",
+      "name": "IEEE International Conference on Consumer Electronics",
+      "aliases": [
+        "ICCE",
+        "IEEE International Conference on Consumer Electronics"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Consumer Electronics",
+      "publicationTitleOverride": "",
+      "source": "https://icce.org/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icce-berlin",
+      "acronym": "ICCE-Berlin",
+      "name": "IEEE International Conference on Consumer Electronics - Berlin",
+      "aliases": [
+        "ICCE-Berlin",
+        "IEEE International Conference on Consumer Electronics - Berlin",
+        "ICCE"
+      ],
+      "excludeAliases": [],
+      "itemType": "conferencePaper",
+      "removeEditors": true,
+      "preserveJournalArticles": true,
+      "enabled": true,
+      "publicationTitle": "IEEE International Conference on Consumer Electronics - Berlin",
+      "publicationTitleOverride": "",
+      "source": "https://doi.org/10.1109/ICCE-Berlin47944.2019.8966159",
+      "checkedOn": "2026-10-04"
+    }
+  ],
+  "extensions": [
+    {
+      "id": "slt",
+      "aliases": ["IEEE Spoken Language Technology Workshop"],
+      "previousAliases": ["SLT", "Spoken Language Technology"],
+      "source": "https://doi.org/10.1109/slt.2018.8639585",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "www",
+      "aliases": [
+        "International Conference on World Wide Web",
+        "International World Wide Web Conferences"
+      ],
+      "previousAliases": [
+        "WWW",
+        "The Web Conference",
+        "International World Wide Web Conference",
+        "World Wide Web Conference"
+      ],
+      "source": "https://doi.org/10.1145/3038912.3052569",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "cikm",
+      "aliases": [
+        "ACM International Conference on Information & Knowledge Management"
+      ],
+      "previousAliases": [
+        "CIKM",
+        "ACM International Conference on Information and Knowledge Management"
+      ],
+      "source": "https://doi.org/10.1145/3511808.3557721",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ecml-pkdd",
+      "aliases": ["Machine Learning and Knowledge Discovery in Databases"],
+      "previousAliases": [
+        "ECML-PKDD",
+        "European Conference on Machine Learning and Principles and Practice of Knowledge Discovery in Databases"
+      ],
+      "source": "https://link.springer.com/conference/ecml",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "uai",
+      "aliases": ["Uncertainty in Artificial Intelligence Conference"],
+      "previousAliases": [
+        "UAI",
+        "Conference on Uncertainty in Artificial Intelligence"
+      ],
+      "source": "https://proceedings.mlr.press/v115/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "colt",
+      "aliases": [
+        "Annual Conference on Learning Theory",
+        "Conference on Learning Theory"
+      ],
+      "previousAliases": [
+        "COLT",
+        "Annual Conference on Computational Learning Theory"
+      ],
+      "source": "https://learningtheory.org/colt2008/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "neurips",
+      "aliases": ["Neural Information Processing Systems"],
+      "previousAliases": [
+        "NeurIPS",
+        "Conference on Neural Information Processing Systems",
+        "NIPS",
+        "Advances in Neural Information Processing Systems"
+      ],
+      "source": "https://proceedings.neurips.cc/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icmr",
+      "aliases": ["International Conference on Multimedia Retrieval"],
+      "previousAliases": [
+        "ICMR",
+        "ACM SIGMM International Conference on Multimedia Retrieval"
+      ],
+      "source": "https://doi.org/10.1145/3460426.3463638",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "mobisys",
+      "aliases": [
+        "International Conference on Mobile Systems, Applications, and Services",
+        "International Conference on Mobile Systems, Applications and Services"
+      ],
+      "previousAliases": [
+        "MobiSys",
+        "ACM International Conference on Mobile Systems, Applications, and Services"
+      ],
+      "source": "https://doi.org/10.1145/2462456.2464449",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "secon",
+      "aliases": [
+        "IEEE Communications Society on Sensor and Ad Hoc Communications and Networks"
+      ],
+      "previousAliases": [
+        "SECON",
+        "IEEE International Conference on Sensing, Communication, and Networking"
+      ],
+      "source": "https://doi.org/10.1109/SAHCN.2006.288442",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "nsdi",
+      "aliases": [
+        "USENIX Conference on Networked Systems Design and Implementation"
+      ],
+      "previousAliases": [
+        "NSDI",
+        "Symposium on Network System Design and Implementation",
+        "USENIX Symposium on Networked Systems Design and Implementation"
+      ],
+      "source": "https://www.usenix.org/conference/nsdi15",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "ecir",
+      "aliases": ["Advances in Information Retrieval"],
+      "previousAliases": [
+        "ECIR",
+        "European Conference on Information Retrieval"
+      ],
+      "source": "https://link.springer.com/conference/ecir",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "usenix-security",
+      "aliases": ["USENIX Conference on Security"],
+      "previousAliases": ["USENIX Security", "USENIX Security Symposium"],
+      "source": "https://www.usenix.org/conference/usenixsecurity10",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "icme",
+      "aliases": ["IEEE International Conference on Multimedia and Expo"],
+      "previousAliases": [
+        "ICME",
+        "IEEE International Conference on Multimedia & Expo"
+      ],
+      "source": "https://2024.ieeeicme.org/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "infocom",
+      "aliases": ["IEEE Conference on Computer Communications"],
+      "previousAliases": [
+        "INFOCOM",
+        "IEEE International Conference on Computer Communications"
+      ],
+      "source": "https://infocom2024.ieee-infocom.org/",
+      "checkedOn": "2026-10-04"
+    },
+    {
+      "id": "chi",
+      "aliases": ["SIGCHI Conference on Human Factors in Computing Systems"],
+      "previousAliases": [
+        "CHI",
+        "ACM Conference on Human Factors in Computing Systems"
+      ],
+      "source": "https://doi.org/10.1145/1978942.1979395",
+      "checkedOn": "2026-10-04"
+    }
+  ]
+}

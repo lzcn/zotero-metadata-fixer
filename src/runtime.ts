@@ -40,6 +40,7 @@ export class Runtime {
   private dialogOwners = new Map<any, any>();
   private progressWindow?: any;
   private progressState?: any;
+  private progressResult?: Promise<any>;
   private s = String(Zotero.locale).startsWith("zh") ? zh : en;
   private lastArxivRequest = 0;
   private lastScholarRequest = 0;
@@ -237,7 +238,8 @@ export class Runtime {
     if (this.progressState) {
       this.progressState.cancelled = true;
       for (const row of this.progressState.rows)
-        if (row.status === this.s.working) row.status = this.s.cancelled;
+        if (row.status === this.s.working || row.status === this.s.waiting)
+          row.status = this.s.cancelled;
       if (!this.progressWindow?.closed)
         this.cleanup(() => this.progressWindow?.renderProgress?.());
     }
@@ -385,18 +387,44 @@ export class Runtime {
       throw new Error(this.s.unsupported);
   }
 
+  private enqueue(items: Item[], source: RetrievalSource | "lint"): void {
+    const state = this.progressState;
+    for (const item of items) {
+      if (
+        state.rows.some(
+          (row: any) =>
+            row.itemID === item.id && row.generation === this.generation,
+        )
+      )
+        continue;
+      const row = {
+        itemID: item.id,
+        generation: this.generation,
+        title: item.getField("title"),
+        status: this.s.waiting,
+        detail: "",
+      };
+      state.rows.push(row);
+      state.tasks.push({ item, source, row });
+    }
+    state.total = state.rows.length;
+    if (!this.progressWindow?.closed)
+      this.cleanup(() => this.progressWindow?.renderProgress?.());
+  }
+
   async run(win: any, source: RetrievalSource | "lint"): Promise<void> {
     if (!this.alive) return;
-    if (this.busy) {
-      this.progressWindow?.focus?.();
-      return;
-    }
     const selected: Item[] = win.ZoteroPane.getSelectedItems().filter(
       (item: Item) =>
         item.isRegularItem() && item.isEditable() && !item.deleted,
     );
     if (!selected.length) {
       Zotero.alert(win, this.s.name, this.s.empty);
+      return;
+    }
+    if (this.busy) {
+      if (this.operation?.active()) this.enqueue(selected, source);
+      this.progressWindow?.focus?.();
       return;
     }
     this.busy = true;
@@ -418,15 +446,24 @@ export class Runtime {
         () => this.alive && operation.active(),
         (url) => this.request(url, operation, "document"),
       );
-    const state: any = {
-      kind: "progress",
-      total: selected.length,
-      rows: [],
-      finished: false,
-    };
+    const reuse = this.progressWindow && !this.progressWindow.closed;
+    const state: any = reuse
+      ? this.progressState
+      : {
+          kind: "progress",
+          total: 0,
+          rows: [],
+          tasks: [],
+          finished: false,
+        };
+    state.finished = false;
+    state.cancelled = false;
+    state.tasks = [];
     let progress: ReturnType<Runtime["open"]>;
     try {
-      progress = this.open(win, state);
+      progress = reuse
+        ? { window: this.progressWindow, result: this.progressResult! }
+        : this.open(win, state);
     } catch (error) {
       operation.cancel();
       this.busy = false;
@@ -437,20 +474,28 @@ export class Runtime {
     }
     this.progressWindow = progress.window;
     this.progressState = state;
+    this.progressResult = progress.result;
     state.cancel = () => this.cancel();
+    this.enqueue(selected, source);
     // Closing the progress window is cancellation while work is running.
-    void progress.result.then(() => {
-      if (!state.finished && token === this.generation) this.cancel();
-    });
+    if (!reuse) {
+      void progress.result.then(() => {
+        if (state !== this.progressState) return;
+        if (!state.finished) this.cancel();
+        this.progressWindow = undefined;
+        this.progressState = undefined;
+        this.progressResult = undefined;
+      });
+    }
+    this.progressWindow.focus?.();
     try {
-      for (const item of selected) {
-        if (!host.active()) break;
-        const row: any = {
-          title: item.getField("title"),
-          status: this.s.working,
-          detail: "",
+      while (state.tasks.length && host.active()) {
+        const { item, source, row } = state.tasks.shift() as {
+          item: Item;
+          source: RetrievalSource | "lint";
+          row: any;
         };
-        state.rows.push(row);
+        row.status = this.s.working;
         if (!progress.window.closed)
           this.cleanup(() => progress.window.renderProgress?.());
         try {
@@ -618,18 +663,18 @@ export class Runtime {
     } finally {
       if (!host.active()) {
         for (const row of state.rows)
-          if (row.status === this.s.working) row.status = this.s.cancelled;
+          if (row.status === this.s.working || row.status === this.s.waiting)
+            row.status = this.s.cancelled;
       }
       state.finished = true;
       state.cancelled = !host.active();
       if (!progress.window.closed)
         this.cleanup(() => progress.window.renderProgress?.());
+      state.tasks = [];
       operation.cancel();
       this.busy = false;
       this.operation = undefined;
       this.operationWindow = undefined;
-      this.progressWindow = undefined;
-      this.progressState = undefined;
     }
   }
 }

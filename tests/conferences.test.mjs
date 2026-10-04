@@ -263,8 +263,11 @@ test("settings validate unique IDs and persist the Publication switch", () => {
 
 test("the CCF catalog covers all 386 conferences and 10 categories with provenance", async () => {
   const { conferenceInfo } = await import("../.tests-build/conferences.js");
-  assert.equal(DEFAULT_CONFERENCE_RULES.length, 386);
-  const info = DEFAULT_CONFERENCE_RULES.map((rule) => conferenceInfo(rule.id));
+  assert.equal(DEFAULT_CONFERENCE_RULES.length, 513);
+  const info = DEFAULT_CONFERENCE_RULES.map((rule) =>
+    conferenceInfo(rule.id),
+  ).filter((row) => row.source.startsWith("https://www.ccf.org.cn/"));
+  assert.equal(info.length, 386);
   assert.equal(new Set(info.map((row) => row.category)).size, 10);
   assert.equal(info.filter((row) => row.rank === "A").length, 58);
   for (const row of info) {
@@ -286,7 +289,7 @@ test("legacy settings gain new conferences while retaining edits, disabled rules
   const upgraded = parseConferenceSettings(
     JSON.stringify({ rules: [old], formatPublication: true }),
   );
-  assert.equal(upgraded.rules.length, 386);
+  assert.equal(upgraded.rules.length, DEFAULT_CONFERENCE_RULES.length);
   assert.equal(upgraded.rules[0].name, "My ECCV");
   assert.equal(upgraded.rules[0].enabled, false);
   const deleted = parseConferenceSettings(
@@ -508,4 +511,149 @@ test("CVPR standard mode supplies the official IEEE/CVF full name without the so
       .metadata.proceedingsTitle,
     fullName,
   );
+});
+
+test("the library's previously unmatched venues recognize verified conferences and retain ambiguous records", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const fixtures = JSON.parse(
+    await readFile(
+      new URL("./fixtures/conference-venues.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  for (const { venue, rule } of fixtures) {
+    const original = { ...bookSection(), bookTitle: venue };
+    const result = normalizeConference(
+      original,
+      DEFAULT_CONFERENCE_RULES,
+      "standard",
+    );
+    assert.equal(result.rule?.id ?? null, rule, venue);
+    if (!rule) assert.deepEqual(result.metadata, original, venue);
+  }
+});
+
+test("supplementary conferences have independent sources, full names and short names", async () => {
+  const { conferenceInfo } = await import("../.tests-build/conferences.js");
+  for (const [id, venue, short] of [
+    [
+      "igarss",
+      "2024 IEEE International Geoscience and Remote Sensing Symposium",
+      "IGARSS",
+    ],
+    [
+      "wacv",
+      "2025 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+      "WACV",
+    ],
+    [
+      "embc",
+      "2024 46th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)",
+      "EMBC",
+    ],
+    ["cvpr-workshops", "CVPRW", "CVPRW"],
+    ["iccv-workshops", "ICCV 2023 Workshops", "ICCVW"],
+    ["eacl", "EACL", "EACL"],
+    ["colm", "CoLM", "COLM"],
+    [
+      "neurips-autodiff",
+      "NeurIPS Autodiff Workshop",
+      "NeurIPS Autodiff Workshop",
+    ],
+  ]) {
+    const info = conferenceInfo(id);
+    assert.ok(info.source.startsWith("https://"), id);
+    assert.equal(info.sourcePDF, undefined, id);
+    const metadata = { ...bookSection(), bookTitle: venue };
+    const standard = normalizeConference(
+      metadata,
+      DEFAULT_CONFERENCE_RULES,
+      "standard",
+    );
+    const compact = normalizeConference(
+      metadata,
+      DEFAULT_CONFERENCE_RULES,
+      "short",
+    );
+    const original = normalizeConference(
+      metadata,
+      DEFAULT_CONFERENCE_RULES,
+      "original",
+    );
+    assert.equal(standard.rule.id, id);
+    assert.equal(standard.metadata.proceedingsTitle, info.publicationTitle);
+    assert.equal(compact.metadata.proceedingsTitle, short);
+    assert.equal(original.metadata.proceedingsTitle, venue);
+    const journal = { ...metadata, itemType: "journalArticle" };
+    assert.deepEqual(
+      normalizeConference(journal, DEFAULT_CONFERENCE_RULES, "standard")
+        .metadata,
+      journal,
+    );
+  }
+  for (const venue of [
+    "ECCV Unlisted Workshop",
+    "WACV Unlisted Workshop",
+    "ICCE",
+    "SAS",
+    "USENIX",
+    "Pattern Recognition",
+  ]) {
+    assert.equal(
+      normalizeConference(
+        { ...bookSection(), bookTitle: venue },
+        DEFAULT_CONFERENCE_RULES,
+      ).rule,
+      undefined,
+      venue,
+    );
+  }
+});
+
+test("catalog upgrades add rules and refresh untouched aliases without overriding user edits", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const oldRules = JSON.parse(
+    await readFile(
+      new URL("../data/conferences.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const www = oldRules.find((rule) => rule.id === "www");
+  const nsdi = oldRules.find((rule) => rule.id === "nsdi");
+  nsdi.aliases = ["My own NSDI alias"];
+  www.enabled = false;
+  const custom = {
+    ...www,
+    id: "personal",
+    name: "My Conference",
+    aliases: ["My Conference"],
+  };
+  const settings = parseConferenceSettings(
+    JSON.stringify({
+      rules: [www, nsdi, custom],
+      formatPublication: false,
+      publicationStyle: "original",
+      catalogVersion: "CCF-2026-7",
+      removedRuleIDs: ["wacv"],
+    }),
+  );
+  assert.equal(settings.publicationStyle, "original");
+  assert.equal(
+    settings.rules.some((rule) => rule.id === "wacv"),
+    false,
+  );
+  assert.equal(settings.rules.find((rule) => rule.id === "www").enabled, false);
+  assert.ok(
+    settings.rules
+      .find((rule) => rule.id === "www")
+      .aliases.includes("International Conference on World Wide Web"),
+  );
+  assert.deepEqual(settings.rules.find((rule) => rule.id === "nsdi").aliases, [
+    "My own NSDI alias",
+  ]);
+  assert.equal(
+    settings.rules.find((rule) => rule.id === "personal").name,
+    "My Conference",
+  );
+  assert.deepEqual(parseConferenceSettings(JSON.stringify(settings)), settings);
 });

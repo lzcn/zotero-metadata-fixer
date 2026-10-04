@@ -12,7 +12,7 @@ Update preprints, fill missing metadata and fix clear errors in the original Zot
 
 ## Install and use
 
-Requires Zotero 10. Install `dist/zotero-metadata-fixer.xpi` through **Tools → Plugins → Install Plugin From File**. Select papers and choose **Metadata Fixer** from the context menu. Updates run without candidate or field confirmation dialogs. One window shows titles, statuses and Cancel or Close; a failed item does not stop the batch. Cancel or close the window to stop pending updates.
+Requires Zotero 10. Install `dist/zotero-metadata-fixer.xpi` through **Tools → Plugins → Install Plugin From File**. Select papers and choose **Metadata Fixer** from the context menu. Updates run without candidate or field confirmation dialogs. One shared window shows waiting items and completed results with a native Cancel button. New selections join the running queue; repeated items are ignored. Completed results remain visible until you close the window. New tasks reuse it; a failed item does not stop the batch. Cancel or close the window to stop pending updates.
 
 ## Update behavior
 
@@ -24,7 +24,7 @@ Published items receive missing values and clear repairs. Differences only in ca
 
 In **Settings → Metadata Fixer**, choose **Original**, **Standard** (full name) or **Short** (acronym) conference names. Original is the default. Formatting applies to Proceedings Title, omits editions and years, and preserves the paper date and existing Conference Name. Misplaced proceedings names, item types and editors can be repaired; genuine journals and secondary tracks are protected.
 
-The maintained conference catalog and source references are in `data/conferences.json` and `data/conference-catalog.json`.
+The catalog combines the CCF directory with additional conferences and separate workshop tracks. Source references are in `data/conferences.json`, `data/conference-catalog.json` and `data/conference-supplements.json`.
 
 ## Limitations
 

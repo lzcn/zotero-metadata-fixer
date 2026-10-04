@@ -12,7 +12,7 @@
 
 ## 安装与使用
 
-需要 Zotero 10。通过 **工具 → 插件 → 从文件安装插件** 安装 `dist/zotero-metadata-fixer.xpi`。选中文献，右键选择 **Metadata Fixer**。直接更新，不弹出候选或字段确认窗口。一个窗口显示标题、状态及取消／关闭按钮；单篇失败不影响其他文献。取消或关闭窗口可停止尚未完成的更新。
+需要 Zotero 10。通过 **工具 → 插件 → 从文件安装插件** 安装 `dist/zotero-metadata-fixer.xpi`。选中文献，右键选择 **Metadata Fixer**。直接更新，不弹出候选或字段确认窗口。全局共用一个窗口，显示等待任务、处理结果和原生取消按钮。新增选择加入正在运行的队列，重复条目不会重复入队。队列结束后保留结果，手动关闭窗口。后续任务继续使用同一窗口；单篇失败不影响其他文献。取消或关闭窗口可停止尚未完成的更新。
 
 ## 更新行为
 
@@ -24,7 +24,7 @@
 
 在 **设置 → Metadata Fixer** 中选择会议名称：**原名**、**标准全名** 或 **简洁缩写**。默认保留原名。格式化作用于 Proceedings Title，去掉届数和年份，保留论文日期及已有 Conference Name。可修正错放的论文集名称、条目类型和 editor；真正的期刊及次级会场受到保护。
 
-维护的会议目录和来源见 `data/conferences.json`、`data/conference-catalog.json`。
+会议规则包含 CCF 目录、补充会议及独立的 workshop 分会场。来源记录见 `data/conferences.json`、`data/conference-catalog.json` 和 `data/conference-supplements.json`。
 
 ## 当前限制
 

@@ -32,7 +32,7 @@ class Element {
   }
   focus() {}
   click() {
-    this.events.get("click")?.();
+    this.events.get("command")?.();
   }
 }
 async function dialog(data) {
@@ -50,7 +50,8 @@ async function dialog(data) {
   elements.window = win;
   const document = {
     body: { classList: { add() {} } },
-    createElementNS: (_, tag) => new Element(tag),
+    createElementNS: (namespace, tag) =>
+      Object.assign(new Element(tag), { namespace }),
     getElementById: (id) => elements[id],
   };
   const code = await readFile(
@@ -101,6 +102,11 @@ test("batch progress shows only paper titles, short statuses and one action", as
     ["Second", en.failed],
   );
   assert.equal(elements.actions.children.length, 1);
+  assert.equal(elements.actions.children[0].label, en.cancel);
+  assert.equal(
+    elements.actions.children[0].namespace,
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  );
   elements.actions.children[0].click();
   assert.equal(cancelled, 1);
   state.rows[2].status = en.updated;
@@ -109,5 +115,5 @@ test("batch progress shows only paper titles, short statuses and one action", as
   elements.window.renderProgress();
   assert.equal(body.children.length, 4);
   assert.equal(body.children[2].children[1].textContent, en.updated);
-  assert.equal(elements.actions.children[0].textContent, en.close);
+  assert.equal(elements.actions.children[0].label, en.close);
 });

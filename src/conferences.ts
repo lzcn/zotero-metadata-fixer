@@ -1,7 +1,20 @@
 import type { Metadata, PlanOverrides } from "./model";
 import { normalize } from "./matching";
-import catalog from "../data/conferences.json";
+import ccfCatalog from "../data/conferences.json";
+import supplements from "../data/conference-supplements.json";
 import catalogInfo from "../data/conference-catalog.json";
+
+const catalog = [...ccfCatalog, ...supplements.additions].map((conference) => {
+  const extension = supplements.extensions.find(
+    (entry) => entry.id === conference.id,
+  );
+  return {
+    ...conference,
+    aliases: [
+      ...new Set([...conference.aliases, ...(extension?.aliases ?? [])]),
+    ],
+  };
+});
 
 export type ConferenceRule = {
   id: string;
@@ -17,11 +30,16 @@ export type ConferenceRule = {
 export const CONFERENCE_SETTINGS_PREF =
   "extensions.zotero.metadata-linter.conferences";
 export const DEFAULT_CONFERENCE_RULES = validateConferenceRules(catalog);
-export const CONFERENCE_CATALOG_VERSION = catalogInfo.id;
+export const CONFERENCE_CATALOG_VERSION = `${catalogInfo.id}+${supplements.id}`;
 export function conferenceInfo(id: string) {
   const conference = catalog.find((conference) => conference.id === id);
   return conference
-    ? { ...conference, sourcePDF: catalogInfo.pdfURL }
+    ? {
+        ...conference,
+        sourcePDF: ccfCatalog.some((row) => row.id === id)
+          ? catalogInfo.pdfURL
+          : undefined,
+      }
     : undefined;
 }
 export type PublicationStyle = "original" | "standard" | "short";
@@ -60,6 +78,19 @@ export function parseConferenceSettings(stored?: string): ConferenceSettings {
     throw new Error("Invalid removed conference IDs");
   // Add new bundled conferences during upgrades, preserving edits and deletions.
   if (settings.catalogVersion !== CONFERENCE_CATALOG_VERSION) {
+    for (const rule of rules) {
+      const extension = supplements.extensions.find(
+        (entry) => entry.id === rule.id,
+      );
+      // Refresh untouched bundled aliases; retain explicitly customized aliases.
+      if (
+        extension &&
+        rule.aliases.length === extension.previousAliases.length &&
+        rule.aliases.every((alias) => extension.previousAliases.includes(alias))
+      ) {
+        rule.aliases = [...new Set([...rule.aliases, ...extension.aliases])];
+      }
+    }
     const existing = new Set(rules.map((rule) => rule.id));
     rules.push(
       ...defaults.filter(
@@ -170,7 +201,15 @@ export function normalizeConference(
       (value): value is string =>
         typeof value === "string" && Boolean(value.trim()),
     )
-    .map((value) => ` ${normalize(value)} `);
+    .map(
+      (value) =>
+        ` ${normalize(value)
+          .replace(/([a-z])(20\d{2})(?=\s|$)/g, "$1 $2")
+          .replace(/(20\d{2})([a-z])/g, "$1 $2")
+          .replace(/\b(?:19|20)\d{2}\b/g, " ")
+          .replace(/\b\d+(?:st|nd|rd|th)\b/g, " ")
+          .replace(/\s+/g, " ")} `,
+    );
   const secondaryTrack =
     /\b(workshops?|companion|findings|demonstrations?|posters?|short papers?)\b/;
   const hasSecondaryTrack = venues.some((venue) => secondaryTrack.test(venue));
@@ -187,11 +226,7 @@ export function normalizeConference(
       for (const alias of rule.aliases) {
         const normalizedAlias = normalize(alias);
         const match = ` ${normalizedAlias} `;
-        for (const originalVenue of venues) {
-          // Publishers sometimes attach the year directly to the acronym, e.g. ECCV2024.
-          const venue = originalVenue
-            .replace(/([a-z])(20\d{2})(?=\s|$)/g, "$1 $2")
-            .replace(/(20\d{2})([a-z])/g, "$1 $2");
+        for (const venue of venues) {
           if (
             hasSecondaryTrack &&
             !rule.aliases.some((alias) => secondaryTrack.test(normalize(alias)))
