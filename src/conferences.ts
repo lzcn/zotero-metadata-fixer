@@ -1,5 +1,11 @@
 import type { Metadata, PlanOverrides } from "./model";
 import { normalize } from "./matching";
+import {
+  containerField,
+  containerTitle,
+  isProceedingsTitle,
+  matchConference,
+} from "./venues";
 import ccfCatalog from "../data/conferences.json";
 import supplements from "../data/conference-supplements.json";
 import catalogInfo from "../data/conference-catalog.json";
@@ -31,29 +37,6 @@ export type ConferenceRule = {
 const catalogById = new Map(
   catalog.map((conference) => [conference.id, conference]),
 );
-const SECONDARY_TRACK =
-  /\b(workshops?|companion|findings|demonstrations?|posters?|short papers?)\b/;
-type RuleSignature = {
-  aliases: string[];
-  excludeAliases: string[];
-  secondaryAlias: boolean;
-};
-// Aliases are stable for a validated rule, so their normalized forms are cached
-// instead of being recomputed for every venue of every item.
-const signatures = new WeakMap<ConferenceRule, RuleSignature>();
-function signature(rule: ConferenceRule): RuleSignature {
-  let value = signatures.get(rule);
-  if (!value) {
-    const aliases = rule.aliases.map(normalize);
-    value = {
-      aliases,
-      excludeAliases: rule.excludeAliases.map(normalize),
-      secondaryAlias: aliases.some((alias) => SECONDARY_TRACK.test(alias)),
-    };
-    signatures.set(rule, value);
-  }
-  return value;
-}
 export const CONFERENCE_SETTINGS_PREF =
   "extensions.zotero.metadata-linter.conferences";
 export const DEFAULT_CONFERENCE_RULES = validateConferenceRules(catalog);
@@ -216,52 +199,7 @@ export function normalizeConference(
     )
   )
     return { metadata };
-  const venues = [
-    metadata.conferenceName,
-    metadata.proceedingsTitle,
-    metadata.bookTitle,
-    metadata.publicationTitle,
-  ]
-    .filter(
-      (value): value is string =>
-        typeof value === "string" && Boolean(value.trim()),
-    )
-    .map(
-      (value) =>
-        ` ${normalize(value)
-          .replace(/([a-z])(20\d{2})(?=\s|$)/g, "$1 $2")
-          .replace(/(20\d{2})([a-z])/g, "$1 $2")
-          .replace(/\b(?:19|20)\d{2}\b/g, " ")
-          .replace(/\b\d+(?:st|nd|rd|th)\b/g, " ")
-          .replace(/\s+/g, " ")} `,
-    );
-  const hasSecondaryTrack = venues.some((venue) => SECONDARY_TRACK.test(venue));
-  const matches = rules
-    .flatMap((rule) => {
-      if (!rule.enabled) return [];
-      const sig = signature(rule);
-      if (hasSecondaryTrack && !sig.secondaryAlias) return [];
-      if (
-        sig.excludeAliases.some((alias) =>
-          venues.some((venue) => venue.includes(` ${alias} `)),
-        )
-      )
-        return [];
-      let score = 0;
-      for (const alias of sig.aliases) {
-        const match = ` ${alias} `;
-        for (const venue of venues) {
-          if (venue.includes(match)) score = Math.max(score, alias.length);
-        }
-      }
-      return score ? [{ rule, score }] : [];
-    })
-    .sort((a, b) => b.score - a.score);
-  // Ambiguous short names such as FSE and SEC must not pick the first catalog row.
-  const rule =
-    matches[0] && (matches.length < 2 || matches[0].score > matches[1].score)
-      ? matches[0].rule
-      : undefined;
+  const rule = matchConference(metadata, rules);
   if (!rule) return { metadata };
   // Conference events can publish in genuine journals (PACMPL, PACMMOD, PVLDB, TOG…).
   if (metadata.itemType === "journalArticle" && rule.preserveJournalArticles)
@@ -281,40 +219,10 @@ export function normalizeConference(
           ? conferenceInfo(rule.id)?.acronym || commonPublicationTitle(rule.id)
           : commonPublicationTitle(rule.id))
       : "";
-  if (rule.itemType === "conferencePaper") {
-    // Name formatting targets the proceedings, not the separate conference event field.
-    if (!normalized.conferenceName) normalized.conferenceName = rule.name;
-    const misplacedProceedings =
-      typeof metadata.conferenceName === "string" &&
-      /^proceedings of\b/i.test(metadata.conferenceName)
-        ? metadata.conferenceName
-        : "";
-    const proceedings =
-      misplacedProceedings ||
-      metadata.proceedingsTitle ||
-      metadata.bookTitle ||
-      metadata.publicationTitle;
-    if (commonTitle) fields.proceedingsTitle = commonTitle;
-    else if (typeof proceedings === "string" && proceedings)
-      fields.proceedingsTitle = proceedings;
-    delete normalized.bookTitle;
-  } else if (rule.itemType === "bookSection") {
-    const bookTitle =
-      metadata.bookTitle ||
-      metadata.proceedingsTitle ||
-      metadata.publicationTitle;
-    if (commonTitle) fields.bookTitle = commonTitle;
-    else if (typeof bookTitle === "string" && bookTitle)
-      fields.bookTitle = bookTitle;
-  } else {
-    const title =
-      metadata.publicationTitle ||
-      metadata.proceedingsTitle ||
-      metadata.bookTitle;
-    if (commonTitle) fields.publicationTitle = commonTitle;
-    else if (typeof title === "string" && title)
-      fields.publicationTitle = title;
-  }
+  const field = containerField(rule.itemType)!;
+  const title = commonTitle || containerTitle(metadata, rule.itemType);
+  if (title) fields[field] = title;
+  if (rule.itemType === "conferencePaper") delete normalized.bookTitle;
   Object.assign(normalized, fields);
   return {
     metadata: normalized,
@@ -323,6 +231,36 @@ export function normalizeConference(
       itemType: rule.itemType,
       removeEditors: rule.removeEditors,
       fields,
+    },
+  };
+}
+
+// Keep source/baseline comparison out of the task runner; both local and retrieved repairs use the same rules.
+export function normalizeConferenceUpdate(
+  metadata: Metadata,
+  previous: Metadata,
+  rules: ConferenceRule[],
+  style: PublicationStyle,
+) {
+  const result = normalizeConference(metadata, rules, style);
+  const existing = normalizeConference(previous, rules, "original");
+  const sameConference = Boolean(
+    result.rule && result.rule.id === existing.rule?.id,
+  );
+  if (
+    style === "original" &&
+    sameConference &&
+    isProceedingsTitle(previous.conferenceName) &&
+    result.overrides?.fields &&
+    existing.overrides?.fields?.proceedingsTitle
+  )
+    result.overrides.fields.proceedingsTitle =
+      existing.overrides.fields.proceedingsTitle;
+  return {
+    ...result,
+    venuePolicy: {
+      preserve: sameConference,
+      repair: Boolean(result.rule && existing.rule && !sameConference),
     },
   };
 }

@@ -7,16 +7,7 @@ import {
 } from "./identifiers";
 import { titleScore, matchesAuthor } from "./matching";
 
-function containerField(itemType: string): string | undefined {
-  switch (itemType) {
-    case "conferencePaper":
-      return "proceedingsTitle";
-    case "bookSection":
-      return "bookTitle";
-    case "journalArticle":
-      return "publicationTitle";
-  }
-}
+import { containerField } from "./venues";
 
 export function needsContainerTitle(metadata: Metadata): boolean {
   const field = containerField(metadata.itemType);

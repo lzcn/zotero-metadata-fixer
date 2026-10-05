@@ -7,7 +7,13 @@ import { join } from "node:path";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
+let metadataRequests = 0;
 const server = createServer((request, response) => {
+  if (request.url === "/metadata") {
+    metadataRequests++;
+    response.end("shared metadata");
+    return;
+  }
   if (request.url.startsWith("/publication")) {
     response.writeHead(200, { "Content-Type": "text/html" });
     const withDOI = request.url.includes("with-doi");
@@ -191,6 +197,25 @@ startup = async function(data) {
       if (result.cvpr.publication !== 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition' || result.cvpr.conference !== 'My existing CVPR event' || result.cvpr.date !== '2026' || cvpr.getField('title') !== 'My Hand Edited CVPR TITLE') throw new Error('CVPR full-name normalization failed');
       if (!progressState.rows[0].detail.includes('Access blocked')) throw new Error('Native HTML API response was not classified as blocked');
       result.blockedResponse = true;
+      const identity = {id:cvpr.id,key:cvpr.key};
+      for (const venue of ["2026 IEEE 37 Conference for Computer Vision & Pattern Recognition", "Proc. of the XXXVII Annual Conference on Computer Vision and Pattern Recognition (CVPR'26)"]) {
+        cvpr.setField('proceedingsTitle', venue);
+        await cvpr.saveTx();
+        MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:cvpr.toJSON(),source:'DOI',warnings:[]})};
+        await MLRuntime.run(win, 'lint');
+        if (cvpr.getField('proceedingsTitle') !== result.cvpr.publication || cvpr.getField('conferenceName') !== result.cvpr.conference || cvpr.getField('date') !== '2026' || cvpr.id !== identity.id || cvpr.key !== identity.key) throw new Error('Generic venue normalization changed the event, date or identity');
+      }
+      result.venueVariants = true;
+      const exporting = new Zotero.Translate.Export();
+      exporting.setItems([cvpr]);
+      const exporter = (await exporting.getTranslators()).find(translator => translator.label === 'BibTeX');
+      if (!exporter) throw new Error('Native BibTeX translator is missing');
+      exporting.setTranslator(exporter);
+      await exporting.translate();
+      const bibtex = exporting.string.replace(/[{}]/g, '');
+      result.bibtex = bibtex.includes('booktitle') && bibtex.includes(result.cvpr.publication) && !bibtex.includes('My existing CVPR event');
+      if (!result.bibtex) throw new Error('Native BibTeX export did not use Proceedings Title: ' + exporting.string);
+
       select.value = 'original';
       select.dispatchEvent(new settings.Event('command'));
       cvpr.setField('conferenceName', 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition');
@@ -364,7 +389,12 @@ startup = async function(data) {
       let requested = false;
       MLRuntime.request = (...args) => { requested = true; return originalRequest(...args); };
       MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
-      MLRuntime.retriever = {retrieveCurrent:async () => { await MLRuntime.request(${JSON.stringify(slowURL)}); return {metadata:item.toJSON(),source:'URL',warnings:[]}; }};
+      MLRuntime.retriever = {retrieveCurrent:async () => { const metadataURL = ${JSON.stringify(slowURL.replace("/pending", "/metadata"))};
+        const values = await Promise.all([MLRuntime.request(metadataURL), MLRuntime.request(metadataURL)]);
+        values.push(await MLRuntime.request(metadataURL));
+        if (values.some(value => value !== 'shared metadata')) throw new Error('Shared native response was corrupted');
+        result.requestReuse = true;
+        await Promise.all([MLRuntime.request(${JSON.stringify(slowURL)}), MLRuntime.request(${JSON.stringify(slowURL)})]); return {metadata:item.toJSON(),source:'URL',warnings:[]}; }};
       const exitingRuntime = MLRuntime;
       const pending = exitingRuntime.run(win, 'lint');
       await wait(() => requested);
@@ -413,6 +443,8 @@ try {
   if (timedOut) throw new Error("Zotero did not exit without being killed");
   const result = JSON.parse(await readFile(marker, "utf8"));
   if (!result.ok) throw new Error(JSON.stringify(result));
+  if (metadataRequests !== 1 || abortedRequests !== 1)
+    throw new Error("Native requests were not deduplicated");
   if (!abortedRequests)
     throw new Error("Shutdown did not abort the pending native HTTP request");
   console.log(JSON.stringify({ ...result, abortedRequests }));

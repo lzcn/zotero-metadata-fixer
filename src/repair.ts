@@ -2,6 +2,7 @@ import type { Item, Metadata, Plan, PlanOverrides, UpdateHost } from "./model";
 import { cleanDOI, preprintDOI } from "./identifiers";
 import { normalize } from "./matching";
 import { buildPlan } from "./update";
+import { containerField, isProceedingsTitle } from "./venues";
 
 function comparable(value: string): string {
   return value
@@ -31,7 +32,7 @@ export function buildRepairPlan(
       : {};
   if (
     overrides?.fields?.proceedingsTitle &&
-    /^proceedings of\b/i.test(item.getField("conferenceName")) &&
+    isProceedingsTitle(item.getField("conferenceName")) &&
     (venuePolicy?.preserve ||
       normalize(String(metadata.conferenceName || "")) ===
         normalize(item.getField("conferenceName")))
@@ -40,14 +41,7 @@ export function buildRepairPlan(
   if (!publication) {
     // Type conversion maps the existing venue before filling from another source.
     const targetType = overrides?.itemType || metadata.itemType;
-    const venueField =
-      targetType === "conferencePaper"
-        ? "proceedingsTitle"
-        : targetType === "bookSection"
-          ? "bookTitle"
-          : targetType === "journalArticle"
-            ? "publicationTitle"
-            : undefined;
+    const venueField = containerField(targetType);
     if (
       venueField &&
       !fields[venueField] &&

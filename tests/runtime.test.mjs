@@ -757,8 +757,13 @@ test("network cancellation invokes Zotero's request canceller and refuses late f
   };
   try {
     const request = runtime.request("https://example.test", operation);
+    const shared = runtime.request("https://example.test", operation);
+    const rejected = Promise.all([
+      assert.rejects(request, /cancelled/),
+      assert.rejects(shared, /cancelled/),
+    ]);
     operation.cancel();
-    await assert.rejects(request, /cancelled/);
+    await rejected;
     assert.equal(cancelled, 1);
     await assert.rejects(
       runtime.request("https://example.test/fallback", operation),
@@ -1214,4 +1219,82 @@ test("DMLNet official IEEE metadata fills DOI despite compound-word title differ
   assert.equal(paper.getField("DOI"), "10.1109/LGRS.2026.3708839");
   assert.equal(paper.getField("title"), originalTitle);
   assert.equal(state.progress.rows[0].status, "Updated");
+});
+
+test("a batch shares pending and completed text responses but isolates documents and later batches", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  let calls = 0;
+  let resolve;
+  globalThis.Zotero.HTTP = {
+    request: () => {
+      calls++;
+      return new Promise((done) => {
+        resolve = done;
+      });
+    },
+    wrapDocument: (doc) => doc,
+  };
+  try {
+    const first = runtime.request("https://example.test", operation);
+    const second = runtime.request("https://example.test", operation);
+    assert.equal(calls, 1);
+    resolve({ responseText: "metadata" });
+    assert.deepEqual(await Promise.all([first, second]), [
+      "metadata",
+      "metadata",
+    ]);
+    assert.equal(
+      await runtime.request("https://example.test", operation),
+      "metadata",
+    );
+    assert.equal(calls, 1);
+    globalThis.Zotero.HTTP.request = async () => {
+      calls++;
+      return { responseText: "fresh", response: {} };
+    };
+    await runtime.request("https://example.test", new Operation());
+    assert.equal(calls, 2);
+    await runtime.request("https://example.test", operation, "document");
+    await runtime.request("https://example.test", operation, "document");
+    assert.equal(calls, 4);
+    operation.cancel();
+    await assert.rejects(
+      runtime.request("https://example.test", operation),
+      /Cancelled/,
+    );
+  } finally {
+    delete globalThis.Zotero.HTTP;
+  }
+});
+
+test("failed text responses are retried within a batch", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  let calls = 0;
+  globalThis.Zotero.HTTP = {
+    request: async () => {
+      if (++calls === 1) throw new Error("Temporary failure");
+      return { responseText: "recovered" };
+    },
+  };
+  try {
+    await assert.rejects(
+      runtime.request("https://example.test", operation),
+      /Temporary/,
+    );
+    assert.equal(
+      await runtime.request("https://example.test", operation),
+      "recovered",
+    );
+    assert.equal(calls, 2);
+  } finally {
+    delete globalThis.Zotero.HTTP;
+  }
 });

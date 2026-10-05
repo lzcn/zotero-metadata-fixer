@@ -19,6 +19,7 @@ import {
   CONFERENCE_SETTINGS_PREF,
   parseConferenceSettings,
   normalizeConference,
+  normalizeConferenceUpdate,
   type ConferenceSettings,
   type PublicationStyle,
 } from "./conferences";
@@ -37,6 +38,7 @@ export class Runtime {
   private registeringPreferences = false;
   private settingsCache?: { raw?: string; value: ConferenceSettings };
   private operation?: Operation;
+  private responses = new WeakMap<Operation, Map<string, Promise<string>>>();
   private operationWindow?: any;
   private dialogOwners = new Map<any, any>();
   private progressWindow?: any;
@@ -88,6 +90,36 @@ export class Runtime {
       this.generation !== this.operationGeneration
     )
       throw new Error(this.s.cancelled);
+    // Keep immutable responses within one batch; documents remain private to translators.
+    if (responseType !== "text")
+      return this.fetchResponse(url, operation, responseType);
+    let responses = this.responses.get(operation);
+    if (!responses) {
+      responses = new Map();
+      this.responses.set(operation, responses);
+      const batch = responses;
+      operation.onCancel(() => batch.clear());
+    }
+    let pending = responses.get(url);
+    if (!pending) {
+      pending = this.fetchResponse(url, operation, responseType).catch(
+        (error) => {
+          responses.delete(url);
+          throw error;
+        },
+      );
+      responses.set(url, pending);
+    }
+    const result = await pending;
+    if (!operation.active() || !this.alive) throw new Error(this.s.cancelled);
+    return result;
+  }
+
+  private async fetchResponse(
+    url: string,
+    operation: Operation,
+    responseType: string,
+  ): Promise<any> {
     if (url.startsWith("https://export.arxiv.org/")) {
       const wait = 3000 - (Date.now() - this.lastArxivRequest);
       if (wait > 0) await operation.delay(wait);
@@ -615,27 +647,13 @@ export class Runtime {
           }
           if (!host.active()) break;
           const settings = this.conferenceSettings();
-          const conference = normalizeConference(
+          const conference = normalizeConferenceUpdate(
             metadata,
-            settings.rules,
-            settings.publicationStyle,
-          );
-          metadata = conference.metadata;
-          const existingConference = normalizeConference(
             item.toJSON(),
             settings.rules,
-            "original",
+            settings.publicationStyle ?? "original",
           );
-          // Translators may omit the old event field; use the baseline to repair misplaced proceedings.
-          if (
-            settings.publicationStyle === "original" &&
-            conference.rule?.id === existingConference.rule?.id &&
-            /^proceedings of\b/i.test(item.getField("conferenceName")) &&
-            conference.overrides?.fields &&
-            existingConference.overrides?.fields?.proceedingsTitle
-          )
-            conference.overrides.fields.proceedingsTitle =
-              existingConference.overrides.fields.proceedingsTitle;
+          metadata = conference.metadata;
           const plan = buildRepairPlan(
             item,
             metadata,
@@ -643,17 +661,7 @@ export class Runtime {
             conference.overrides,
             publication,
             settings.publicationStyle !== "original",
-            {
-              preserve: Boolean(
-                conference.rule &&
-                  conference.rule.id === existingConference.rule?.id,
-              ),
-              repair: Boolean(
-                conference.rule &&
-                  existingConference.rule &&
-                  conference.rule.id !== existingConference.rule.id,
-              ),
-            },
+            conference.venuePolicy,
           );
           if (!plan.changes.length) {
             row.status = this.s.noChanges;

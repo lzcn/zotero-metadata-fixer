@@ -32,7 +32,7 @@ test("ECCV matching changes type and maps the proceedings without modifying the 
   const result = normalizeConference(metadata, DEFAULT_CONFERENCE_RULES);
   assert.equal(result.metadata.itemType, "conferencePaper");
   assert.equal(result.metadata.proceedingsTitle, originalProceedings);
-  assert.equal(result.metadata.conferenceName, ccfName);
+  assert.equal(result.metadata.conferenceName, undefined);
   assert.equal(result.metadata.bookTitle, undefined);
   assert.equal(result.overrides.removeEditors, true);
   assert.deepEqual(metadata, before);
