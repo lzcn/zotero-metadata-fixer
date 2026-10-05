@@ -16,6 +16,15 @@ import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { selectPublication } from "./selection";
 import { en, zh } from "./strings";
 import {
+  publicationShort,
+  addJournalAliases,
+  addJournalTitleAbbreviations,
+} from "./publication-short";
+import {
+  PublicationColumnView,
+  REPLACE_PUBLICATION_PREF,
+} from "./publication-column";
+import {
   CONFERENCE_SETTINGS_PREF,
   parseConferenceSettings,
   normalizeConference,
@@ -35,6 +44,8 @@ export class Runtime {
   private windows = new Map<any, () => void>();
   private dialogs = new Set<any>();
   private preferencePane?: string;
+  private publicationColumn?: string;
+  private publicationView = new PublicationColumnView();
   private registeringPreferences = false;
   private settingsCache?: { raw?: string; value: ConferenceSettings };
   private operation?: Operation;
@@ -206,6 +217,11 @@ export class Runtime {
     };
     popup.addEventListener("popupshowing", showing);
     popup.appendChild(menu);
+    this.publicationView.sync(
+      win,
+      this.publicationColumn,
+      Boolean(this.publicationColumn),
+    );
     this.windows.set(win, () => {
       popup.removeEventListener("popupshowing", showing);
       menu.remove();
@@ -213,6 +229,9 @@ export class Runtime {
   }
 
   remove(win: any): void {
+    if (this.alive && this.windows.size === 1 && this.windows.has(win))
+      this.publicationView.restore([win]);
+    this.publicationView.cancel(win);
     if (this.operationWindow === win) this.cancel();
     for (const [dialog, owner] of this.dialogOwners)
       if (owner === win) this.cleanup(() => dialog.close());
@@ -284,11 +303,18 @@ export class Runtime {
   stop(): void {
     if (!this.alive) return;
     this.alive = false;
+    this.cleanup(() => this.publicationView.restore([...this.windows.keys()]));
     this.cleanup(() => this.cancel());
     for (const win of [...this.windows.keys()])
       this.cleanup(() => this.remove(win));
     this.dialogs.clear();
     this.dialogOwners.clear();
+    if (this.publicationColumn) {
+      this.cleanup(() =>
+        Zotero.ItemTreeManager.unregisterColumn(this.publicationColumn),
+      );
+      this.publicationColumn = undefined;
+    }
     if (this.preferencePane) {
       this.cleanup(() =>
         Zotero.PreferencePanes.unregister(this.preferencePane),
@@ -296,6 +322,81 @@ export class Runtime {
       this.preferencePane = undefined;
     }
     if (Zotero.MetadataLinter === this) delete Zotero.MetadataLinter;
+  }
+
+  registerPublicationColumn(): void {
+    if (!this.alive || this.publicationColumn) return;
+    if (!this.publicationView.enabled()) {
+      for (const win of this.windows.keys())
+        this.publicationView.sync(win, undefined, false);
+      return;
+    }
+    if (Zotero.File?.getContentsFromURL) {
+      const abbreviations = JSON.parse(
+        Zotero.File.getContentsFromURL(
+          "resource://zotero/schema/abbreviations.json",
+        ),
+      );
+      addJournalTitleAbbreviations(abbreviations.default["container-title"]);
+    }
+    if (Zotero.Cite?.getAbbreviation) {
+      addJournalAliases((name) => {
+        const abbreviations = {
+          default: { "container-title": {} as Record<string, string> },
+        };
+        Zotero.Cite.getAbbreviation(
+          "",
+          abbreviations,
+          "default",
+          "container-title",
+          name,
+        );
+        return abbreviations.default["container-title"][name];
+      });
+    }
+    const key = Zotero.ItemTreeManager.registerColumn({
+      pluginID: "metadata-linter@lzcn",
+      dataKey: "publication-short",
+      label: this.s.publicationShort,
+      width: "120",
+      zoteroPersist: ["width", "hidden", "sortDirection"],
+      dataProvider: (item: any) => {
+        if (!item.isRegularItem()) return "";
+        return publicationShort({
+          itemType: item.itemType,
+          title: "",
+          publicationTitle: item.getField("publicationTitle", false, true),
+          proceedingsTitle: item.getField("proceedingsTitle"),
+          bookTitle: item.getField("bookTitle"),
+          conferenceName: item.getField("conferenceName"),
+          journalAbbreviation: item.getField("journalAbbreviation"),
+          repository: item.getField("repository"),
+          institution: item.getField("institution"),
+          university: item.getField("university"),
+          publisher: item.getField("publisher", false, true),
+          archive: item.getField("archive"),
+          archiveID: item.getField("archiveID"),
+          url: item.getField("url"),
+          DOI: item.getField("DOI"),
+          extra: item.getField("extra"),
+        });
+      },
+    });
+    if (!key) throw new Error("Could not register publication column");
+    this.publicationColumn = key;
+    for (const win of this.windows.keys()) this.publicationView.sync(win, key);
+  }
+
+  setReplacePublicationColumn(enabled: boolean): void {
+    if (!this.alive) return;
+    Zotero.Prefs.set(REPLACE_PUBLICATION_PREF, enabled, true);
+    if (enabled) this.registerPublicationColumn();
+    else {
+      this.publicationView.restore([...this.windows.keys()]);
+      if (this.publicationColumn)
+        Zotero.ItemTreeManager.unregisterColumn(this.publicationColumn);
+      this.publicationColumn = undefined;
+    }
   }
 
   registerPreferences(): void {
@@ -334,6 +435,15 @@ export class Runtime {
       false,
       true,
     );
+    doc
+      .getElementById("ml-replace-publication")
+      .addEventListener(
+        "command",
+        (event: any) =>
+          this.setReplacePublicationColumn(Boolean(event.target.checked)),
+        false,
+        true,
+      );
     this.refreshPreferences(doc);
   }
 
@@ -341,6 +451,7 @@ export class Runtime {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
       "ml-settings-help": this.s.settingsHelp,
+      "ml-replace-publication": this.s.replacePublication,
       "ml-publication-label": this.s.publicationStyle,
       "ml-retrieved-names": this.s.retrievedNames,
       "ml-standard-names": this.s.standardNames,
@@ -348,11 +459,14 @@ export class Runtime {
       "ml-publication-help": this.s.formatHelp,
     })) {
       const element = doc.getElementById(id);
-      if (element.localName === "menuitem") element.setAttribute("label", text);
+      if (["menuitem", "checkbox"].includes(element.localName))
+        element.setAttribute("label", text);
       else if (element.localName === "label")
         element.setAttribute("value", text);
       else element.textContent = text;
     }
+    doc.getElementById("ml-replace-publication").checked =
+      this.publicationView.enabled();
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
   }
@@ -704,6 +818,7 @@ export function start(): Runtime {
   try {
     for (const win of Zotero.getMainWindows()) runtime.inject(win);
     runtime.registerPreferences();
+    runtime.registerPublicationColumn();
   } catch (error) {
     runtime.stop();
     throw error;

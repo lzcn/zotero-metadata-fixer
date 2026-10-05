@@ -338,6 +338,7 @@ test("preferences only expose naming style while internal conference rules remai
   const saved = [];
   const ids = [
     "ml-publication-style",
+    "ml-replace-publication",
     "ml-settings-help",
     "ml-publication-label",
     "ml-retrieved-names",
@@ -1296,5 +1297,43 @@ test("failed text responses are retried within a batch", async () => {
     assert.equal(calls, 2);
   } finally {
     delete globalThis.Zotero.HTTP;
+  }
+});
+
+test("publication column registration is idempotent and removed on stop", () => {
+  const previous = Zotero.ItemTreeManager;
+  const registered = [],
+    removed = [];
+  Zotero.ItemTreeManager = {
+    registerColumn(options) {
+      registered.push(options);
+      return "host-publication-short";
+    },
+    unregisterColumn(key) {
+      removed.push(key);
+    },
+  };
+  try {
+    const runtime = new Runtime();
+    runtime.registerPublicationColumn();
+    runtime.registerPublicationColumn();
+    assert.equal(registered.length, 1);
+    const item = new FakeItem();
+    item.data.itemType = "journalArticle";
+    item.data.publicationTitle = "IEEE Transactions on Multimedia";
+    assert.equal(registered[0].dataProvider(item), "TMM");
+    item.data.publicationTitle = "Uncommon Journal";
+    assert.equal(registered[0].dataProvider(item), "Uncommon Journal");
+    assert.equal(
+      registered[0].dataProvider({ isRegularItem: () => false }),
+      "",
+    );
+    runtime.stop();
+    runtime.stop();
+    runtime.registerPublicationColumn();
+    assert.deepEqual(removed, ["host-publication-short"]);
+    assert.equal(registered.length, 1);
+  } finally {
+    Zotero.ItemTreeManager = previous;
   }
 });

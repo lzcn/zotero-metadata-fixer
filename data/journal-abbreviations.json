@@ -1,0 +1,3322 @@
+[
+  {
+    "name": "ACM Computing Surveys",
+    "aliases": [],
+    "acronym": "CSUR",
+    "source": "https://dl.acm.org/journal/csur"
+  },
+  {
+    "acronym": "ACM Trans Comput Healthc",
+    "name": "ACM Transactions on Computing for Healthcare",
+    "aliases": [
+      "ACM transactions on computing for healthcare",
+      "ACM Trans Comput Healthc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101768787",
+    "nlmID": "101768787"
+  },
+  {
+    "acronym": "TOG",
+    "name": "ACM Transactions on Graphics",
+    "aliases": ["ACM Trans. Graph."],
+    "source": "https://dl.acm.org/journal/tog"
+  },
+  {
+    "name": "ACM Transactions on Information Systems",
+    "aliases": [],
+    "acronym": "TOIS",
+    "source": "https://dl.acm.org/journal/tois"
+  },
+  {
+    "name": "ACM Transactions on Intelligent Systems and Technology",
+    "aliases": [],
+    "acronym": "TIST",
+    "source": "https://dl.acm.org/journal/tist"
+  },
+  {
+    "name": "ACM Transactions on Interactive Intelligent Systems",
+    "aliases": [],
+    "acronym": "TIIS",
+    "source": "https://dl.acm.org/journal/tiis"
+  },
+  {
+    "name": "ACM Transactions on Knowledge Discovery from Data",
+    "aliases": [],
+    "acronym": "TKDD",
+    "source": "https://dl.acm.org/journal/tkdd"
+  },
+  {
+    "acronym": "TOMM",
+    "name": "ACM Transactions on Multimedia Computing, Communications, and Applications",
+    "aliases": [
+      "ACM Trans. Multimedia Comput. Commun. Appl.",
+      "ACM Transactions on Multimedia Computing Communications and Applications"
+    ],
+    "source": "https://dl.acm.org/journal/tomm"
+  },
+  {
+    "acronym": "ACM IMS Trans Data Sci",
+    "name": "ACM/IMS Transactions on Data Science",
+    "aliases": [
+      "ACM/IMS transactions on data science",
+      "ACM IMS Trans Data Sci"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918316882406676",
+    "nlmID": "9918316882406676"
+  },
+  {
+    "acronym": "Acta Paediatr (Stockh)",
+    "name": "Acta Paediatrica",
+    "aliases": ["Acta paediatrica", "Acta Paediatr (Stockh)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0000213",
+    "nlmID": "0000213"
+  },
+  {
+    "acronym": "Adapt Behav",
+    "name": "Adaptive Behavior",
+    "aliases": ["Adaptive behavior", "Adapt Behav"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9438485",
+    "nlmID": "9438485"
+  },
+  {
+    "acronym": "NeurIPS",
+    "name": "Advances in Neural Information Processing Systems",
+    "aliases": [
+      "Advances in Neural Information Processing Systems",
+      "Advances in neural information processing systems",
+      "Adv Neural Inf Process Syst"
+    ],
+    "source": "https://proceedings.neurips.cc/"
+  },
+  {
+    "acronym": "Am Heart J",
+    "name": "American Heart Journal",
+    "aliases": ["American heart journal", "Am Heart J"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0370465",
+    "nlmID": "0370465"
+  },
+  {
+    "acronym": "Am J Physiol Heart Circ Physiol",
+    "name": "American Journal of Physiology. Heart and Circulatory Physiology",
+    "aliases": [
+      "American journal of physiology. Heart and circulatory physiology",
+      "Am J Physiol Heart Circ Physiol"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100901228",
+    "nlmID": "100901228"
+  },
+  {
+    "acronym": "Ann Emerg Med",
+    "name": "Annals of Emergency Medicine",
+    "aliases": ["Annals of emergency medicine", "Ann Emerg Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8002646",
+    "nlmID": "8002646"
+  },
+  {
+    "acronym": "Ann Intern Med",
+    "name": "Annals of Internal Medicine",
+    "aliases": ["Annals of internal medicine", "Ann Intern Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0372351",
+    "nlmID": "0372351"
+  },
+  {
+    "acronym": "Ann Math",
+    "name": "Annals of Mathematics",
+    "aliases": ["Annals of mathematics", "Ann Math"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101581697",
+    "nlmID": "101581697"
+  },
+  {
+    "acronym": "Annu Rev Clin Psychol",
+    "name": "Annual Review of Clinical Psychology",
+    "aliases": [
+      "Annual review of clinical psychology",
+      "Annu Rev Clin Psychol"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101235325",
+    "nlmID": "101235325"
+  },
+  {
+    "acronym": "Annu Rev Stat Appl",
+    "name": "Annual Review of Statistics and Its Application",
+    "aliases": [
+      "Annual review of statistics and its application",
+      "Annu Rev Stat Appl"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101622422",
+    "nlmID": "101622422"
+  },
+  {
+    "acronym": "APSIPA Trans Signal Inf Process",
+    "name": "APSIPA Transactions on Signal and Information Processing",
+    "aliases": [
+      "APSIPA Transactions on Signal and Information Processing",
+      "APSIPA Trans Signal Inf Process"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101694868",
+    "nlmID": "101694868"
+  },
+  {
+    "acronym": "Artif Intell",
+    "name": "Artificial Intelligence",
+    "aliases": ["Artificial intelligence", "Artif Intell"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0262613",
+    "nlmID": "0262613"
+  },
+  {
+    "acronym": "Artif Intell Med",
+    "name": "Artificial Intelligence in Medicine",
+    "aliases": ["Artificial intelligence in medicine", "Artif Intell Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8915031",
+    "nlmID": "8915031"
+  },
+  {
+    "acronym": "Artif Intell Rev",
+    "name": "Artificial Intelligence Review",
+    "aliases": ["Artificial intelligence review", "Artif Intell Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883087",
+    "nlmID": "9883087"
+  },
+  {
+    "acronym": "Bayesian Anal",
+    "name": "Bayesian Analysis",
+    "aliases": ["Bayesian analysis", "Bayesian Anal"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101307045",
+    "nlmID": "101307045"
+  },
+  {
+    "acronym": "Behav Res Methods",
+    "name": "Behavior Research Methods",
+    "aliases": ["Behavior research methods", "Behav Res Methods"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101244316",
+    "nlmID": "101244316"
+  },
+  {
+    "acronym": "Behav Sci",
+    "name": "Behavioral Science",
+    "aliases": ["Behavioral science", "Behav Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/2984722R",
+    "nlmID": "2984722R"
+  },
+  {
+    "acronym": "Behav Sci (Basel)",
+    "name": "Behavioral sciences (Basel, Switzerland)",
+    "aliases": [
+      "Behavioral sciences (Basel, Switzerland)",
+      "Behav Sci (Basel)"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101576826",
+    "nlmID": "101576826"
+  },
+  {
+    "acronym": "Biochem Med (Zagreb)",
+    "name": "Biochemia Medica",
+    "aliases": ["Biochemia medica", "Biochem Med (Zagreb)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9610305",
+    "nlmID": "9610305"
+  },
+  {
+    "acronym": "Biol Cybern",
+    "name": "Biological Cybernetics",
+    "aliases": ["Biological cybernetics", "Biol Cybern"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7502533",
+    "nlmID": "7502533"
+  },
+  {
+    "acronym": "Biol Psychol",
+    "name": "Biological Psychology",
+    "aliases": ["Biological psychology", "Biol Psychol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0375566",
+    "nlmID": "0375566"
+  },
+  {
+    "acronym": "Biomed Res Int",
+    "name": "BioMed Research International",
+    "aliases": ["BioMed research international", "Biomed Res Int"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101600173",
+    "nlmID": "101600173"
+  },
+  {
+    "acronym": "Biomed Signal Process Control",
+    "name": "Biomedical Signal Processing and Control",
+    "aliases": [
+      "Biomedical signal processing and control",
+      "Biomed Signal Process Control"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101317299",
+    "nlmID": "101317299"
+  },
+  {
+    "acronym": "BMC Med",
+    "name": "BMC Medicine",
+    "aliases": ["BMC medicine", "BMC Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101190723",
+    "nlmID": "101190723"
+  },
+  {
+    "acronym": "BMJ Glob Health",
+    "name": "BMJ Global Health",
+    "aliases": ["BMJ global health", "BMJ Glob Health"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101685275",
+    "nlmID": "101685275"
+  },
+  {
+    "acronym": "Br J Sports Med",
+    "name": "British Journal of Sports Medicine",
+    "aliases": ["British journal of sports medicine", "Br J Sports Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0432520",
+    "nlmID": "0432520"
+  },
+  {
+    "acronym": "Bull World Health Organ",
+    "name": "Bulletin of the World Health Organization",
+    "aliases": [
+      "Bulletin of the World Health Organization",
+      "Bull World Health Organ"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7507052",
+    "nlmID": "7507052"
+  },
+  {
+    "acronym": "Cardiol Clin",
+    "name": "Cardiology Clinics",
+    "aliases": ["Cardiology clinics", "Cardiol Clin"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8300331",
+    "nlmID": "8300331"
+  },
+  {
+    "acronym": "Chaos Solitons Fractals",
+    "name": "Chaos, Solitons & Fractals",
+    "aliases": ["Chaos, solitons, and fractals", "Chaos Solitons Fractals"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100971564",
+    "nlmID": "100971564"
+  },
+  {
+    "acronym": "Circuits Syst Signal Process",
+    "name": "Circuits, Systems, and Signal Processing",
+    "aliases": [
+      "Circuits, systems, and signal processing",
+      "Circuits Syst Signal Process"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101771471",
+    "nlmID": "101771471"
+  },
+  {
+    "acronym": "Circ Res",
+    "name": "Circulation Research",
+    "aliases": ["Circulation research", "Circ Res"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0047103",
+    "nlmID": "0047103"
+  },
+  {
+    "acronym": "Circ Cardiovasc Qual Outcomes",
+    "name": "Circulation: Cardiovascular Quality and Outcomes",
+    "aliases": [
+      "Circulation. Cardiovascular quality and outcomes",
+      "Circ Cardiovasc Qual Outcomes"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101489148",
+    "nlmID": "101489148"
+  },
+  {
+    "acronym": "Clin Cardiol",
+    "name": "Clinical Cardiology",
+    "aliases": ["Clinical cardiology", "Clin Cardiol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7903272",
+    "nlmID": "7903272"
+  },
+  {
+    "acronym": "Clin Epidemiol",
+    "name": "Clinical Epidemiology",
+    "aliases": ["Clinical epidemiology", "Clin Epidemiol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101531700",
+    "nlmID": "101531700"
+  },
+  {
+    "acronym": "Clin Kidney J",
+    "name": "Clinical Kidney Journal",
+    "aliases": ["Clinical kidney journal", "Clin Kidney J"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101579321",
+    "nlmID": "101579321"
+  },
+  {
+    "acronym": "Clin Res Cardiol",
+    "name": "Clinical Research in Cardiology: Official Journal of the German Cardiac Society",
+    "aliases": [
+      "Clinical research in cardiology : official journal of the German Cardiac Society",
+      "Clin Res Cardiol"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101264123",
+    "nlmID": "101264123"
+  },
+  {
+    "acronym": "Cogn Sci",
+    "name": "Cognitive Science",
+    "aliases": ["Cognitive science", "Cogn Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7708195",
+    "nlmID": "7708195"
+  },
+  {
+    "acronym": "Commun Biol",
+    "name": "Communications Biology",
+    "aliases": ["Communications biology", "Commun Biol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101719179",
+    "nlmID": "101719179"
+  },
+  {
+    "acronym": "Commun Eng",
+    "name": "Communications Engineering",
+    "aliases": ["Communications engineering", "Commun Eng"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918523382506676",
+    "nlmID": "9918523382506676"
+  },
+  {
+    "acronym": "Commun Partial Differ Equ",
+    "name": "Communications in Partial Differential Equations",
+    "aliases": [
+      "Communications in partial differential equations",
+      "Commun Partial Differ Equ"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918284179806676",
+    "nlmID": "9918284179806676"
+  },
+  {
+    "acronym": "Commun Med (Lond)",
+    "name": "Communications Medicine",
+    "aliases": ["Communications medicine", "Commun Med (Lond)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918250414506676",
+    "nlmID": "9918250414506676"
+  },
+  {
+    "acronym": "CACM",
+    "name": "Communications of the ACM",
+    "aliases": [],
+    "source": "https://cacm.acm.org/"
+  },
+  {
+    "acronym": "Commun Pure Appl Math",
+    "name": "Communications on Pure and Applied Mathematics",
+    "aliases": [
+      "Communications on pure and applied mathematics",
+      "Commun Pure Appl Math"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9890126",
+    "nlmID": "9890126"
+  },
+  {
+    "acronym": "Complex Intell Systems",
+    "name": "Complex & Intelligent Systems",
+    "aliases": ["Complex & intelligent systems", "Complex Intell Systems"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918284259706676",
+    "nlmID": "9918284259706676"
+  },
+  {
+    "acronym": "Comput Mech",
+    "name": "Computational mechanics",
+    "aliases": ["Computational mechanics", "Comput Mech"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883520",
+    "nlmID": "9883520"
+  },
+  {
+    "acronym": "Comput Aided Geom Des",
+    "name": "Computer Aided Geometric Design",
+    "aliases": ["Computer aided geometric design", "Comput Aided Geom Des"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101511481",
+    "nlmID": "101511481"
+  },
+  {
+    "acronym": "Comput Commun",
+    "name": "Computer Communications",
+    "aliases": ["Computer communications", "Comput Commun"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101570583",
+    "nlmID": "101570583"
+  },
+  {
+    "acronym": "Comput Methods Programs Biomed",
+    "name": "Computer Methods and Programs in Biomedicine",
+    "aliases": [
+      "Computer methods and programs in biomedicine",
+      "Comput Methods Programs Biomed"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8506513",
+    "nlmID": "8506513"
+  },
+  {
+    "acronym": "CVIU",
+    "name": "Computer Vision and Image Understanding",
+    "aliases": ["Comput. Vis. Image Underst."],
+    "source": "https://www.sciencedirect.com/journal/computer-vision-and-image-understanding"
+  },
+  {
+    "acronym": "Comput Aided Civ Infrastruct Eng",
+    "name": "Computer-Aided Civil and Infrastructure Engineering",
+    "aliases": [
+      "Computer-aided civil and infrastructure engineering",
+      "Comput Aided Civ Infrastruct Eng"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9919066770906676",
+    "nlmID": "9919066770906676"
+  },
+  {
+    "acronym": "Comput Geosci",
+    "name": "Computers & Geosciences",
+    "aliases": ["Computers & geosciences", "Comput Geosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101092352",
+    "nlmID": "101092352"
+  },
+  {
+    "acronym": "Comput Secur",
+    "name": "Computers & Security",
+    "aliases": ["Computers & security", "Comput Secur"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9881584",
+    "nlmID": "9881584"
+  },
+  {
+    "acronym": "Comput Biol Med",
+    "name": "Computers in Biology and Medicine",
+    "aliases": ["Computers in biology and medicine", "Comput Biol Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/1250250",
+    "nlmID": "1250250"
+  },
+  {
+    "acronym": "Comput Environ Urban Syst",
+    "name": "Computers, Environment and Urban Systems",
+    "aliases": [
+      "Computers, environment and urban systems",
+      "Comput Environ Urban Syst"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101092368",
+    "nlmID": "101092368"
+  },
+  {
+    "acronym": "Crit Care Med",
+    "name": "Critical Care Medicine",
+    "aliases": ["Critical care medicine", "Crit Care Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0355501",
+    "nlmID": "0355501"
+  },
+  {
+    "acronym": "Decis Support Syst",
+    "name": "Decision Support Systems",
+    "aliases": ["Decision support systems", "Decis Support Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101550449",
+    "nlmID": "101550449"
+  },
+  {
+    "acronym": "Ecol Indic",
+    "name": "Ecological Indicators",
+    "aliases": ["Ecological indicators", "Ecol Indic"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101174880",
+    "nlmID": "101174880"
+  },
+  {
+    "acronym": "Electronics (Basel)",
+    "name": "Electronics",
+    "aliases": ["Electronics", "Electronics (Basel)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101630280",
+    "nlmID": "101630280"
+  },
+  {
+    "acronym": "Eng Appl Artif Intell",
+    "name": "Engineering Applications of Artificial Intelligence",
+    "aliases": [
+      "Engineering applications of artificial intelligence",
+      "Eng Appl Artif Intell"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101469722",
+    "nlmID": "101469722"
+  },
+  {
+    "acronym": "Environ Dev Sustain",
+    "name": "Environment, Development and Sustainability",
+    "aliases": [
+      "Environment, development and sustainability",
+      "Environ Dev Sustain"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101769312",
+    "nlmID": "101769312"
+  },
+  {
+    "acronym": "Environ Sci Technol",
+    "name": "Environmental Science & Technology",
+    "aliases": ["Environmental science & technology", "Environ Sci Technol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0213155",
+    "nlmID": "0213155"
+  },
+  {
+    "acronym": "Eur Heart J",
+    "name": "European Heart Journal",
+    "aliases": ["European heart journal", "Eur Heart J"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8006263",
+    "nlmID": "8006263"
+  },
+  {
+    "acronym": "Eur Heart J Digit Health",
+    "name": "European Heart Journal - Digital Health",
+    "aliases": [
+      "European heart journal. Digital health",
+      "Eur Heart J Digit Health"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101778323",
+    "nlmID": "101778323"
+  },
+  {
+    "acronym": "Eur Heart J Open",
+    "name": "European Heart Journal Open",
+    "aliases": ["European heart journal open", "Eur Heart J Open"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918282081406676",
+    "nlmID": "9918282081406676"
+  },
+  {
+    "acronym": "Eur J Echocardiogr",
+    "name": "European Journal of Echocardiography: The Journal of the Working Group on Echocardiography of the European Society of Cardiology",
+    "aliases": [
+      "European journal of echocardiography : the journal of the Working Group on Echocardiography of the European Society of Cardiology",
+      "Eur J Echocardiogr"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100890618",
+    "nlmID": "100890618"
+  },
+  {
+    "acronym": "Expert Syst Appl",
+    "name": "Expert Systems with Applications",
+    "aliases": ["Expert systems with applications", "Expert Syst Appl"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9884333",
+    "nlmID": "9884333"
+  },
+  {
+    "acronym": "FnT Information Retrieval",
+    "name": "Foundations and Trends in Information Retrieval",
+    "aliases": [
+      "Foundations and Trends\\textregistered in Information Retrieval"
+    ],
+    "source": "https://www.nowpublishers.com/Public-Content/LaTex/LateX_Instructions.pdf"
+  },
+  {
+    "acronym": "FnT Machine Learning",
+    "name": "Foundations and Trends in Machine Learning",
+    "aliases": ["Foundations and Trends\\textregistered in Machine Learning"],
+    "source": "https://www.nowpublishers.com/Public-Content/LaTex/LateX_Instructions.pdf"
+  },
+  {
+    "acronym": "Front Hum Neurosci",
+    "name": "Frontiers in Human Neuroscience",
+    "aliases": ["Frontiers in human neuroscience", "Front Hum Neurosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101477954",
+    "nlmID": "101477954"
+  },
+  {
+    "acronym": "Front Neurosci",
+    "name": "Frontiers in Neuroscience",
+    "aliases": ["Frontiers in neuroscience", "Front Neurosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101478481",
+    "nlmID": "101478481"
+  },
+  {
+    "acronym": "Front Physiol",
+    "name": "Frontiers in Physiology",
+    "aliases": ["Frontiers in physiology", "Front Physiol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101549006",
+    "nlmID": "101549006"
+  },
+  {
+    "acronym": "Front Psychiatry",
+    "name": "Frontiers in Psychiatry",
+    "aliases": ["Frontiers in psychiatry", "Front Psychiatry"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101545006",
+    "nlmID": "101545006"
+  },
+  {
+    "acronym": "Front Psychol",
+    "name": "Frontiers in Psychology",
+    "aliases": ["Frontiers in psychology", "Front Psychol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101550902",
+    "nlmID": "101550902"
+  },
+  {
+    "acronym": "Glob Heart",
+    "name": "Global Heart",
+    "aliases": ["Global heart", "Glob Heart"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101584391",
+    "nlmID": "101584391"
+  },
+  {
+    "acronym": "Health Aff",
+    "name": "Health Affairs",
+    "aliases": ["Health affairs", "Health Aff"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0351302",
+    "nlmID": "0351302"
+  },
+  {
+    "acronym": "Health Aff (Millwood)",
+    "name": "Health Affairs (Project Hope)",
+    "aliases": ["Health affairs (Project Hope)", "Health Aff (Millwood)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8303128",
+    "nlmID": "8303128"
+  },
+  {
+    "acronym": "Health Data Sci",
+    "name": "Health Data Science",
+    "aliases": ["Health data science", "Health Data Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918419276606676",
+    "nlmID": "9918419276606676"
+  },
+  {
+    "acronym": "ACCESS",
+    "name": "IEEE Access",
+    "aliases": ["ACCESS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "ACCESS"
+  },
+  {
+    "acronym": "MAHC",
+    "name": "IEEE Annals of the History of Computing",
+    "aliases": ["M-AHC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-AHC"
+  },
+  {
+    "acronym": "MAP",
+    "name": "IEEE Antennas and Propagation Magazine",
+    "aliases": ["M-AP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-AP"
+  },
+  {
+    "acronym": "LAWP",
+    "name": "IEEE Antennas and Wireless Propagation Letters",
+    "aliases": ["L-AWP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-AWP"
+  },
+  {
+    "acronym": "MBITS",
+    "name": "IEEE BITS the Information Theory Magazine",
+    "aliases": ["M-BITS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-BITS"
+  },
+  {
+    "acronym": "JCJECE",
+    "name": "IEEE Canadian Journal of Electrical and Computer Engineering",
+    "aliases": ["J-CJECE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-CJECE"
+  },
+  {
+    "acronym": "LCOMM",
+    "name": "IEEE Communications Letters",
+    "aliases": ["L-COMM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-COMM"
+  },
+  {
+    "acronym": "MCOMM",
+    "name": "IEEE Communications Magazine",
+    "aliases": ["M-COMM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-COMM"
+  },
+  {
+    "acronym": "MCOMSTD",
+    "name": "IEEE Communications Standards Magazine",
+    "aliases": ["M-COMSTD"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-COMSTD"
+  },
+  {
+    "acronym": "COMST",
+    "name": "IEEE Communications Surveys & Tutorials",
+    "aliases": ["COMST"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "COMST"
+  },
+  {
+    "acronym": "LCA",
+    "name": "IEEE Computer Architecture Letters",
+    "aliases": ["L-CA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-CA"
+  },
+  {
+    "acronym": "MCG&A",
+    "name": "IEEE Computer Graphics and Applications",
+    "aliases": ["M-CG&A"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-CG&A"
+  },
+  {
+    "acronym": "LCSS",
+    "name": "IEEE Control Systems Letters",
+    "aliases": ["L-CSS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-CSS"
+  },
+  {
+    "acronym": "IEEEDATA",
+    "name": "IEEE Data Descriptions",
+    "aliases": ["IEEEDATA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "IEEEDATA"
+  },
+  {
+    "acronym": "MEI",
+    "name": "IEEE Electrical Insulation Magazine",
+    "aliases": ["M-EI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-EI"
+  },
+  {
+    "acronym": "LED",
+    "name": "IEEE Electron Device Letters",
+    "aliases": ["L-ED"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-ED"
+  },
+  {
+    "acronym": "EDM",
+    "name": "IEEE Electron Devices Magazine",
+    "aliases": ["ED-M"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "ED-M"
+  },
+  {
+    "acronym": "LES",
+    "name": "IEEE Embedded Systems Letters",
+    "aliases": ["L-ES"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-ES"
+  },
+  {
+    "acronym": "REM",
+    "name": "IEEE Engineering Management Review",
+    "aliases": ["R-EM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "R-EM"
+  },
+  {
+    "acronym": "GRSL",
+    "name": "IEEE Geoscience and Remote Sensing Letters",
+    "aliases": ["L-GRS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-GRS"
+  },
+  {
+    "name": "IEEE Geoscience and Remote Sensing Magazine",
+    "aliases": [],
+    "acronym": "GRSM",
+    "source": "https://www.grss-ieee.org/publications/"
+  },
+  {
+    "acronym": "MIA",
+    "name": "IEEE Industry Applications Magazine",
+    "aliases": ["M-IA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-IA"
+  },
+  {
+    "acronym": "MIM",
+    "name": "IEEE Instrumentation & Measurement Magazine",
+    "aliases": ["M-IM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-IM"
+  },
+  {
+    "acronym": "MIS",
+    "name": "IEEE Intelligent Systems",
+    "aliases": ["M-IS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-IS"
+  },
+  {
+    "acronym": "MIC",
+    "name": "IEEE Internet Computing",
+    "aliases": ["M-IC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-IC"
+  },
+  {
+    "acronym": "JIOT",
+    "name": "IEEE Internet of Things Journal",
+    "aliases": ["J-IOT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-IOT"
+  },
+  {
+    "acronym": "MIOT",
+    "name": "IEEE Internet of Things Magazine",
+    "aliases": ["M-IOT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-IOT"
+  },
+  {
+    "acronym": "JBHI",
+    "name": "IEEE Journal of Biomedical and Health Informatics",
+    "aliases": ["J-BHI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-BHI"
+  },
+  {
+    "acronym": "JERM",
+    "name": "IEEE Journal of Electromagnetics, RF and Microwaves in Medicine and Biology",
+    "aliases": ["J-ERM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-ERM"
+  },
+  {
+    "acronym": "JESTIE",
+    "name": "IEEE Journal of Emerging and Selected Topics in Industrial Electronics",
+    "aliases": ["J-ESTIE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-ESTIE"
+  },
+  {
+    "acronym": "JESTPE",
+    "name": "IEEE Journal of Emerging and Selected Topics in Power Electronics",
+    "aliases": ["J-ESTPE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-ESTPE"
+  },
+  {
+    "acronym": "JISPIN",
+    "name": "IEEE Journal of Indoor and Seamless Positioning and Navigation",
+    "aliases": ["J-ISPIN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-ISPIN"
+  },
+  {
+    "acronym": "JMW",
+    "name": "IEEE Journal of Microwaves",
+    "aliases": ["JMW"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JMW"
+  },
+  {
+    "acronym": "JOE",
+    "name": "IEEE Journal of Oceanic Engineering",
+    "aliases": ["J-OE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-OE"
+  },
+  {
+    "acronym": "JPHOTOV",
+    "name": "IEEE Journal of Photovoltaics",
+    "aliases": ["J-PHOTOV"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-PHOTOV"
+  },
+  {
+    "acronym": "JQE",
+    "name": "IEEE Journal of Quantum Electronics",
+    "aliases": ["J-QE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-QE"
+  },
+  {
+    "acronym": "JRFID",
+    "name": "IEEE Journal of Radio Frequency Identification",
+    "aliases": ["J-RFID"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-RFID"
+  },
+  {
+    "acronym": "JSAS",
+    "name": "IEEE Journal of Selected Areas in Sensors",
+    "aliases": ["JSAS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JSAS"
+  },
+  {
+    "acronym": "JSTARS",
+    "name": "IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing",
+    "aliases": ["J-STARS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-STARS"
+  },
+  {
+    "acronym": "JSTQE",
+    "name": "IEEE Journal of Selected Topics in Quantum Electronics",
+    "aliases": ["J-STQE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-STQE"
+  },
+  {
+    "acronym": "JSTSP",
+    "name": "IEEE Journal of Selected Topics in Signal Processing",
+    "aliases": ["J-STSP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-STSP"
+  },
+  {
+    "acronym": "JSSC",
+    "name": "IEEE Journal of Solid-State Circuits",
+    "aliases": ["J-SSC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-SSC"
+  },
+  {
+    "acronym": "JEDS",
+    "name": "IEEE Journal of the Electron Devices Society",
+    "aliases": ["JEDS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JEDS"
+  },
+  {
+    "acronym": "JTEHM",
+    "name": "IEEE Journal of Translational Engineering in Health and Medicine",
+    "aliases": ["JTEHM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JTEHM"
+  },
+  {
+    "acronym": "JETCAS",
+    "name": "IEEE Journal on Emerging and Selected Topics in Circuits and Systems",
+    "aliases": ["JETCAS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JETCAS"
+  },
+  {
+    "acronym": "JXCDC",
+    "name": "IEEE Journal on Exploratory Solid-State Computational Devices and Circuits",
+    "aliases": ["JXCDC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JXCDC"
+  },
+  {
+    "acronym": "JFLEX",
+    "name": "IEEE Journal on Flexible Electronics",
+    "aliases": ["J-FLEX"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-FLEX"
+  },
+  {
+    "acronym": "JMASS",
+    "name": "IEEE Journal on Miniaturization for Air and Space Systems",
+    "aliases": ["J-MASS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-MASS"
+  },
+  {
+    "acronym": "JMMCT",
+    "name": "IEEE Journal on Multiscale and Multiphysics Computational Techniques",
+    "aliases": ["J-MMCT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-MMCT"
+  },
+  {
+    "acronym": "JSAC",
+    "name": "IEEE Journal on Selected Areas in Communications",
+    "aliases": ["J-SAC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-SAC"
+  },
+  {
+    "acronym": "JSAIT",
+    "name": "IEEE Journal on Selected Areas in Information Theory",
+    "aliases": ["J-SAIT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-SAIT"
+  },
+  {
+    "acronym": "LEMCPA",
+    "name": "IEEE Letters on Electromagnetic Compatibility Practice and Applications",
+    "aliases": ["L-EMCPA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-EMCPA"
+  },
+  {
+    "acronym": "LMAG",
+    "name": "IEEE Magnetics Letters",
+    "aliases": ["L-MAG"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-MAG"
+  },
+  {
+    "acronym": "MMICRO",
+    "name": "IEEE Micro",
+    "aliases": ["M-MICRO"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-MICRO"
+  },
+  {
+    "acronym": "LMWT",
+    "name": "IEEE Microwave and Wireless Technology Letters",
+    "aliases": ["L-MWT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-MWT"
+  },
+  {
+    "acronym": "MMULTI",
+    "name": "IEEE MultiMedia",
+    "aliases": ["M-MULTI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-MULTI"
+  },
+  {
+    "acronym": "MNET",
+    "name": "IEEE Network",
+    "aliases": ["M-NET"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-NET"
+  },
+  {
+    "acronym": "LNET",
+    "name": "IEEE Networking Letters",
+    "aliases": ["L-NET"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-NET"
+  },
+  {
+    "acronym": "OAJPE",
+    "name": "IEEE Open Access Journal of Power and Energy",
+    "aliases": ["OAJPE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OAJPE"
+  },
+  {
+    "acronym": "OJAP",
+    "name": "IEEE Open Journal of Antennas and Propagation",
+    "aliases": ["OJAP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJAP"
+  },
+  {
+    "acronym": "OJCAS",
+    "name": "IEEE Open Journal of Circuits and Systems",
+    "aliases": ["OJCAS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJCAS"
+  },
+  {
+    "acronym": "OJCSS",
+    "name": "IEEE Open Journal of Control Systems",
+    "aliases": ["OJ-CSS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJ-CSS"
+  },
+  {
+    "acronym": "OJEMB",
+    "name": "IEEE Open Journal of Engineering in Medicine and Biology",
+    "aliases": ["OJEMB"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJEMB"
+  },
+  {
+    "acronym": "OJIA",
+    "name": "IEEE Open Journal of Industry Applications",
+    "aliases": ["OJIA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJIA"
+  },
+  {
+    "acronym": "OJIM",
+    "name": "IEEE Open Journal of Instrumentation and Measurement",
+    "aliases": ["OJIM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJIM"
+  },
+  {
+    "acronym": "OJITS",
+    "name": "IEEE Open Journal of Intelligent Transportation Systems",
+    "aliases": ["OJITS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJITS"
+  },
+  {
+    "acronym": "OJNANO",
+    "name": "IEEE Open Journal of Nanotechnology",
+    "aliases": ["OJNANO"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJNANO"
+  },
+  {
+    "acronym": "OJPEL",
+    "name": "IEEE Open Journal of Power Electronics",
+    "aliases": ["OJPEL"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJPEL"
+  },
+  {
+    "acronym": "OJSP",
+    "name": "IEEE Open Journal of Signal Processing",
+    "aliases": ["OJSP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJSP"
+  },
+  {
+    "acronym": "OJSE",
+    "name": "IEEE Open Journal of Systems Engineering",
+    "aliases": ["OJSE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJSE"
+  },
+  {
+    "acronym": "OJCOMS",
+    "name": "IEEE Open Journal of the Communications Society",
+    "aliases": ["OJCOMS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJCOMS"
+  },
+  {
+    "acronym": "OJCS",
+    "name": "IEEE Open Journal of the Computer Society",
+    "aliases": ["OJCS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJCS"
+  },
+  {
+    "acronym": "OJIES",
+    "name": "IEEE Open Journal of the Industrial Electronics Society",
+    "aliases": ["OJIES"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJIES"
+  },
+  {
+    "acronym": "OJSSCS",
+    "name": "IEEE Open Journal of the Solid-State Circuits Society",
+    "aliases": ["OJSSCS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJSSCS"
+  },
+  {
+    "acronym": "OJUFFC",
+    "name": "IEEE Open Journal of Ultrasonics, Ferroelectrics, and Frequency Control",
+    "aliases": ["OJUFFC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJUFFC"
+  },
+  {
+    "acronym": "OJVT",
+    "name": "IEEE Open Journal of Vehicular Technology",
+    "aliases": ["OJVT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJVT"
+  },
+  {
+    "acronym": "OJID",
+    "name": "IEEE Open Journal on Immersive Displays",
+    "aliases": ["OJID"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "OJID"
+  },
+  {
+    "acronym": "MPVC",
+    "name": "IEEE Pervasive Computing",
+    "aliases": ["M-PVC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-PVC"
+  },
+  {
+    "acronym": "JPHOT",
+    "name": "IEEE Photonics Journal",
+    "aliases": ["JPHOT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JPHOT"
+  },
+  {
+    "acronym": "LPT",
+    "name": "IEEE Photonics Technology Letters",
+    "aliases": ["L-PT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-PT"
+  },
+  {
+    "acronym": "MRL",
+    "name": "IEEE Reliability Magazine",
+    "aliases": ["M-RL"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-RL"
+  },
+  {
+    "acronym": "RBME",
+    "name": "IEEE Reviews in Biomedical Engineering",
+    "aliases": ["R-BME"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "R-BME"
+  },
+  {
+    "acronym": "IEEERITA",
+    "name": "IEEE Revista Iberoamericana de Technologias del Aprendizaje",
+    "aliases": ["IEEE-RITA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "IEEE-RITA"
+  },
+  {
+    "acronym": "MRA",
+    "name": "IEEE Robotics & Automation Magazine",
+    "aliases": ["M-RA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-RA"
+  },
+  {
+    "acronym": "LRA",
+    "name": "IEEE Robotics and Automation Letters",
+    "aliases": ["L-RA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-RA"
+  },
+  {
+    "acronym": "RAP",
+    "name": "IEEE Robotics and Automation Practice",
+    "aliases": ["RAP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "RAP"
+  },
+  {
+    "acronym": "MS&P",
+    "name": "IEEE Security & Privacy",
+    "aliases": ["M-S&P"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-S&P"
+  },
+  {
+    "acronym": "JSEN",
+    "name": "IEEE Sensors Journal",
+    "aliases": ["J-SEN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-SEN"
+  },
+  {
+    "acronym": "LSEN",
+    "name": "IEEE Sensors Letters",
+    "aliases": ["L-SEN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-SEN"
+  },
+  {
+    "acronym": "JSR",
+    "name": "IEEE Sensors Reviews",
+    "aliases": ["JSR"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "JSR"
+  },
+  {
+    "acronym": "SPL",
+    "name": "IEEE Signal Processing Letters",
+    "aliases": ["L-SP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-SP"
+  },
+  {
+    "acronym": "IEEE Signal Process Mag",
+    "name": "IEEE Signal Processing Magazine",
+    "aliases": ["IEEE signal processing magazine", "IEEE Signal Process Mag"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101212681",
+    "nlmID": "101212681"
+  },
+  {
+    "acronym": "MSOFT",
+    "name": "IEEE Software",
+    "aliases": ["M-SOFT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-SOFT"
+  },
+  {
+    "acronym": "LSSC",
+    "name": "IEEE Solid-State Circuits Letters",
+    "aliases": ["L-SSC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-SSC"
+  },
+  {
+    "acronym": "SPEC",
+    "name": "IEEE Spectrum",
+    "aliases": ["SPEC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "SPEC"
+  },
+  {
+    "acronym": "JSYS",
+    "name": "IEEE Systems Journal",
+    "aliases": ["J-SYS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-SYS"
+  },
+  {
+    "acronym": "LSMC",
+    "name": "IEEE Systems, Man, and Cybernetics Letters",
+    "aliases": ["LSMC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "LSMC"
+  },
+  {
+    "acronym": "TAES",
+    "name": "IEEE Transactions on Aerospace and Electronic Systems",
+    "aliases": ["T-AES"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-AES"
+  },
+  {
+    "acronym": "TAC",
+    "name": "IEEE Transactions on Affective Computing",
+    "aliases": ["T-AFFC"],
+    "source": "https://www.ccf.org.cn/Academic_Evaluation/AI/zgjsjxhtjgjxskw/bl/2017-04-25/591975.shtml",
+    "publisherAcronym": "T-AFFC"
+  },
+  {
+    "acronym": "TAFE",
+    "name": "IEEE Transactions on AgriFood Electronics",
+    "aliases": ["T-AFE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-AFE"
+  },
+  {
+    "acronym": "TAP",
+    "name": "IEEE Transactions on Antennas and Propagation",
+    "aliases": ["T-AP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-AP"
+  },
+  {
+    "acronym": "TASC",
+    "name": "IEEE Transactions on Applied Superconductivity",
+    "aliases": ["T-ASC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ASC"
+  },
+  {
+    "acronym": "TAI",
+    "name": "IEEE Transactions on Artificial Intelligence",
+    "aliases": ["T-AI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-AI"
+  },
+  {
+    "acronym": "TAC",
+    "name": "IEEE Transactions on Automatic Control",
+    "aliases": ["T-AC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-AC"
+  },
+  {
+    "acronym": "TASE",
+    "name": "IEEE Transactions on Automation Science and Engineering",
+    "aliases": ["T-ASE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ASE"
+  },
+  {
+    "acronym": "TBD",
+    "name": "IEEE Transactions on Big Data",
+    "aliases": ["T-BD"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-BD"
+  },
+  {
+    "acronym": "TBCAS",
+    "name": "IEEE Transactions on Biomedical Circuits and Systems",
+    "aliases": ["T-BCAS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-BCAS"
+  },
+  {
+    "acronym": "TBME",
+    "name": "IEEE Transactions on Biomedical Engineering",
+    "aliases": ["T-BME"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-BME"
+  },
+  {
+    "acronym": "TBIOM",
+    "name": "IEEE Transactions on Biometrics, Behavior, and Identity Science",
+    "aliases": ["T-BIOM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-BIOM"
+  },
+  {
+    "acronym": "TBC",
+    "name": "IEEE Transactions on Broadcasting",
+    "aliases": ["T-BC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-BC"
+  },
+  {
+    "acronym": "TCASAI",
+    "name": "IEEE Transactions on Circuits and Systems for Artificial Intelligence",
+    "aliases": ["T-CASAI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CASAI"
+  },
+  {
+    "acronym": "TCSVT",
+    "name": "IEEE Transactions on Circuits and Systems for Video Technology",
+    "aliases": ["IEEE Trans. Circuits Syst. Video Technol.", "T-CSVT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CSVT"
+  },
+  {
+    "acronym": "TCAS1",
+    "name": "IEEE Transactions on Circuits and Systems--I: Regular Papers",
+    "aliases": ["T-CAS1"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CAS1"
+  },
+  {
+    "acronym": "TCAS2",
+    "name": "IEEE Transactions on Circuits and Systems--II: Express Briefs",
+    "aliases": ["T-CAS2"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CAS2"
+  },
+  {
+    "acronym": "TCC",
+    "name": "IEEE Transactions on Cloud Computing",
+    "aliases": ["T-CC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CC"
+  },
+  {
+    "acronym": "TCDS",
+    "name": "IEEE Transactions on Cognitive and Developmental Systems",
+    "aliases": ["T-CDS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CDS"
+  },
+  {
+    "acronym": "TCCN",
+    "name": "IEEE Transactions on Cognitive Communications and Networking",
+    "aliases": ["T-CCN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CCN"
+  },
+  {
+    "acronym": "TCOMM",
+    "name": "IEEE Transactions on Communications",
+    "aliases": ["T-COMM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-COMM"
+  },
+  {
+    "acronym": "TCPMT",
+    "name": "IEEE Transactions on Components, Packaging and Manufacturing Technology",
+    "aliases": ["T-CPMT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CPMT"
+  },
+  {
+    "acronym": "TCI",
+    "name": "IEEE Transactions on Computational Imaging",
+    "aliases": ["T-CI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CI"
+  },
+  {
+    "acronym": "TCSS",
+    "name": "IEEE Transactions on Computational Social Systems",
+    "aliases": ["T-CSS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CSS"
+  },
+  {
+    "acronym": "TCAD",
+    "name": "IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems",
+    "aliases": ["T-CAD"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CAD"
+  },
+  {
+    "acronym": "TC",
+    "name": "IEEE Transactions on Computers",
+    "aliases": ["T-C"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-C"
+  },
+  {
+    "acronym": "TCE",
+    "name": "IEEE Transactions on Consumer Electronics",
+    "aliases": ["T-CE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CE"
+  },
+  {
+    "acronym": "TCNS",
+    "name": "IEEE Transactions on Control of Network Systems",
+    "aliases": ["T-CNS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CNS"
+  },
+  {
+    "acronym": "TCST",
+    "name": "IEEE Transactions on Control Systems Technology",
+    "aliases": ["T-CST"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CST"
+  },
+  {
+    "acronym": "TCYB",
+    "name": "IEEE Transactions on Cybernetics",
+    "aliases": ["T-CYB"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CYB"
+  },
+  {
+    "acronym": "TDSC",
+    "name": "IEEE Transactions on Dependable and Secure Computing",
+    "aliases": ["T-DSC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-DSC"
+  },
+  {
+    "acronym": "TDMR",
+    "name": "IEEE Transactions on Device and Materials Reliability",
+    "aliases": ["T-DMR"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-DMR"
+  },
+  {
+    "acronym": "TDEI",
+    "name": "IEEE Transactions on Dielectrics and Electrical Insulation",
+    "aliases": ["T-DEI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-DEI"
+  },
+  {
+    "acronym": "TE",
+    "name": "IEEE Transactions on Education",
+    "aliases": ["T-E"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-E"
+  },
+  {
+    "acronym": "TEMC",
+    "name": "IEEE Transactions on Electromagnetic Compatibility",
+    "aliases": ["T-EMC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-EMC"
+  },
+  {
+    "acronym": "TED",
+    "name": "IEEE Transactions on Electron Devices",
+    "aliases": ["T-ED"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ED"
+  },
+  {
+    "acronym": "TETCI",
+    "name": "IEEE Transactions on Emerging Topics in Computational Intelligence",
+    "aliases": ["T-ETCI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ETCI"
+  },
+  {
+    "acronym": "TETC",
+    "name": "IEEE Transactions on Emerging Topics in Computing",
+    "aliases": ["T-ETC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ETC"
+  },
+  {
+    "acronym": "TEC",
+    "name": "IEEE Transactions on Energy Conversion",
+    "aliases": ["T-EC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-EC"
+  },
+  {
+    "acronym": "TEMPR",
+    "name": "IEEE Transactions on Energy Markets, Policy and Regulation",
+    "aliases": ["T-EMPR"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-EMPR"
+  },
+  {
+    "acronym": "TEM",
+    "name": "IEEE Transactions on Engineering Management",
+    "aliases": ["T-EM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-EM"
+  },
+  {
+    "acronym": "TEVC",
+    "name": "IEEE Transactions on Evolutionary Computation",
+    "aliases": ["T-EVC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-EVC"
+  },
+  {
+    "acronym": "TCASAI",
+    "name": "IEEE Transactions on Field Robotics",
+    "aliases": ["T-CASAI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CASAI"
+  },
+  {
+    "acronym": "TFUZZ",
+    "name": "IEEE Transactions on Fuzzy Systems",
+    "aliases": ["T-FUZZ"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-FUZZ"
+  },
+  {
+    "acronym": "TG",
+    "name": "IEEE Transactions on Games",
+    "aliases": ["T-G"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-G"
+  },
+  {
+    "acronym": "TGRS",
+    "name": "IEEE Transactions on Geoscience and Remote Sensing",
+    "aliases": ["T-GRS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-GRS"
+  },
+  {
+    "acronym": "TGCN",
+    "name": "IEEE Transactions on Green Communications and Networking",
+    "aliases": ["T-GCN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-GCN"
+  },
+  {
+    "acronym": "TH",
+    "name": "IEEE Transactions on Haptics",
+    "aliases": ["T-H"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-H"
+  },
+  {
+    "acronym": "THMS",
+    "name": "IEEE Transactions on Human-Machine Systems",
+    "aliases": ["T-HMS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-HMS"
+  },
+  {
+    "acronym": "TIP",
+    "name": "IEEE Transactions on Image Processing",
+    "aliases": ["IEEE Trans. Image Process.", "T-IP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IP"
+  },
+  {
+    "acronym": "TICPS",
+    "name": "IEEE Transactions on Industrial Cyber-Physical Systems",
+    "aliases": ["T-ICPS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ICPS"
+  },
+  {
+    "acronym": "TIE",
+    "name": "IEEE Transactions on Industrial Electronics",
+    "aliases": ["T-IE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IE"
+  },
+  {
+    "acronym": "TIINF",
+    "name": "IEEE Transactions on Industrial Informatics",
+    "aliases": ["T-IINF"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IINF"
+  },
+  {
+    "acronym": "TIA",
+    "name": "IEEE Transactions on Industry Applications",
+    "aliases": ["T-IA"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IA"
+  },
+  {
+    "acronym": "TIFS",
+    "name": "IEEE Transactions on Information Forensics and Security",
+    "aliases": ["T-IFS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IFS"
+  },
+  {
+    "acronym": "TIT",
+    "name": "IEEE Transactions on Information Theory",
+    "aliases": ["T-IT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IT"
+  },
+  {
+    "acronym": "TIM",
+    "name": "IEEE Transactions on Instrumentation and Measurement",
+    "aliases": ["T-IM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IM"
+  },
+  {
+    "acronym": "TITS",
+    "name": "IEEE Transactions on Intelligent Transportation Systems",
+    "aliases": ["T-ITS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ITS"
+  },
+  {
+    "acronym": "TIV",
+    "name": "IEEE Transactions on Intelligent Vehicles",
+    "aliases": ["T-IV"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-IV"
+  },
+  {
+    "acronym": "TKDE",
+    "name": "IEEE Transactions on Knowledge and Data Engineering",
+    "aliases": ["IEEE Trans. Knowl. Data Eng.", "T-KDE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-KDE"
+  },
+  {
+    "acronym": "TLT",
+    "name": "IEEE Transactions on Learning Technologies",
+    "aliases": ["T-LT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-LT"
+  },
+  {
+    "acronym": "TMLCN",
+    "name": "IEEE Transactions on Machine Learning in Communications and Networking",
+    "aliases": ["T-MLCN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MLCN"
+  },
+  {
+    "acronym": "TMAG",
+    "name": "IEEE Transactions on Magnetics",
+    "aliases": ["T-MAG"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MAG"
+  },
+  {
+    "acronym": "TMAT",
+    "name": "IEEE Transactions on Materials for Electron Devices",
+    "aliases": ["T-MAT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MAT"
+  },
+  {
+    "acronym": "TMI",
+    "name": "IEEE Transactions on Medical Imaging",
+    "aliases": ["T-MI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MI"
+  },
+  {
+    "acronym": "TMRB",
+    "name": "IEEE Transactions on Medical Robotics and Bionics",
+    "aliases": ["T-MRB"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MRB"
+  },
+  {
+    "acronym": "TMTT",
+    "name": "IEEE Transactions on Microwave Theory and Techniques",
+    "aliases": ["T-MTT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MTT"
+  },
+  {
+    "acronym": "TMC",
+    "name": "IEEE Transactions on Mobile Computing",
+    "aliases": [
+      "T-MC",
+      "IEEE Trans. Mobile Comput.",
+      "IEEE Trans. Mob. Comput."
+    ],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MC"
+  },
+  {
+    "acronym": "TMBMC",
+    "name": "IEEE Transactions on Molecular, Biological, and Multi-Scale Communications",
+    "aliases": ["T-MBMC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MBMC"
+  },
+  {
+    "acronym": "TMM",
+    "name": "IEEE Transactions on Multimedia",
+    "aliases": ["IEEE Trans. Multimedia", "T-MM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MM"
+  },
+  {
+    "acronym": "TNB",
+    "name": "IEEE Transactions on NanoBioscience",
+    "aliases": ["T-NB"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NB"
+  },
+  {
+    "acronym": "TNANO",
+    "name": "IEEE Transactions on Nanotechnology",
+    "aliases": ["T-NANO"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NANO"
+  },
+  {
+    "acronym": "TNSM",
+    "name": "IEEE Transactions on Network and Service Management",
+    "aliases": ["T-NSM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NSM"
+  },
+  {
+    "acronym": "TNSE",
+    "name": "IEEE Transactions on Network Science and Engineering",
+    "aliases": ["T-NSE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NSE"
+  },
+  {
+    "acronym": "TNN",
+    "name": "IEEE Transactions on Neural Networks",
+    "aliases": ["IEEE Trans. Neural Netw."],
+    "source": "https://ieeexplore.ieee.org/xpl/RecentIssue.jsp?punumber=72"
+  },
+  {
+    "acronym": "TNNLS",
+    "name": "IEEE Transactions on Neural Networks and Learning Systems",
+    "aliases": ["IEEE Trans. Neural Netw. Learn. Syst.", "T-NNLS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NNLS"
+  },
+  {
+    "acronym": "TNSRE",
+    "name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+    "aliases": ["T-NSRE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NSRE"
+  },
+  {
+    "acronym": "TNS",
+    "name": "IEEE Transactions on Nuclear Science",
+    "aliases": ["T-NS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NS"
+  },
+  {
+    "acronym": "TPDS",
+    "name": "IEEE Transactions on Parallel and Distributed Systems",
+    "aliases": ["IEEE Trans. Parallel Distrib. Syst.", "T-PDS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PDS"
+  },
+  {
+    "acronym": "TPAMI",
+    "name": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+    "aliases": ["IEEE Trans. Pattern Anal. Mach. Intell.", "PAMI", "T-PAMI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PAMI"
+  },
+  {
+    "acronym": "TPS",
+    "name": "IEEE Transactions on Plasma Science",
+    "aliases": ["T-PS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PS"
+  },
+  {
+    "acronym": "TPWRD",
+    "name": "IEEE Transactions on Power Delivery",
+    "aliases": ["T-PWRD"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PWRD"
+  },
+  {
+    "acronym": "TPEL",
+    "name": "IEEE Transactions on Power Electronics",
+    "aliases": ["T-PEL"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PEL"
+  },
+  {
+    "acronym": "TPWRS",
+    "name": "IEEE Transactions on Power Systems",
+    "aliases": ["T-PWRS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PWRS"
+  },
+  {
+    "acronym": "TP",
+    "name": "IEEE Transactions on Privacy",
+    "aliases": ["TP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "TP"
+  },
+  {
+    "acronym": "TPC",
+    "name": "IEEE Transactions on Professional Communication",
+    "aliases": ["T-PC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-PC"
+  },
+  {
+    "acronym": "TQE",
+    "name": "IEEE Transactions on Quantum Engineering",
+    "aliases": ["TQE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "TQE"
+  },
+  {
+    "acronym": "TRS",
+    "name": "IEEE Transactions on Radar Systems",
+    "aliases": ["T-RS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-RS"
+  },
+  {
+    "acronym": "TRPMS",
+    "name": "IEEE Transactions on Radiation and Plasma Medical Sciences",
+    "aliases": ["T-RPMS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-RPMS"
+  },
+  {
+    "acronym": "TR",
+    "name": "IEEE Transactions on Reliability",
+    "aliases": ["T-R"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-R"
+  },
+  {
+    "acronym": "TRO",
+    "name": "IEEE Transactions on Robotics",
+    "aliases": ["T-RO"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-RO"
+  },
+  {
+    "acronym": "TSCM",
+    "name": "IEEE Transactions on Semiconductor Manufacturing",
+    "aliases": ["T-SCM"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SCM"
+  },
+  {
+    "acronym": "TSC",
+    "name": "IEEE Transactions on Services Computing",
+    "aliases": ["T-SC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SC"
+  },
+  {
+    "acronym": "TSIPN",
+    "name": "IEEE Transactions on Signal and Information Processing over Networks",
+    "aliases": ["T-SIPN"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SIPN"
+  },
+  {
+    "acronym": "TSPI",
+    "name": "IEEE Transactions on Signal and Power Integrity",
+    "aliases": ["T-SPI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SPI"
+  },
+  {
+    "acronym": "TSP",
+    "name": "IEEE Transactions on Signal Processing",
+    "aliases": ["IEEE Trans. Signal Process.", "T-SP"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SP"
+  },
+  {
+    "acronym": "TSG",
+    "name": "IEEE Transactions on Smart Grid",
+    "aliases": ["T-SG"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SG"
+  },
+  {
+    "acronym": "TSE",
+    "name": "IEEE Transactions on Software Engineering",
+    "aliases": ["IEEE Trans. Softw. Eng.", "T-SE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SE"
+  },
+  {
+    "acronym": "TSUSC",
+    "name": "IEEE Transactions on Sustainable Computing",
+    "aliases": ["T-SUSC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SUSC"
+  },
+  {
+    "acronym": "TSTE",
+    "name": "IEEE Transactions on Sustainable Energy",
+    "aliases": ["T-STE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-STE"
+  },
+  {
+    "acronym": "IEEE Trans Syst Man Cybern",
+    "name": "IEEE Transactions on Systems, Man, and Cybernetics",
+    "aliases": [
+      "IEEE transactions on systems, man, and cybernetics",
+      "IEEE Trans Syst Man Cybern"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/1274320",
+    "nlmID": "1274320"
+  },
+  {
+    "acronym": "TSMC",
+    "name": "IEEE Transactions on Systems, Man, and Cybernetics: Systems",
+    "aliases": ["T-SMC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-SMC"
+  },
+  {
+    "acronym": "TTS",
+    "name": "IEEE Transactions on Technology and Society",
+    "aliases": ["T-TS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-TS"
+  },
+  {
+    "acronym": "TTHZ",
+    "name": "IEEE Transactions on Terahertz Science and Technology",
+    "aliases": ["T-THZ"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-THZ"
+  },
+  {
+    "acronym": "TTE",
+    "name": "IEEE Transactions on Transportation Electrification",
+    "aliases": ["T-TE"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-TE"
+  },
+  {
+    "acronym": "TUFFC",
+    "name": "IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control",
+    "aliases": ["T-UFFC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-UFFC"
+  },
+  {
+    "acronym": "TVT",
+    "name": "IEEE Transactions on Vehicular Technology",
+    "aliases": ["T-VT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-VT"
+  },
+  {
+    "acronym": "TVLSI",
+    "name": "IEEE Transactions on Very Large Scale Integration (VLSI) Systems",
+    "aliases": ["T-VLSI"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-VLSI"
+  },
+  {
+    "acronym": "TVCG",
+    "name": "IEEE Transactions on Visualization and Computer Graphics",
+    "aliases": ["IEEE Trans. Vis. Comput. Graph.", "T-VCG"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-VCG"
+  },
+  {
+    "acronym": "TWC",
+    "name": "IEEE Transactions on Wireless Communications",
+    "aliases": ["T-WC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-WC"
+  },
+  {
+    "acronym": "MVT",
+    "name": "IEEE Vehicular Technology Magazine",
+    "aliases": ["M-VT"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-VT"
+  },
+  {
+    "acronym": "LWC",
+    "name": "IEEE Wireless Communications Letters",
+    "aliases": ["L-WC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "L-WC"
+  },
+  {
+    "acronym": "MWC",
+    "name": "IEEE Wireless Communications Magazine",
+    "aliases": ["M-WC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "M-WC"
+  },
+  {
+    "acronym": "JAS",
+    "name": "IEEE-CAA Journal of Automatica Sinica",
+    "aliases": ["J-AS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-AS"
+  },
+  {
+    "name": "IEEE/ACM Transactions on Audio, Speech, and Language Processing",
+    "aliases": [
+      "IEEE/ACM Transactions on Audio, Speech and Language Processing",
+      "T-ASL"
+    ],
+    "acronym": "TASLP",
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-ASL"
+  },
+  {
+    "acronym": "TCBB",
+    "name": "IEEE/ACM Transactions on Computational Biology and Bioinformatics",
+    "aliases": ["T-CBB"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-CBB"
+  },
+  {
+    "acronym": "TNET",
+    "name": "IEEE/ACM Transactions on Networking",
+    "aliases": ["T-NET"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-NET"
+  },
+  {
+    "acronym": "JMEMS",
+    "name": "IEEE/ASME Journal of Microelectromechanical Systems",
+    "aliases": ["J-MEMS"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "J-MEMS"
+  },
+  {
+    "acronym": "TMECH",
+    "name": "IEEE/ASME Transactions on Mechatronics",
+    "aliases": ["T-MECH"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "T-MECH"
+  },
+  {
+    "acronym": "IET Image Process",
+    "name": "IET Image Processing",
+    "aliases": ["IET image processing", "IET Image Process"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101660828",
+    "nlmID": "101660828"
+  },
+  {
+    "acronym": "Image Vis Comput",
+    "name": "Image and Vision Computing",
+    "aliases": ["Image and vision computing", "Image Vis Comput"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101151810",
+    "nlmID": "101151810"
+  },
+  {
+    "acronym": "Inf Process Manag",
+    "name": "Information Processing & Management",
+    "aliases": ["Information processing & management", "Inf Process Manag"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9877091",
+    "nlmID": "9877091"
+  },
+  {
+    "acronym": "Inf Syst",
+    "name": "Information Systems",
+    "aliases": ["Information systems", "Inf Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9875802",
+    "nlmID": "9875802"
+  },
+  {
+    "acronym": "Infrared Phys Technol",
+    "name": "Infrared Physics & Technology",
+    "aliases": ["Infrared physics & technology", "Infrared Phys Technol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101610606",
+    "nlmID": "101610606"
+  },
+  {
+    "acronym": "JAG",
+    "name": "International Journal of Applied Earth Observation and Geoinformation",
+    "aliases": [],
+    "source": "https://www.sciencedirect.com/science/article/pii/S0303243411001772"
+  },
+  {
+    "acronym": "Int J Arrhythmia",
+    "name": "International Journal of Arrhythmia",
+    "aliases": ["International journal of arrhythmia", "Int J Arrhythmia"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101685981",
+    "nlmID": "101685981"
+  },
+  {
+    "acronym": "Int J Cardiol",
+    "name": "International Journal of Cardiology",
+    "aliases": ["International journal of cardiology", "Int J Cardiol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8200291",
+    "nlmID": "8200291"
+  },
+  {
+    "acronym": "IJCV",
+    "name": "International Journal of Computer Vision",
+    "aliases": ["Int. J. Comput. Vis."],
+    "source": "https://link.springer.com/journal/11263"
+  },
+  {
+    "acronym": "IJDE",
+    "name": "International Journal of Digital Earth",
+    "aliases": [],
+    "source": "https://www.tandfonline.com/doi/full/10.1080/17538940902746199"
+  },
+  {
+    "acronym": "Int J Forecast",
+    "name": "International Journal of Forecasting",
+    "aliases": ["International journal of forecasting", "Int J Forecast"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101084857",
+    "nlmID": "101084857"
+  },
+  {
+    "acronym": "Int J Mach Learn Cybern",
+    "name": "International Journal of Machine Learning and Cybernetics",
+    "aliases": [
+      "International journal of machine learning and cybernetics",
+      "Int J Mach Learn Cybern"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101777117",
+    "nlmID": "101777117"
+  },
+  {
+    "acronym": "Int J Mol Med",
+    "name": "International Journal of Molecular Medicine",
+    "aliases": ["International journal of molecular medicine", "Int J Mol Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9810955",
+    "nlmID": "9810955"
+  },
+  {
+    "acronym": "Int J Multimed Inf Retr",
+    "name": "International Journal of Multimedia Information Retrieval",
+    "aliases": [
+      "International journal of multimedia information retrieval",
+      "Int J Multimed Inf Retr"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101600562",
+    "nlmID": "101600562"
+  },
+  {
+    "acronym": "Int J Neural Syst",
+    "name": "International Journal of Neural Systems",
+    "aliases": ["International journal of neural systems", "Int J Neural Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9100527",
+    "nlmID": "9100527"
+  },
+  {
+    "acronym": "Int J Remote Sens",
+    "name": "International Journal of Remote Sensing",
+    "aliases": ["International journal of remote sensing", "Int J Remote Sens"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9878707",
+    "nlmID": "9878707"
+  },
+  {
+    "acronym": "Invent Math",
+    "name": "Inventiones mathematicae",
+    "aliases": ["Inventiones mathematicae", "Invent Math"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101690572",
+    "nlmID": "101690572"
+  },
+  {
+    "name": "ISPRS International Journal of Geo-Information",
+    "aliases": [],
+    "acronym": "IJGI",
+    "source": "https://isprs.org/news/newsletter/2021-05/index.html"
+  },
+  {
+    "name": "ISPRS Journal of Photogrammetry and Remote Sensing",
+    "aliases": [],
+    "acronym": "IJPRS",
+    "source": "https://isprs.org/news/newsletter/2021-05/index.html"
+  },
+  {
+    "acronym": "JACC Adv",
+    "name": "JACC: Advances",
+    "aliases": ["JACC. Advances", "JACC Adv"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918419284106676",
+    "nlmID": "9918419284106676"
+  },
+  {
+    "acronym": "JACC Heart Fail",
+    "name": "JACC: Heart Failure",
+    "aliases": ["JACC. Heart failure", "JACC Heart Fail"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101598241",
+    "nlmID": "101598241"
+  },
+  {
+    "acronym": "JAMA Intern Med",
+    "name": "JAMA Internal Medicine",
+    "aliases": ["JAMA internal medicine", "JAMA Intern Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101589534",
+    "nlmID": "101589534"
+  },
+  {
+    "acronym": "JAMA Netw Open",
+    "name": "JAMA Network Open",
+    "aliases": ["JAMA network open", "JAMA Netw Open"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101729235",
+    "nlmID": "101729235"
+  },
+  {
+    "acronym": "JMIR Mhealth Uhealth",
+    "name": "JMIR mHealth and uHealth",
+    "aliases": ["JMIR mHealth and uHealth", "JMIR Mhealth Uhealth"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101624439",
+    "nlmID": "101624439"
+  },
+  {
+    "acronym": "J Appl Behav Anal",
+    "name": "Journal of Applied Behavior Analysis",
+    "aliases": ["Journal of applied behavior analysis", "J Appl Behav Anal"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0174763",
+    "nlmID": "0174763"
+  },
+  {
+    "acronym": "J Arrhythm",
+    "name": "Journal of Arrhythmia",
+    "aliases": ["Journal of arrhythmia", "J Arrhythm"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101263026",
+    "nlmID": "101263026"
+  },
+  {
+    "acronym": "J Big Data",
+    "name": "Journal of Big Data",
+    "aliases": ["Journal of big data", "J Big Data"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101659495",
+    "nlmID": "101659495"
+  },
+  {
+    "acronym": "J Causal Inference",
+    "name": "Journal of Causal Inference",
+    "aliases": ["Journal of causal inference", "J Causal Inference"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101628371",
+    "nlmID": "101628371"
+  },
+  {
+    "acronym": "J Chem Inf Model",
+    "name": "Journal of Chemical Information and Modeling",
+    "aliases": [
+      "Journal of chemical information and modeling",
+      "J Chem Inf Model"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101230060",
+    "nlmID": "101230060"
+  },
+  {
+    "name": "Journal of Clinical Sleep Medicine",
+    "aliases": [],
+    "acronym": "JCSM",
+    "source": "https://jcsm.aasm.org/"
+  },
+  {
+    "acronym": "J Community Hosp Intern Med Perspect",
+    "name": "Journal of Community Hospital Internal Medicine Perspectives",
+    "aliases": [
+      "Journal of community hospital internal medicine perspectives",
+      "J Community Hosp Intern Med Perspect"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101601396",
+    "nlmID": "101601396"
+  },
+  {
+    "acronym": "JCGS",
+    "name": "Journal of Computational and Graphical Statistics",
+    "aliases": [],
+    "source": "https://www.amstat.org/publications/journals"
+  },
+  {
+    "acronym": "J Comput Phys",
+    "name": "Journal of Computational Physics",
+    "aliases": ["Journal of computational physics", "J Comput Phys"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883524",
+    "nlmID": "9883524"
+  },
+  {
+    "acronym": "J Electrocardiol",
+    "name": "Journal of Electrocardiology",
+    "aliases": ["Journal of electrocardiology", "J Electrocardiol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0153605",
+    "nlmID": "0153605"
+  },
+  {
+    "acronym": "J Gen Intern Med",
+    "name": "Journal of General Internal Medicine",
+    "aliases": ["Journal of general internal medicine", "J Gen Intern Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8605834",
+    "nlmID": "8605834"
+  },
+  {
+    "acronym": "J Geophys Eng",
+    "name": "Journal of Geophysics and Engineering",
+    "aliases": ["Journal of geophysics and engineering", "J Geophys Eng"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918521384906676",
+    "nlmID": "9918521384906676"
+  },
+  {
+    "acronym": "J Hydrol (Amst)",
+    "name": "Journal of Hydrology",
+    "aliases": ["Journal of hydrology", "J Hydrol (Amst)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9882987",
+    "nlmID": "9882987"
+  },
+  {
+    "acronym": "J Intell Robot Syst",
+    "name": "Journal of Intelligent and Robotic Systems",
+    "aliases": [
+      "Journal of intelligent & robotic systems",
+      "J Intell Robot Syst"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101730197",
+    "nlmID": "101730197"
+  },
+  {
+    "acronym": "JMLR",
+    "name": "Journal of Machine Learning Research",
+    "aliases": ["J. Mach. Learn. Res."],
+    "source": "https://www.jmlr.org/"
+  },
+  {
+    "acronym": "J Math Biol",
+    "name": "Journal of Mathematical Biology",
+    "aliases": ["Journal of mathematical biology", "J Math Biol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7502105",
+    "nlmID": "7502105"
+  },
+  {
+    "acronym": "J Math Psychol",
+    "name": "Journal of Mathematical Psychology",
+    "aliases": ["Journal of mathematical psychology", "J Math Psychol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/2985082R",
+    "nlmID": "2985082R"
+  },
+  {
+    "acronym": "J Med Biol Eng",
+    "name": "Journal of medical and biological engineering",
+    "aliases": [
+      "Journal of medical and biological engineering",
+      "J Med Biol Eng"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101123071",
+    "nlmID": "101123071"
+  },
+  {
+    "acronym": "J Med Syst",
+    "name": "Journal of Medical Systems",
+    "aliases": ["Journal of medical systems", "J Med Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7806056",
+    "nlmID": "7806056"
+  },
+  {
+    "acronym": "J Multivar Anal",
+    "name": "Journal of Multivariate Analysis",
+    "aliases": ["Journal of multivariate analysis", "J Multivar Anal"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9890139",
+    "nlmID": "9890139"
+  },
+  {
+    "acronym": "J Neural Eng",
+    "name": "Journal of Neural Engineering",
+    "aliases": ["Journal of neural engineering", "J Neural Eng"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101217933",
+    "nlmID": "101217933"
+  },
+  {
+    "acronym": "J Neurosci Methods",
+    "name": "Journal of Neuroscience Methods",
+    "aliases": ["Journal of neuroscience methods", "J Neurosci Methods"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7905558",
+    "nlmID": "7905558"
+  },
+  {
+    "acronym": "J Philos Logic",
+    "name": "Journal of Philosophical Logic",
+    "aliases": ["Journal of philosophical logic", "J Philos Logic"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101670470",
+    "nlmID": "101670470"
+  },
+  {
+    "acronym": "J Phys D Appl Phys",
+    "name": "Journal of Physics D: Applied Physics",
+    "aliases": ["Journal of physics D: Applied physics", "J Phys D Appl Phys"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/1256300",
+    "nlmID": "1256300"
+  },
+  {
+    "acronym": "J Reliab Intell Environ",
+    "name": "Journal of Reliable Intelligent Environments",
+    "aliases": [
+      "Journal of reliable intelligent environments",
+      "J Reliab Intell Environ"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101679298",
+    "nlmID": "101679298"
+  },
+  {
+    "acronym": "J Sci Comput",
+    "name": "Journal of Scientific Computing",
+    "aliases": ["Journal of scientific computing", "J Sci Comput"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9882378",
+    "nlmID": "9882378"
+  },
+  {
+    "acronym": "J Sleep Res",
+    "name": "Journal of Sleep Research",
+    "aliases": ["Journal of sleep research", "J Sleep Res"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9214441",
+    "nlmID": "9214441"
+  },
+  {
+    "name": "Journal of the ACM",
+    "aliases": [],
+    "acronym": "JACM",
+    "source": "https://dl.acm.org/journal/jacm"
+  },
+  {
+    "name": "Journal of the American College of Cardiology",
+    "aliases": [],
+    "acronym": "JACC",
+    "source": "https://www.jacc.org/"
+  },
+  {
+    "acronym": "J Am Heart Assoc",
+    "name": "Journal of the American Heart Association",
+    "aliases": [
+      "Journal of the American Heart Association",
+      "J Am Heart Assoc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101580524",
+    "nlmID": "101580524"
+  },
+  {
+    "name": "Journal of the American Medical Informatics Association",
+    "aliases": [],
+    "acronym": "JAMIA",
+    "source": "https://academic.oup.com/jamia"
+  },
+  {
+    "acronym": "J Am Med Inform Assoc",
+    "name": "Journal of the American Medical Informatics Association: JAMIA",
+    "aliases": [
+      "Journal of the American Medical Informatics Association : JAMIA",
+      "J Am Med Inform Assoc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9430800",
+    "nlmID": "9430800"
+  },
+  {
+    "name": "Journal of the American Statistical Association",
+    "aliases": [],
+    "acronym": "JASA",
+    "source": "https://www.amstat.org/publications/journals"
+  },
+  {
+    "acronym": "J R Stat Soc Series B Stat Methodol",
+    "name": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+    "aliases": [
+      "Journal of the Royal Statistical Society. Series B, Statistical methodology",
+      "J R Stat Soc Series B Stat Methodol"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100890344",
+    "nlmID": "100890344"
+  },
+  {
+    "acronym": "J Theor Probab",
+    "name": "Journal of Theoretical Probability",
+    "aliases": ["Journal of theoretical probability", "J Theor Probab"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101770672",
+    "nlmID": "101770672"
+  },
+  {
+    "acronym": "J Vis Commun Image Represent",
+    "name": "Journal of Visual Communication and Image Representation",
+    "aliases": [
+      "Journal of visual communication and image representation",
+      "J Vis Commun Image Represent"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9422637",
+    "nlmID": "9422637"
+  },
+  {
+    "acronym": "Knowl Inf Syst",
+    "name": "Knowledge and Information Systems",
+    "aliases": ["Knowledge and information systems", "Knowl Inf Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101511283",
+    "nlmID": "101511283"
+  },
+  {
+    "acronym": "Knowl Based Syst",
+    "name": "Knowledge-Based Systems",
+    "aliases": ["Knowledge-based systems", "Knowl Based Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101634338",
+    "nlmID": "101634338"
+  },
+  {
+    "acronym": "Mach Learn",
+    "name": "Machine Learning",
+    "aliases": ["Machine learning", "Mach Learn"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9881780",
+    "nlmID": "9881780"
+  },
+  {
+    "acronym": "Math Program",
+    "name": "Mathematical Programming",
+    "aliases": ["Mathematical programming", "Math Program"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101595505",
+    "nlmID": "101595505"
+  },
+  {
+    "acronym": "Math Comput",
+    "name": "Mathematics of Computation",
+    "aliases": ["Mathematics of computation", "Math Comput"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/18430630R",
+    "nlmID": "18430630R"
+  },
+  {
+    "acronym": "Med Biol Eng Comput",
+    "name": "Medical & Biological Engineering & Computing",
+    "aliases": [
+      "Medical & biological engineering & computing",
+      "Med Biol Eng Comput"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7704869",
+    "nlmID": "7704869"
+  },
+  {
+    "acronym": "Med Sci Sports Exerc",
+    "name": "Medicine & Science in Sports & Exercise",
+    "aliases": [
+      "Medicine and science in sports and exercise",
+      "Med Sci Sports Exerc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8005433",
+    "nlmID": "8005433"
+  },
+  {
+    "acronym": "Microsyst Nanoeng",
+    "name": "Microsystems & Nanoengineering",
+    "aliases": ["Microsystems & nanoengineering", "Microsyst Nanoeng"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101695458",
+    "nlmID": "101695458"
+  },
+  {
+    "acronym": "Mon Not R Astron Soc",
+    "name": "Monthly Notices of the Royal Astronomical Society",
+    "aliases": [
+      "Monthly notices of the Royal Astronomical Society",
+      "Mon Not R Astron Soc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100954591",
+    "nlmID": "100954591"
+  },
+  {
+    "acronym": "Mov Disord",
+    "name": "Movement Disorders: Official Journal of the Movement Disorder Society",
+    "aliases": [
+      "Movement disorders : official journal of the Movement Disorder Society",
+      "Mov Disord"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8610688",
+    "nlmID": "8610688"
+  },
+  {
+    "acronym": "Multimed Syst",
+    "name": "Multimedia Systems",
+    "aliases": ["Multimedia systems", "Multimed Syst"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101710967",
+    "nlmID": "101710967"
+  },
+  {
+    "acronym": "Multimed Tools Appl",
+    "name": "Multimedia Tools and Applications",
+    "aliases": ["Multimedia tools and applications", "Multimed Tools Appl"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101555932",
+    "nlmID": "101555932"
+  },
+  {
+    "acronym": "Natl Sci Rev",
+    "name": "National Science Review",
+    "aliases": ["National science review", "Natl Sci Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101633095",
+    "nlmID": "101633095"
+  },
+  {
+    "acronym": "Nat Sci Sleep",
+    "name": "Nature and Science of Sleep",
+    "aliases": ["Nature and science of sleep", "Nat Sci Sleep"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101537767",
+    "nlmID": "101537767"
+  },
+  {
+    "acronym": "Nat Biomed Eng",
+    "name": "Nature Biomedical Engineering",
+    "aliases": ["Nature biomedical engineering", "Nat Biomed Eng"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101696896",
+    "nlmID": "101696896"
+  },
+  {
+    "acronym": "Nat Biotechnol",
+    "name": "Nature Biotechnology",
+    "aliases": ["Nature biotechnology", "Nat Biotechnol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9604648",
+    "nlmID": "9604648"
+  },
+  {
+    "acronym": "Nat Commun",
+    "name": "Nature Communications",
+    "aliases": ["Nature communications", "Nat Commun"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101528555",
+    "nlmID": "101528555"
+  },
+  {
+    "acronym": "Nat Comput Sci",
+    "name": "Nature Computational Science",
+    "aliases": ["Nature computational science", "Nat Comput Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101775476",
+    "nlmID": "101775476"
+  },
+  {
+    "acronym": "Nat Ecol Evol",
+    "name": "Nature Ecology & Evolution",
+    "aliases": ["Nature ecology & evolution", "Nat Ecol Evol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101698577",
+    "nlmID": "101698577"
+  },
+  {
+    "acronym": "Nat Electron",
+    "name": "Nature Electronics",
+    "aliases": ["Nature electronics", "Nat Electron"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101719173",
+    "nlmID": "101719173"
+  },
+  {
+    "acronym": "Nat Geosci",
+    "name": "Nature Geoscience",
+    "aliases": ["Nature geoscience", "Nat Geosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101482213",
+    "nlmID": "101482213"
+  },
+  {
+    "acronym": "Nat Mach Intell",
+    "name": "Nature Machine Intelligence",
+    "aliases": ["Nature machine intelligence", "Nat Mach Intell"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101740243",
+    "nlmID": "101740243"
+  },
+  {
+    "acronym": "Nat Mater",
+    "name": "Nature Materials",
+    "aliases": ["Nature materials", "Nat Mater"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101155473",
+    "nlmID": "101155473"
+  },
+  {
+    "acronym": "Nat Med",
+    "name": "Nature Medicine",
+    "aliases": ["Nature medicine", "Nat Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9502015",
+    "nlmID": "9502015"
+  },
+  {
+    "acronym": "Nat Methods",
+    "name": "Nature Methods",
+    "aliases": ["Nature methods", "Nat Methods"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101215604",
+    "nlmID": "101215604"
+  },
+  {
+    "acronym": "Nat Neurosci",
+    "name": "Nature Neuroscience",
+    "aliases": ["Nature neuroscience", "Nat Neurosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9809671",
+    "nlmID": "9809671"
+  },
+  {
+    "acronym": "Nat Photonics",
+    "name": "Nature Photonics",
+    "aliases": ["Nature photonics", "Nat Photonics"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101283276",
+    "nlmID": "101283276"
+  },
+  {
+    "acronym": "Nat Rev Clin Oncol",
+    "name": "Nature Reviews Clinical Oncology",
+    "aliases": ["Nature reviews. Clinical oncology", "Nat Rev Clin Oncol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101500077",
+    "nlmID": "101500077"
+  },
+  {
+    "acronym": "Nat Rev Mater",
+    "name": "Nature Reviews Materials",
+    "aliases": ["Nature reviews. Materials", "Nat Rev Mater"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101692128",
+    "nlmID": "101692128"
+  },
+  {
+    "acronym": "Nat Rev Neurosci",
+    "name": "Nature Reviews Neuroscience",
+    "aliases": ["Nature reviews. Neuroscience", "Nat Rev Neurosci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100962781",
+    "nlmID": "100962781"
+  },
+  {
+    "acronym": "Nat Struct Mol Biol",
+    "name": "Nature Structural & Molecular Biology",
+    "aliases": ["Nature structural & molecular biology", "Nat Struct Mol Biol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101186374",
+    "nlmID": "101186374"
+  },
+  {
+    "acronym": "Neural Comput.",
+    "name": "Neural Computation",
+    "aliases": [],
+    "source": "https://direct.mit.edu/neco"
+  },
+  {
+    "acronym": "Neural Comput Appl",
+    "name": "Neural Computing and Applications",
+    "aliases": ["Neural computing & applications", "Neural Comput Appl"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9313239",
+    "nlmID": "9313239"
+  },
+  {
+    "acronym": "Neural Plast",
+    "name": "Neural Plasticity",
+    "aliases": ["Neural plasticity", "Neural Plast"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100883417",
+    "nlmID": "100883417"
+  },
+  {
+    "acronym": "Neural Process Lett",
+    "name": "Neural Processing Letters",
+    "aliases": ["Neural processing letters", "Neural Process Lett"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9889249",
+    "nlmID": "9889249"
+  },
+  {
+    "acronym": "Neurocomputing (Amst)",
+    "name": "Neurocomputing",
+    "aliases": ["Neurocomputing", "Neurocomputing (Amst)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9884927",
+    "nlmID": "9884927"
+  },
+  {
+    "name": "New England Journal of Medicine",
+    "aliases": [],
+    "acronym": "NEJM",
+    "source": "https://www.nejm.org/"
+  },
+  {
+    "acronym": "NPJ Biomed Innov",
+    "name": "npj Biomedical Innovations",
+    "aliases": ["npj biomedical innovations", "NPJ Biomed Innov"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918994495106676",
+    "nlmID": "9918994495106676"
+  },
+  {
+    "acronym": "NPJ Digit Med",
+    "name": "npj Digital Medicine",
+    "aliases": ["NPJ digital medicine", "NPJ Digit Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101731738",
+    "nlmID": "101731738"
+  },
+  {
+    "acronym": "Npj Flex Electron",
+    "name": "npj Flexible Electronics",
+    "aliases": ["Npj flexible electronics", "Npj Flex Electron"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918451387006676",
+    "nlmID": "9918451387006676"
+  },
+  {
+    "acronym": "Ont Health Technol Assess Ser",
+    "name": "Ontario Health Technology Assessment Series",
+    "aliases": [
+      "Ontario health technology assessment series",
+      "Ont Health Technol Assess Ser"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101521610",
+    "nlmID": "101521610"
+  },
+  {
+    "acronym": "Opt Lett",
+    "name": "Optics Letters",
+    "aliases": ["Optics letters", "Opt Lett"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7708433",
+    "nlmID": "7708433"
+  },
+  {
+    "acronym": "PR",
+    "name": "Pattern Recognition",
+    "aliases": [],
+    "source": "https://www.sciencedirect.com/journal/pattern-recognition"
+  },
+  {
+    "acronym": "PRL",
+    "name": "Pattern Recognition Letters",
+    "aliases": ["Pattern Recognit. Lett."],
+    "source": "https://www.sciencedirect.com/journal/pattern-recognition-letters"
+  },
+  {
+    "acronym": "Perspect Psychol Sci",
+    "name": "Perspectives on Psychological Science: A Journal of the Association for Psychological Science",
+    "aliases": [
+      "Perspectives on psychological science : a journal of the Association for Psychological Science",
+      "Perspect Psychol Sci"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101274347",
+    "nlmID": "101274347"
+  },
+  {
+    "acronym": "Philos Psychol",
+    "name": "Philosophical Psychology",
+    "aliases": ["Philosophical psychology", "Philos Psychol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8810907",
+    "nlmID": "8810907"
+  },
+  {
+    "acronym": "Phys Rev Lett",
+    "name": "Physical Review Letters",
+    "aliases": ["Physical review letters", "Phys Rev Lett"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0401141",
+    "nlmID": "0401141"
+  },
+  {
+    "acronym": "Physiol Meas",
+    "name": "Physiological Measurement",
+    "aliases": ["Physiological measurement", "Physiol Meas"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9306921",
+    "nlmID": "9306921"
+  },
+  {
+    "acronym": "Physiol Rev",
+    "name": "Physiological Reviews",
+    "aliases": ["Physiological reviews", "Physiol Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0231714",
+    "nlmID": "0231714"
+  },
+  {
+    "acronym": "PLoS Comput Biol",
+    "name": "PLoS Computational Biology",
+    "aliases": ["PLoS computational biology", "PLoS Comput Biol"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101238922",
+    "nlmID": "101238922"
+  },
+  {
+    "acronym": "Procedia Comput Sci",
+    "name": "Procedia Computer Science",
+    "aliases": ["Procedia computer science", "Procedia Comput Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101537771",
+    "nlmID": "101537771"
+  },
+  {
+    "acronym": "AAAI",
+    "name": "Proceedings of the AAAI Conference on Artificial Intelligence",
+    "aliases": [],
+    "source": "https://ojs.aaai.org/index.php/aaai/"
+  },
+  {
+    "name": "Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies",
+    "aliases": [
+      "Proceedings of the ACM on Interactive Mobile Wearable and Ubiquitous Technologies"
+    ],
+    "acronym": "IMWUT",
+    "source": "https://dl.acm.org/journal/imwut"
+  },
+  {
+    "name": "Proceedings of the ACM on Management of Data",
+    "aliases": [],
+    "acronym": "PACMMOD",
+    "source": "https://dl.acm.org/journal/pacmmod"
+  },
+  {
+    "acronym": "Proc Am Thorac Soc",
+    "name": "Proceedings of the American Thoracic Society",
+    "aliases": [
+      "Proceedings of the American Thoracic Society",
+      "Proc Am Thorac Soc"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101203596",
+    "nlmID": "101203596"
+  },
+  {
+    "acronym": "PROC",
+    "name": "Proceedings of the IEEE",
+    "aliases": ["PROC"],
+    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "publisherAcronym": "PROC"
+  },
+  {
+    "acronym": "ICAPS",
+    "name": "Proceedings of the International Conference on Automated Planning and Scheduling",
+    "aliases": [],
+    "source": "https://ojs.aaai.org/index.php/ICAPS"
+  },
+  {
+    "name": "Proceedings of the National Academy of Sciences",
+    "aliases": [],
+    "acronym": "PNAS",
+    "source": "https://www.pnas.org/"
+  },
+  {
+    "acronym": "Prog Brain Res",
+    "name": "Progress in Brain Research",
+    "aliases": ["Progress in brain research", "Prog Brain Res"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376441",
+    "nlmID": "0376441"
+  },
+  {
+    "acronym": "Psychol Bull",
+    "name": "Psychological bulletin",
+    "aliases": ["Psychological bulletin", "Psychol Bull"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376473",
+    "nlmID": "0376473"
+  },
+  {
+    "acronym": "Psychol Rev",
+    "name": "Psychological Review",
+    "aliases": ["Psychological review", "Psychol Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376476",
+    "nlmID": "0376476"
+  },
+  {
+    "acronym": "Remote Sensing",
+    "name": "Remote Sensing",
+    "aliases": ["Remote sensing", "Remote Sens (Basel)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101624426",
+    "nlmID": "101624426",
+    "nlmAbbreviation": "Remote Sens (Basel)",
+    "displayNote": "Keep the full title for display."
+  },
+  {
+    "name": "Remote Sensing of Environment",
+    "aliases": [],
+    "acronym": "RSE",
+    "source": "https://shop.elsevier.com/journals/remote-sensing-of-environment/0034-4257"
+  },
+  {
+    "acronym": "Sci China Inf Sci",
+    "name": "Science China Information Sciences",
+    "aliases": [],
+    "source": "https://link.springer.com/journal/11432"
+  },
+  {
+    "acronym": "Sci China Phys Mech Astron",
+    "name": "Science China Physics, Mechanics & Astronomy",
+    "aliases": [
+      "Science China. Physics, mechanics & astronomy",
+      "Sci China Phys Mech Astron"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101765261",
+    "nlmID": "101765261"
+  },
+  {
+    "acronym": "Sci Robot",
+    "name": "Science Robotics",
+    "aliases": ["Science robotics", "Sci Robot"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101733136",
+    "nlmID": "101733136"
+  },
+  {
+    "acronym": "Sci Transl Med",
+    "name": "Science Translational Medicine",
+    "aliases": ["Science translational medicine", "Sci Transl Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101505086",
+    "nlmID": "101505086"
+  },
+  {
+    "acronym": "Sci Data",
+    "name": "Scientific Data",
+    "aliases": ["Scientific data", "Sci Data"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101640192",
+    "nlmID": "101640192"
+  },
+  {
+    "acronym": "Sci Rep",
+    "name": "Scientific Reports",
+    "aliases": ["Scientific reports", "Sci Rep"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101563288",
+    "nlmID": "101563288"
+  },
+  {
+    "acronym": "SIAM J Imaging Sci",
+    "name": "SIAM Journal on Imaging Sciences",
+    "aliases": ["SIAM journal on imaging sciences", "SIAM J Imaging Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101530763",
+    "nlmID": "101530763"
+  },
+  {
+    "acronym": "SIAM J Math Data Sci",
+    "name": "SIAM Journal on Mathematics of Data Science",
+    "aliases": [
+      "SIAM journal on mathematics of data science",
+      "SIAM J Math Data Sci"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101752933",
+    "nlmID": "101752933"
+  },
+  {
+    "acronym": "SIAM J Numer Anal",
+    "name": "SIAM Journal on Numerical Analysis",
+    "aliases": ["SIAM journal on numerical analysis", "SIAM J Numer Anal"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101588021",
+    "nlmID": "101588021"
+  },
+  {
+    "acronym": "SISC",
+    "name": "SIAM Journal on Scientific Computing",
+    "aliases": [],
+    "source": "https://www.siam.org/publications/siam-journals/siam-journal-on-scientific-computing"
+  },
+  {
+    "acronym": "Sleep Med",
+    "name": "Sleep Medicine",
+    "aliases": ["Sleep medicine", "Sleep Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100898759",
+    "nlmID": "100898759"
+  },
+  {
+    "acronym": "Sleep Med Rev",
+    "name": "Sleep Medicine Reviews",
+    "aliases": ["Sleep medicine reviews", "Sleep Med Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9804678",
+    "nlmID": "9804678"
+  },
+  {
+    "acronym": "SN Comput Sci",
+    "name": "SN Computer Science",
+    "aliases": ["SN computer science", "SN Comput Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101772308",
+    "nlmID": "101772308"
+  },
+  {
+    "acronym": "Soc Personal Psychol Compass",
+    "name": "Social and Personality Psychology Compass",
+    "aliases": [
+      "Social and personality psychology compass",
+      "Soc Personal Psychol Compass"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101514953",
+    "nlmID": "101514953"
+  },
+  {
+    "acronym": "Stat Comput",
+    "name": "Statistics and Computing",
+    "aliases": ["Statistics and computing", "Stat Comput"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101473218",
+    "nlmID": "101473218"
+  },
+  {
+    "acronym": "Stat Med",
+    "name": "Statistics in Medicine",
+    "aliases": ["Statistics in medicine", "Stat Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8215016",
+    "nlmID": "8215016"
+  },
+  {
+    "acronym": "Stoch Process Their Appl",
+    "name": "Stochastic Processes and their Applications",
+    "aliases": [
+      "Stochastic processes and their applications",
+      "Stoch Process Their Appl"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101542179",
+    "nlmID": "101542179"
+  },
+  {
+    "acronym": "Symmetry (Basel)",
+    "name": "Symmetry",
+    "aliases": ["Symmetry", "Symmetry (Basel)"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101580302",
+    "nlmID": "101580302"
+  },
+  {
+    "acronym": "Syst Rev",
+    "name": "Systematic Reviews",
+    "aliases": ["Systematic reviews", "Syst Rev"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101580575",
+    "nlmID": "101580575"
+  },
+  {
+    "acronym": "Am J Med",
+    "name": "The American Journal of Medicine",
+    "aliases": ["The American journal of medicine", "Am J Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0267200",
+    "nlmID": "0267200"
+  },
+  {
+    "acronym": "EPMA J",
+    "name": "The EPMA Journal",
+    "aliases": ["The EPMA journal", "EPMA J"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101517307",
+    "nlmID": "101517307"
+  },
+  {
+    "acronym": "Int J Biostat",
+    "name": "The International Journal of Biostatistics",
+    "aliases": ["The international journal of biostatistics", "Int J Biostat"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101313850",
+    "nlmID": "101313850"
+  },
+  {
+    "acronym": "Lancet Digit Health",
+    "name": "The Lancet Digital Health",
+    "aliases": ["The Lancet. Digital health", "Lancet Digit Health"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101751302",
+    "nlmID": "101751302"
+  },
+  {
+    "acronym": "Lancet Respir Med",
+    "name": "The Lancet Respiratory Medicine",
+    "aliases": ["The Lancet. Respiratory medicine", "Lancet Respir Med"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101605555",
+    "nlmID": "101605555"
+  },
+  {
+    "acronym": "Milbank Q",
+    "name": "The Milbank Quarterly",
+    "aliases": ["The Milbank quarterly", "Milbank Q"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8607003",
+    "nlmID": "8607003"
+  },
+  {
+    "acronym": "Vis Comput",
+    "name": "The Visual Computer",
+    "aliases": ["The Visual computer", "Vis Comput"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101584127",
+    "nlmID": "101584127"
+  },
+  {
+    "name": "Transactions of the Association for Computational Linguistics",
+    "aliases": [],
+    "acronym": "TACL",
+    "source": "https://transacl.org/"
+  },
+  {
+    "acronym": "TMLR",
+    "name": "Transactions on Machine Learning Research",
+    "aliases": [],
+    "source": "https://jmlr.org/tmlr/"
+  },
+  {
+    "acronym": "Transp Res Part C Emerg Technol",
+    "name": "Transportation Research Part C: Emerging Technologies",
+    "aliases": [
+      "Transportation research. Part C, Emerging technologies",
+      "Transp Res Part C Emerg Technol"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101593943",
+    "nlmID": "101593943"
+  },
+  {
+    "acronym": "Transp Res D Transp Environ",
+    "name": "Transportation Research Part D: Transport and Environment",
+    "aliases": [
+      "Transportation research. Part D, Transport and environment",
+      "Transp Res D Transp Environ"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101643741",
+    "nlmID": "101643741"
+  },
+  {
+    "acronym": "Trends Cogn Sci",
+    "name": "Trends in Cognitive Sciences",
+    "aliases": ["Trends in cognitive sciences", "Trends Cogn Sci"],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9708669",
+    "nlmID": "9708669"
+  },
+  {
+    "acronym": "Wiley Interdiscip Rev Comput Stat",
+    "name": "Wiley Interdisciplinary Reviews: Computational Statistics",
+    "aliases": [
+      "Wiley interdisciplinary reviews. Computational statistics",
+      "Wiley Interdiscip Rev Comput Stat"
+    ],
+    "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101526762",
+    "nlmID": "101526762"
+  }
+]
