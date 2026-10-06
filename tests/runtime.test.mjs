@@ -339,6 +339,7 @@ test("preferences only expose naming style while internal conference rules remai
   const ids = [
     "ml-publication-style",
     "ml-replace-publication",
+    "ml-replace-publication-help",
     "ml-settings-help",
     "ml-publication-label",
     "ml-retrieved-names",
@@ -1300,40 +1301,37 @@ test("failed text responses are retried within a batch", async () => {
   }
 });
 
-test("publication column registration is idempotent and removed on stop", () => {
-  const previous = Zotero.ItemTreeManager;
-  const registered = [],
-    removed = [];
+test("publication initialization creates no custom column and cancels deferred loading on stop", async () => {
+  const previousManager = Zotero.ItemTreeManager;
+  const previousFile = Zotero.File;
+  let loads = 0;
   Zotero.ItemTreeManager = {
-    registerColumn(options) {
-      registered.push(options);
-      return "host-publication-short";
-    },
-    unregisterColumn(key) {
-      removed.push(key);
+    registerColumn() {
+      throw new Error("Unexpected custom column");
     },
   };
+  Zotero.File = {
+    getContentsFromURL() {
+      loads++;
+      return JSON.stringify({ default: { "container-title": {} } });
+    },
+  };
+  const runtime = new Runtime();
   try {
-    const runtime = new Runtime();
-    runtime.registerPublicationColumn();
-    runtime.registerPublicationColumn();
-    assert.equal(registered.length, 1);
-    const item = new FakeItem();
-    item.data.itemType = "journalArticle";
-    item.data.publicationTitle = "IEEE Transactions on Multimedia";
-    assert.equal(registered[0].dataProvider(item), "TMM");
-    item.data.publicationTitle = "Uncommon Journal";
-    assert.equal(registered[0].dataProvider(item), "Uncommon Journal");
-    assert.equal(
-      registered[0].dataProvider({ isRegularItem: () => false }),
-      "",
-    );
-    runtime.stop();
-    runtime.stop();
-    runtime.registerPublicationColumn();
-    assert.deepEqual(removed, ["host-publication-short"]);
-    assert.equal(registered.length, 1);
+    runtime.configurePublicationDisplay();
+    runtime.configurePublicationDisplay();
+    assert.equal(loads, 0);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(loads, 1);
+    runtime.configurePublicationDisplay();
+    const cancelled = new Runtime();
+    cancelled.configurePublicationDisplay();
+    cancelled.stop();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(loads, 1);
   } finally {
-    Zotero.ItemTreeManager = previous;
+    runtime.stop();
+    Zotero.ItemTreeManager = previousManager;
+    Zotero.File = previousFile;
   }
 });

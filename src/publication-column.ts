@@ -1,38 +1,21 @@
+import { publicationForItem } from "./publication-short";
+
 declare const Zotero: any;
 
 export const REPLACE_PUBLICATION_PREF =
   "extensions.zotero.metadata-linter.replace-publication-column";
 const RESTORE_PREF =
   "extensions.zotero.metadata-linter.publication-column-visibility";
+const LEGACY_COLUMN = "metadata-linter\\@lzcn-publication-short";
 
-// Use Zotero's column preferences and redraw methods, never replace its renderer.
+// Decorate only the native Publication cell and leave row data/sorting untouched.
 export class PublicationColumnView {
   private timers = new Map<any, ReturnType<typeof setTimeout>>();
-  private originals?: Record<string, boolean>;
-  private revisions = new Map<string, number>();
+  private views = new Map<any, { view: any; release: () => void }>();
+  private migrating = new Set<string>();
 
   enabled(): boolean {
     return Zotero.Prefs?.get(REPLACE_PUBLICATION_PREF, true) !== false;
-  }
-
-  private visibility(): Record<string, boolean> {
-    if (!this.originals) {
-      const raw = Zotero.Prefs?.get(RESTORE_PREF, true);
-      const saved = typeof raw === "string" ? JSON.parse(raw) : {};
-      if (
-        !saved ||
-        typeof saved !== "object" ||
-        Array.isArray(saved) ||
-        Object.values(saved).some((value) => typeof value !== "boolean")
-      )
-        throw new Error("Invalid saved publication column visibility");
-      this.originals = saved;
-    }
-    return this.originals!;
-  }
-
-  private save(): void {
-    Zotero.Prefs.set(RESTORE_PREF, JSON.stringify(this.visibility()), true);
   }
 
   cancel(win: any): void {
@@ -41,77 +24,126 @@ export class PublicationColumnView {
     this.timers.delete(win);
   }
 
-  sync(win: any, key?: string, enabled = this.enabled(), attempt = 0): void {
-    this.cancel(win);
-    if (win.closed && enabled) return;
-    const view = win.ZoteroPane?.itemsView;
-    const columns = enabled ? view?._getColumns?.() : undefined;
-    const original = columns?.find(
-      (column: any) => column.dataKey === "publicationTitle",
-    );
-    const custom =
-      key && columns?.find((column: any) => column.dataKey === key);
-    if (enabled && (!original || !view?.tree || !custom)) {
-      if (attempt >= 100) {
-        Zotero.logError(
-          new Error("Publication column view did not become ready"),
+  private redraw(view: any): void {
+    view.tree?.invalidate();
+  }
+
+  private migrate(view: any): void {
+    const raw = Zotero.Prefs?.get(RESTORE_PREF, true);
+    if (!raw || this.migrating.has(view.id)) return;
+    const saved = JSON.parse(raw);
+    if (
+      !saved ||
+      typeof saved !== "object" ||
+      Array.isArray(saved) ||
+      Object.values(saved).some((value) => typeof value !== "boolean")
+    )
+      throw new Error("Invalid saved publication column visibility");
+    if (!(view.id in saved)) return;
+    const prefs = { ...view._getColumnPrefs() };
+    const legacy = prefs[LEGACY_COLUMN];
+    prefs.publicationTitle = {
+      ...prefs.publicationTitle,
+      hidden: legacy?.hidden === false ? false : saved[view.id],
+      ...(legacy?.width && { width: legacy.width }),
+      ...(legacy?.ordinal !== undefined && { ordinal: legacy.ordinal }),
+    };
+    delete prefs[LEGACY_COLUMN];
+    view._storeColumnPrefs(prefs);
+    this.migrating.add(view.id);
+    void view
+      ._writeColumnPrefsToFile(true)
+      .then(() => {
+        const current = JSON.parse(
+          Zotero.Prefs.get(RESTORE_PREF, true) || "{}",
         );
+        delete current[view.id];
+        Zotero.Prefs.set(RESTORE_PREF, JSON.stringify(current), true);
+        this.migrating.delete(view.id);
+      })
+      .catch((error: unknown) => {
+        this.migrating.delete(view.id);
+        Zotero.logError(error);
+      });
+    if (view.tree)
+      void view
+        ._resetColumns()
+        .catch((error: unknown) => Zotero.logError(error));
+  }
+
+  sync(win: any, attempt = 0): void {
+    this.cancel(win);
+    const existing = this.views.get(win);
+    const view = win.ZoteroPane?.itemsView;
+    if (existing && existing.view !== view) {
+      existing.release();
+      this.views.delete(win);
+    }
+    if (win.closed) return;
+    if (!view?._renderCell || !view?.getRow) {
+      if (attempt >= 100) {
+        Zotero.logError(new Error("Publication view did not become ready"));
         return;
       }
       this.timers.set(
         win,
-        setTimeout(() => this.sync(win, key, enabled, attempt + 1), 100),
+        setTimeout(() => this.sync(win, attempt + 1), 100),
       );
       return;
     }
-    if (!view?._getColumnPrefs || !view?._storeColumnPrefs) return;
-    const originals = this.visibility();
-    const revision = (this.revisions.get(view.id) || 0) + 1;
-    this.revisions.set(view.id, revision);
-    const prefs = { ...view._getColumnPrefs() };
-    if (enabled) {
-      if (!(view.id in originals)) {
-        originals[view.id] = Boolean(original.hidden);
-        this.save();
-      }
-      prefs.publicationTitle = { ...prefs.publicationTitle, hidden: true };
-      prefs[key!] = {
-        ...prefs[key!],
-        hidden: false,
-        ordinal: original.ordinal,
-        width: prefs[key!]?.width || original.width || custom.width,
-      };
-    } else {
-      if (!(view.id in originals)) return;
-      prefs.publicationTitle = {
-        ...prefs.publicationTitle,
-        hidden: originals[view.id],
-      };
+    this.migrate(view);
+    if (!this.enabled()) {
+      this.restore([win]);
+      return;
     }
-    view._storeColumnPrefs(prefs);
-    if (!win.closed && view.tree)
-      void view
-        ._resetColumns()
-        .catch((error: unknown) => Zotero.logError(error));
-    // Persist the restoration now rather than waiting for Zotero's throttled save.
-    if (!enabled) {
-      void view
-        ._writeColumnPrefsToFile(true)
-        .then(() => {
-          // Retain recovery state until the native preferences have been saved.
-          if (this.revisions.get(view.id) === revision) {
-            delete originals[view.id];
-            this.save();
+    if (this.views.has(win)) return;
+    const original = view._renderCell;
+    const owned = Object.hasOwn(view, "_renderCell");
+    let active = true;
+    const render = function (
+      this: any,
+      index: number,
+      data: string,
+      column: any,
+      ...rest: any[]
+    ) {
+      if (active && column.dataKey === "publicationTitle") {
+        const item = this.getRow(index)?.ref;
+        if (item?.isRegularItem) {
+          try {
+            data = publicationForItem(item);
+          } catch (error) {
+            Zotero.logError(error);
           }
-        })
-        .catch((error: unknown) => Zotero.logError(error));
-    }
+        }
+      }
+      return original.call(this, index, data, column, ...rest);
+    };
+    view._renderCell = render;
+    this.views.set(win, {
+      view,
+      release: () => {
+        active = false;
+        // Preserve wrappers another plugin may have installed after ours.
+        if (view._renderCell === render) {
+          if (owned) view._renderCell = original;
+          else delete view._renderCell;
+        }
+        if (!win.closed) this.redraw(view);
+      },
+    });
+    this.redraw(view);
+  }
+
+  refresh(): void {
+    for (const { view } of this.views.values()) this.redraw(view);
   }
 
   restore(windows: any[]): void {
-    for (const win of [...this.timers.keys()]) this.cancel(win);
-    for (const win of windows) this.sync(win, undefined, false);
-    // Shutdown must never leave readiness retries running.
-    for (const win of [...this.timers.keys()]) this.cancel(win);
+    for (const win of windows) {
+      this.cancel(win);
+      this.views.get(win)?.release();
+      this.views.delete(win);
+    }
   }
 }

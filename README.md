@@ -14,9 +14,9 @@ Find published versions, add missing DOIs and correct bibliographic metadata wit
 
 Requires Zotero 10. Install the XPI through **Tools → Plugins → Install Plugin From File**. Select papers, then choose **Metadata Fixer** from the context menu.
 
-The plugin updates the selected items directly. One window shows progress and keeps the results after completion. You can add more items while it runs; duplicates are ignored. Cancel or close the window to stop pending work.
+Selected items are updated in place. Progress and results stay visible until you close the window. You can add items while it runs; duplicates are skipped. Cancel or close the window to stop pending work.
 
-**Settings → Metadata Fixer → Replace built-in Publication column** controls a display-only replacement (enabled by default). The plugin hides the native column and shows abbreviations in its position; switching this off or disabling the plugin restores the original visibility. Other columns and stored item fields are unchanged.
+**Use abbreviations in Publication column** displays abbreviations in the native column (enabled by default). Turning it off restores native display. Item fields and column settings are unchanged. Turn off Zotero Style’s **Publication Column** to avoid conflicts.
 
 Abbreviations use a source-backed local journal catalog from publisher directories and NLM, the existing conference catalog, an item's Journal Abbr field, and exact full-title entries from Zotero's bundled MEDLINE list. Known acronyms such as TMC, TPAMI, TGRS and JSTARS take priority over citation-style abbreviations. Unknown names retain their full title. Preprints show Repository verbatim, reports show Institution, books show Publisher, and theses show University. Only when a preprint has no repository do recognized identifiers and URLs supply a name such as arXiv. Rendering makes no network requests. Journal source URLs and publisher acronyms are recorded in `data/journal-abbreviations.json`.
 
@@ -33,7 +33,7 @@ Updates preserve the original item, attachments, annotations, notes, collections
 
 ## Settings
 
-In **Settings → Metadata Fixer**, choose **Original**, **Standard** (full name) or **Short** (acronym) proceedings titles. Original is the default. Formatting applies to Proceedings Title, omits editions and years, and preserves the paper date, and neither adds nor rewrites Conference Name. Misplaced proceedings names, item types and editors can be repaired; genuine journals and secondary tracks are protected.
+In **Settings → Metadata Fixer**, choose **Original** (default), **Standard** (full name) or **Short** (acronym). Standard and Short omit editions and years from Proceedings Title. Paper dates and Conference Name remain unchanged. Repairs can correct misplaced proceedings titles, item types and editors while preserving genuine journals and secondary tracks.
 
 Matching removes year and edition variations, then tries full names, topic phrases and acronyms. Unknown or ambiguous names stay unchanged; workshops and other tracks remain separate.
 

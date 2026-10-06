@@ -96,3 +96,33 @@ function repositoryTitle(metadata: Metadata): string {
   };
   return (host && repositories[host]) || "";
 }
+
+export function publicationForItem(item: {
+  itemType: string;
+  isRegularItem(): boolean;
+  getField(
+    field: string,
+    unformatted?: boolean,
+    includeBaseMapped?: boolean,
+  ): string;
+}): string {
+  if (!item.isRegularItem()) return "";
+  return publicationShort({
+    itemType: item.itemType,
+    title: "",
+    publicationTitle: item.getField("publicationTitle", false, true),
+    proceedingsTitle: item.getField("proceedingsTitle"),
+    bookTitle: item.getField("bookTitle"),
+    conferenceName: item.getField("conferenceName"),
+    journalAbbreviation: item.getField("journalAbbreviation"),
+    repository: item.getField("repository"),
+    institution: item.getField("institution"),
+    university: item.getField("university"),
+    publisher: item.getField("publisher", false, true),
+    archive: item.getField("archive"),
+    archiveID: item.getField("archiveID"),
+    url: item.getField("url"),
+    DOI: item.getField("DOI"),
+    extra: item.getField("extra"),
+  });
+}

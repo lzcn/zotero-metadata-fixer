@@ -1,6 +1,6 @@
 {
   "name": "zotero-metadata-fixer",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Update preprints and retrieve metadata while preserving the original Zotero item.",
   "author": "Zhi Lu",

@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Metadata Fixer",
-  "version": "0.1.9",
-  "description": "Upgrade preprints in place, fill missing metadata and fix clear errors while preserving your edits.",
+  "version": "0.1.10",
+  "description": "Find published versions and fix metadata in existing items.",
   "author": "Zhi Lu",
   "icons": {
     "48": "icons/icon-48.png",

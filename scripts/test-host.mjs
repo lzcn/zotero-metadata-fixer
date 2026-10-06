@@ -81,8 +81,12 @@ const files = unzipSync(
   await readFile(new URL("../dist/zotero-metadata-fixer.xpi", import.meta.url)),
 );
 files["bootstrap.js"] = strToU8(
-  strFromU8(files["bootstrap.js"]) +
+  strFromU8(files["bootstrap.js"]).replace(
+    "MLRuntime = scope.MetadataLinter.start();",
+    "MLHostNativeRenderer = Zotero.getMainWindow()?.ZoteroPane?.itemsView?._renderCell; MLRuntime = scope.MetadataLinter.start();",
+  ) +
     `
+var MLHostNativeRenderer;
 var MLOriginalStartup = startup;
 startup = async function(data) {
   await MLOriginalStartup(data);
@@ -100,10 +104,26 @@ startup = async function(data) {
       if (!MLRuntime) throw new Error('Runtime failed to start');
       const win = await wait(() => Zotero.getMainWindow()?.ZoteroPane?.itemsView && Zotero.getMainWindow());
       const doc = win.document;
-      const column = await wait(() => Zotero.ItemTreeManager.getCustomColumns().find(col => col.pluginID === 'metadata-linter@lzcn'));
-      MLRuntime.registerPublicationColumn();
-      const originalPublicationHidden = JSON.parse(Zotero.Prefs.get('extensions.zotero.metadata-linter.publication-column-visibility', true) || '{}')[win.ZoteroPane.itemsView.id];
-      if (Zotero.ItemTreeManager.getCustomColumns().filter(col => col.pluginID === 'metadata-linter@lzcn').length !== 1) throw new Error('Duplicate publication column');
+      const view = win.ZoteroPane.itemsView;
+      MLRuntime.configurePublicationDisplay();
+      if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn')) throw new Error('Unexpected duplicate column');
+      if (view._renderCell === MLHostNativeRenderer) throw new Error('Startup did not decorate native renderer');
+      result.nativePublicationOnly = true;
+      const legacyKey = win.CSS.escape('metadata-linter@lzcn-publication-short');
+      const migratedPrefs = { ...view._getColumnPrefs(), publicationTitle: { ...view._getColumnPrefs().publicationTitle, hidden: true }, [legacyKey]: { hidden:false, width:180, ordinal:4 } };
+      view._storeColumnPrefs(migratedPrefs);
+      Zotero.Prefs.set('extensions.zotero.metadata-linter.publication-column-visibility', JSON.stringify({ [view.id]:true }), true);
+      MLRuntime.configurePublicationDisplay();
+      await wait(() => !JSON.parse(Zotero.Prefs.get('extensions.zotero.metadata-linter.publication-column-visibility', true) || '{}')[view.id]);
+      const migrated = view._getColumnPrefs();
+      if (migrated[legacyKey] || migrated.publicationTitle.hidden || migrated.publicationTitle.width !== 180 || migrated.publicationTitle.ordinal !== 4) throw new Error('Legacy replacement preferences did not migrate');
+      result.legacyColumnMigrated = true;
+      const renderPublication = async entry => {
+        await win.ZoteroPane.selectItem(entry.id);
+        const index = view.getRowIndexByID(entry.id);
+        const column = view._getColumns().find(col => col.dataKey === 'publicationTitle');
+        return view._renderCell(index, view.getCellText(index, 'publicationTitle'), column, false).textContent;
+      };
       result.publicationColumn = [];
       for (const [type, field, title, expected] of [
         ['conferencePaper', 'proceedingsTitle', '2025 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)', 'CVPR'],
@@ -134,28 +154,28 @@ startup = async function(data) {
         entry.setField(field, title);
         await entry.saveTx();
         const before = JSON.stringify(entry.toJSON());
-        const value = Zotero.ItemTreeManager.getCustomCellData(entry, column.dataKey);
+        const value = await renderPublication(entry);
         if (value !== expected || JSON.stringify(entry.toJSON()) !== before) throw new Error('Publication column failed: ' + title + ' => ' + value);
         result.publicationColumn.push(value);
         if (expected === 'CVPR') {
           await win.ZoteroPane.selectItem(entry.id);
-          const columns = await wait(() => {
-            const list = win.ZoteroPane.itemsView._getColumns();
-            return list.some(col => col.dataKey === column.dataKey) && list;
-          });
-          const index = columns.findIndex(col => col.dataKey === column.dataKey);
-          if (columns[index].hidden) win.ZoteroPane.itemsView.tree._columns.toggleHidden(index);
+          const columns = view._getColumns();
+          const index = columns.findIndex(col => col.dataKey === 'publicationTitle');
+          if (columns[index].hidden) view.tree._columns.toggleHidden(index);
           await wait(() => [...doc.querySelectorAll('.cell')].some(cell => cell.textContent === 'CVPR'));
-          if (!columns.find(col => col.dataKey === 'publicationTitle').hidden || columns[index].ordinal !== columns.find(col => col.dataKey === 'publicationTitle').ordinal) throw new Error('Column did not replace native publication in place');
+          if (view._getColumns().filter(col => col.dataKey === 'publicationTitle').length !== 1) throw new Error('Duplicate native publication column');
           result.publicationColumnRendered = true;
         }
         if (type === 'journalArticle' && field === 'publicationTitle') {
           entry.setField(field, 'IEEE Transactions on Image Processing');
           await entry.saveTx();
-          if (Zotero.ItemTreeManager.getCustomCellData(entry, column.dataKey) !== 'TIP') throw new Error('Column did not reflect edited publication');
+          if (await renderPublication(entry) !== 'TIP') throw new Error('Column did not reflect edited publication');
         }
       }
-      if (Zotero.ItemTreeManager.getCustomCellData(new Zotero.Item('note'), column.dataKey) !== '') throw new Error('Column displays a note publication');
+      const toggleEntry = new Zotero.Item('journalArticle');
+      toggleEntry.setField('title', 'Native Column Toggle Fixture');
+      toggleEntry.setField('publicationTitle', 'IEEE Transactions on Mobile Computing');
+      await toggleEntry.saveTx();
 
       const menu = doc.getElementById('metadata-linter-menu');
       if (!menu || menu.localName !== 'menuitem' || menu.children.length) throw new Error('Expected one direct context-menu action');
@@ -230,17 +250,18 @@ startup = async function(data) {
       });
       result.settings = [...select.querySelectorAll('menuitem')].map(option => option.label);
       const replace = settings.document.getElementById('ml-replace-publication');
+      if (settings.document.getElementById('ml-replace-publication-help')?.textContent !== MLRuntime.preferenceData().strings.replacePublicationHelp) throw new Error('Missing localized Zotero Style compatibility reminder');
       if (!replace.checked || replace.getAttribute('native') !== 'true') throw new Error('Missing native replacement setting');
       const originalTitlePrefs = JSON.stringify(win.ZoteroPane.itemsView._getColumnPrefs().title);
       replace.checked = false;
       replace.dispatchEvent(new settings.Event('command'));
-      await wait(() => !Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn'));
-      if (win.ZoteroPane.itemsView._getColumns().find(col => col.dataKey === 'publicationTitle').hidden !== originalPublicationHidden) throw new Error('Disabling replacement did not restore native visibility: ' + JSON.stringify({expected:originalPublicationHidden, actual:win.ZoteroPane.itemsView._getColumns().find(col => col.dataKey === 'publicationTitle').hidden, saved:Zotero.Prefs.get('extensions.zotero.metadata-linter.publication-column-visibility', true), id:win.ZoteroPane.itemsView.id}));
-      await new Promise(resolve => setTimeout(resolve, 200));
+      if (view._renderCell !== MLHostNativeRenderer || await renderPublication(toggleEntry) !== 'IEEE Transactions on Mobile Computing') throw new Error('Disabling did not restore native rendering');
+      const nativeVisibility = view._getColumns().find(col => col.dataKey === 'publicationTitle').hidden;
       replace.checked = true;
       replace.dispatchEvent(new settings.Event('command'));
-      await wait(() => win.ZoteroPane.itemsView._getColumns().some(col => col.dataKey === column.dataKey && !col.hidden) && win.ZoteroPane.itemsView._getColumns().find(col => col.dataKey === 'publicationTitle').hidden);
-      if (JSON.stringify(win.ZoteroPane.itemsView._getColumnPrefs().title) !== originalTitlePrefs) throw new Error('Replacement changed another column');
+      if (await renderPublication(toggleEntry) !== 'TMC') throw new Error('Reenabling did not abbreviate native Publication');
+      if (view._getColumns().find(col => col.dataKey === 'publicationTitle').hidden !== nativeVisibility) throw new Error('Toggle changed native visibility');
+      if (JSON.stringify(view._getColumnPrefs().title) !== originalTitlePrefs) throw new Error('Replacement changed another column');
       result.replacementSetting = {disabledRestored:true,enabledReplaced:true};
       select.value = 'standard';
       select.dispatchEvent(new settings.Event('command'));
@@ -477,11 +498,11 @@ startup = async function(data) {
       if (result.shutdown.elapsedMs > 2000 || result.shutdown.busy || !result.shutdown.runtimeReleased || !result.shutdown.chromeReleased) throw new Error('Shutdown waited for remote work or left resources alive');
       if (doc.getElementById('metadata-linter-menu') || Zotero.MetadataLinter || Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences')) throw new Error('Shutdown left plugin UI registered');
       if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn')) throw new Error('Shutdown left publication column');
-      if (win.ZoteroPane.itemsView._getColumns().find(col => col.dataKey === 'publicationTitle').hidden !== originalPublicationHidden) throw new Error('Shutdown did not restore native publication visibility');
+      if (view._renderCell !== MLHostNativeRenderer) throw new Error('Shutdown did not restore native renderer');
       await new Promise(resolve => setTimeout(resolve, 200));
       await MLOriginalStartup(data);
       await wait(() => doc.getElementById('metadata-linter-menu') && Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences'));
-      if (Zotero.ItemTreeManager.getCustomColumns().filter(col => col.pluginID === 'metadata-linter@lzcn').length !== 1) throw new Error('Restart did not restore exactly one publication column');
+      if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn') || await renderPublication(toggleEntry) !== 'TMC') throw new Error('Restart did not decorate the single native Publication');
       result.restart = {menus:doc.querySelectorAll('#metadata-linter-menu').length};
       if (result.restart.menus !== 1 || !MLRuntime) throw new Error('Restart did not restore exactly one plugin entry');
       shutdown();
