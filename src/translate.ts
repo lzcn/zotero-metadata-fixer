@@ -8,10 +8,12 @@ import {
 } from "./identifiers";
 import {
   articleEvidence,
+  bibliographyEvidence,
   normalizeMetadata,
   needsContainerTitle,
   supplementMetadata,
 } from "./metadata";
+import { checkAccess } from "./responses";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -93,7 +95,7 @@ export class MetadataRetriever {
     this.checkActive();
     if (!docs[0]) throw new Error("Unable to load item URL");
     const doc: Document = docs[0];
-    const { doi, bibtex } = articleEvidence(doc, url);
+    const { doi, bibtex, bibliographyURL } = articleEvidence(doc, url);
     let identified: Metadata | undefined;
     if (doi && !preprintDOI(doi)) {
       try {
@@ -107,9 +109,21 @@ export class MetadataRetriever {
     }
     // Embedded BibTeX often contains proceedings/publisher fields omitted by web translators.
     let bibliography: Metadata | undefined;
-    if (bibtex) {
+    if (bibtex || bibliographyURL) {
       try {
-        bibliography = await this.bibtex(bibtex);
+        let text = bibtex;
+        if (!text) {
+          const response = await this.net.text(bibliographyURL!);
+          this.checkActive();
+          checkAccess(response);
+          text = /^\s*@(?:inproceedings|article|incollection)\s*[{(]/i.test(
+            response,
+          )
+            ? response
+            : bibliographyEvidence(this.net.html(response));
+        }
+        if (!text) throw new Error("No article bibliography found");
+        bibliography = await this.bibtex(text);
       } catch (error) {
         this.checkActive();
         // A web translator can still retrieve the article when BibTeX is malformed.
@@ -125,7 +139,8 @@ export class MetadataRetriever {
       if (!bibliography && !identified) throw error;
       metadata = bibliography || identified!;
     }
-    if (bibliography) metadata = supplementMetadata(metadata, bibliography);
+    // Explicit bibliography entry types outrank generic web citation meta tags.
+    if (bibliography) metadata = supplementMetadata(bibliography, metadata);
     if (identified) metadata = supplementMetadata(identified, metadata);
     if (!metadata.url) metadata.url = url;
     return doi && !preprintDOI(doi) && !metadata.DOI
@@ -215,19 +230,27 @@ export class MetadataRetriever {
     if (candidate.url && !official)
       sources.push(["URL", () => this.url(candidate.url!)]);
     const errors: string[] = [];
+    let partial: Metadata | undefined;
     for (const [source, retrieve] of sources) {
       if (!active()) throw new Error("Operation cancelled");
       this.checkActive();
       try {
-        const metadata = complete(await retrieve());
+        const retrieved = complete(await retrieve());
         if (!active()) throw new Error("Operation cancelled");
-        return metadata;
+        this.checkActive();
+        const metadata = partial
+          ? supplementMetadata(partial, retrieved)
+          : retrieved;
+        if (!needsContainerTitle(metadata)) return metadata;
+        // Retain successful fields while later sources supply the missing container.
+        partial = metadata;
       } catch (error) {
         if (!active()) throw error;
         this.checkActive();
         errors.push(`${source}: ${String(error)}`);
       }
     }
+    if (partial) return partial;
     throw new Error(
       errors.join("\n") || "Candidate has no retrievable identifier",
     );

@@ -8,6 +8,7 @@ import {
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
 import { selectPublication } from "./selection";
+import { DEFAULT_CONFERENCE_RULES, normalizeConference } from "./conferences";
 
 export interface Network {
   json(url: string): Promise<any>;
@@ -434,14 +435,30 @@ export class PublicationFinder {
         return [];
       const forum = note.forum || note.id;
       if (!forum) return [];
+      // Resolve the structured event identifier through the shared venue catalog.
+      // Display labels may include presentation categories; unknown events retain them.
+      const event = /\/Conference$/i.test(venueID)
+        ? normalizeConference(
+            {
+              itemType: "conferencePaper",
+              title: String(get("title") || ""),
+              proceedingsTitle: venueID.replace(/[/.]/g, " "),
+            },
+            DEFAULT_CONFERENCE_RULES,
+            "short",
+          )
+        : undefined;
+      const year =
+        Number(`${venue} ${venueID}`.match(/\b\d{4}\b/)?.[0]) || undefined;
       return [
         {
           source: "OpenReview",
           title: String(get("title") || ""),
           authors,
-          venue,
-          year:
-            Number(`${venue} ${venueID}`.match(/\b\d{4}\b/)?.[0]) || undefined,
+          venue: event?.rule
+            ? [event.metadata.proceedingsTitle, year].filter(Boolean).join(" ")
+            : venue,
+          year,
           url: `https://openreview.net/forum?id=${encode(forum)}`,
           bibtex:
             typeof get("_bibtex") === "string" ? get("_bibtex") : undefined,

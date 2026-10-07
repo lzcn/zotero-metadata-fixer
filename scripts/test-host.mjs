@@ -9,6 +9,23 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 let abortedRequests = 0;
 let metadataRequests = 0;
 const server = createServer((request, response) => {
+  if (request.url === "/citation-article") {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(`<!doctype html><html><head>
+      <meta name="citation_title" content="Host Conference Paper">
+      <meta name="citation_author" content="Lu, Zhi">
+      <meta name="citation_journal_title" content="International Conference on Learning Representations">
+      <meta name="citation_publication_date" content="2025-05-01">
+    </head><body><a href="/citation-bibliography">Bibtex</a></body></html>`);
+    return;
+  }
+  if (request.url === "/citation-bibliography") {
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.end(
+      "@inproceedings{host,title={Host Conference Paper},author={Lu, Zhi},booktitle={International Conference on Learning Representations},year={2025},pages={1--8}}",
+    );
+    return;
+  }
   if (request.url === "/metadata") {
     metadataRequests++;
     response.end("shared metadata");
@@ -341,6 +358,30 @@ startup = async function(data) {
       MLRuntime.request = scholarRequest;
       for (const window of [...MLRuntime.dialogs]) window.close();
 
+      // Real web and BibTeX translators, isolated local responses, no source substitutions.
+      const mislabeled = new Zotero.Item('journalArticle');
+      mislabeled.setField('title', 'Host Conference Paper');
+      mislabeled.setField('publicationTitle', 'International Conference on Learning Representations');
+      mislabeled.setField('url', 'https://proceedings.iclr.cc/paper_files/paper/2025/hash/host-Abstract-Conference.html');
+      mislabeled.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+      await mislabeled.saveTx();
+      const mislabeledIdentity = {id:mislabeled.id,key:mislabeled.key};
+      await win.ZoteroPane.selectItem(mislabeled.id);
+      const bibliographyCalls = [];
+      MLRuntime.request = (url, ...args) => {
+        bibliographyCalls.push(url);
+        if (url === mislabeled.getField('url')) return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-article"))}, ...args);
+        if (url === 'https://proceedings.iclr.cc/citation-bibliography') return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-bibliography"))}, ...args);
+        throw new Error('Unexpected online request: ' + url);
+      };
+      MLRuntime.finder = undefined;
+      MLRuntime.retriever = undefined;
+      await MLRuntime.run(win, 'lint');
+      result.bibliographyTypeRepair = {type:mislabeled.itemType,venue:mislabeled.getField('proceedingsTitle'),requests:bibliographyCalls.length,status:MLRuntime.progressState.rows.at(-1).status};
+      if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result.bibliographyTypeRepair.status !== 'Updated' || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result.bibliographyTypeRepair));
+      MLRuntime.request = scholarRequest;
+      for (const window of [...MLRuntime.dialogs]) window.close();
+
       const originalSearch = Zotero.Translate.Search;
       const originalWeb = Zotero.Translate.Web;
       try {
@@ -383,6 +424,33 @@ startup = async function(data) {
           result.official.push({withDOI,requests:officialCalls.length,type:officialItem.itemType,DOI:officialItem.getField('DOI')});
           for (const window of [...MLRuntime.dialogs]) window.close();
         }
+        const revised = new Zotero.Item('preprint');
+        revised.setField('title', 'Revision Host Paper');
+        revised.setField('date', '2025-10-21');
+        revised.setField('url', 'https://arxiv.org/abs/2409.04730');
+        revised.setField('DOI', '10.48550/arXiv.2409.04730');
+        revised.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+        await revised.saveTx();
+        const revisedIdentity = {id:revised.id,key:revised.key};
+        await win.ZoteroPane.selectItem(revised.id);
+        MLRuntime.request = async url => {
+          if (url.startsWith('https://api.crossref.org/works?')) return JSON.stringify({message:{items:[{type:'proceedings-article',title:['Revision Host Paper'],DOI:'10.1000/revision-host',author:[{given:'Zhi',family:'Lu'}],issued:{'date-parts':[[2024]]},'container-title':['2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)']}]}});
+          throw new Error('Offline source: ' + url);
+        };
+        class RevisionIdentifier extends Zotero.Translate.Import {
+          setIdentifier(ids) {
+            if (ids.DOI !== '10.1000/revision-host') throw new Error('Incorrect selected DOI');
+            this.setString('@inproceedings{host,title={Revision Host Paper},author={Lu, Zhi},booktitle={2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},year={2024},doi={10.1000/revision-host}}');
+          }
+        }
+        Zotero.Translate.Search = RevisionIdentifier;
+        Zotero.Translate.Web = originalWeb;
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+        await MLRuntime.run(win, 'lint');
+        result.revisionDateUpgrade = {type:revised.itemType,date:revised.getField('date'),DOI:revised.getField('DOI'),venue:revised.getField('proceedingsTitle'),status:MLRuntime.progressState.rows.at(-1).status};
+        if (revised.itemType !== 'conferencePaper' || revised.getField('date') !== '2024' || revised.getField('DOI') !== '10.1000/revision-host' || revised.id !== revisedIdentity.id || revised.key !== revisedIdentity.key || result.revisionDateUpgrade.status !== 'Updated') throw new Error('Revision date blocked an earlier publication: ' + JSON.stringify(result.revisionDateUpgrade));
+        for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
         Zotero.Translate.Search = originalSearch;
         Zotero.Translate.Web = originalWeb;

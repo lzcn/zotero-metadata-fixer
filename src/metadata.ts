@@ -55,10 +55,23 @@ export function supplementMetadata(
   return merged;
 }
 
+export function bibliographyEvidence(doc: Document): string | undefined {
+  const entries = Array.from(
+    doc.querySelectorAll?.(
+      'pre, .bibtex-text-entry, script[type="application/x-bibtex"]',
+    ) || [],
+  ).filter((node) =>
+    /^\s*@(?:inproceedings|article|incollection)\s*[{(]/i.test(
+      node.textContent || "",
+    ),
+  );
+  return entries.length === 1 ? entries[0].textContent || undefined : undefined;
+}
+
 export function articleEvidence(
   doc: Document,
   url: string,
-): { doi?: string; bibtex?: string } {
+): { doi?: string; bibtex?: string; bibliographyURL?: string } {
   // Read only the article's identifier, not arbitrary DOI links in references.
   let doi = Array.from(
     doc.querySelectorAll?.(
@@ -79,20 +92,26 @@ export function articleEvidence(
     );
     doi = cleanDOI(link?.getAttribute("href") || "");
   }
-  const entries = officialPublicationURL(url)
-    ? Array.from(
-        doc.querySelectorAll?.(
-          'pre, .bibtex-text-entry, script[type="application/x-bibtex"]',
-        ) || [],
-      ).filter((node) =>
-        /^\s*@(?:inproceedings|article|incollection)\s*[{(]/i.test(
-          node.textContent || "",
-        ),
-      )
+  const bibliographyLinks = officialPublicationURL(url)
+    ? Array.from(doc.querySelectorAll?.("a[href]") || [])
+        .filter(
+          (anchor) =>
+            /^bibtex$/i.test(anchor.textContent?.trim() || "") ||
+            anchor.getAttribute("type") === "application/x-bibtex",
+        )
+        .flatMap((anchor) => {
+          try {
+            const link = new URL(anchor.getAttribute("href") || "", url);
+            return link.origin === new URL(url).origin ? [link.href] : [];
+          } catch {
+            return [];
+          }
+        })
     : [];
+  const uniqueLinks = [...new Set(bibliographyLinks)];
   return {
     doi,
-    bibtex:
-      entries.length === 1 ? entries[0].textContent || undefined : undefined,
+    bibtex: officialPublicationURL(url) ? bibliographyEvidence(doc) : undefined,
+    bibliographyURL: uniqueLinks.length === 1 ? uniqueLinks[0] : undefined,
   };
 }

@@ -167,7 +167,7 @@ test("cancellation during save rolls back the transaction", async () => {
   assert.deepEqual(item.toJSON(), original);
 });
 
-test("matching excludes old publications, homonyms, preprints, and duplicate DOIs", () => {
+test("matching uses identity rather than item dates and excludes homonyms, preprints and duplicate DOIs", () => {
   const item = new FakeItem();
   const match = {
     source: "Crossref",
@@ -184,7 +184,7 @@ test("matching excludes old publications, homonyms, preprints, and duplicate DOI
     { ...match, doi: "10.1000/homonym", authors: ["Other Person"] },
     { ...match, doi: "10.48550/arXiv.2501.01234" },
   ]);
-  assert.equal(found.length, 1);
+  assert.equal(found.length, 2);
   assert.equal(found[0].doi, published.DOI);
   for (const venue of [
     "CoRR 2026",

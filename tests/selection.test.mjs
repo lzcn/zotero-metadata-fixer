@@ -101,3 +101,31 @@ test("DMLNet compound-word typography matches without weakening author or DOI ch
     undefined,
   );
 });
+
+test("revision dates do not exclude older publications and identity conflicts still prevent selection", () => {
+  const paper = new FakeItem();
+  paper.data.title =
+    "IR2: Implicit Rendezvous for Robotic Exploration Teams under Sparse Intermittent Connectivity";
+  paper.data.date = "2025-10-21";
+  paper.data.creators = [
+    { firstName: "Derek Ming Siang", lastName: "Tan", creatorType: "author" },
+  ];
+  const record = {
+    source: "Crossref",
+    title: paper.data.title,
+    authors: ["Derek Ming Siang Tan"],
+    year: 2024,
+    venue:
+      "2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)",
+    doi: "10.1109/IROS58592.2024.10801761",
+  };
+  assert.equal(selectPublication(paper, [record]).doi, record.doi);
+  assert.equal(
+    selectPublication(paper, [{ ...record, authors: ["Someone Else"] }]),
+    undefined,
+  );
+  assert.equal(
+    selectPublication(paper, [record, { ...record, doi: "10.1000/another" }]),
+    undefined,
+  );
+});

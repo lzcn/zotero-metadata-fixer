@@ -788,3 +788,211 @@ test("exact OpenReview lookup rejects submissions even when a web translator cou
   accepted = true;
   assert.deepEqual(await retriever.url(item.data.url), published);
 });
+
+test("OpenReview main-conference presentation labels keep the ICLR venue", async () => {
+  for (const category of [
+    "poster",
+    "oral",
+    "spotlight",
+    "new presentation category",
+  ]) {
+    const finder = new PublicationFinder({
+      json: async () => ({
+        notes: [
+          {
+            id: "accepted",
+            content: {
+              title: {
+                value: "RouteLLM: Learning to Route LLMs from Preference Data",
+              },
+              authors: { value: ["Isaac Ong"] },
+              venue: { value: `ICLR 2025 ${category}` },
+              venueid: { value: "ICLR.cc/2025/Conference" },
+            },
+          },
+        ],
+      }),
+    });
+    const [candidate] = await finder.openreview(new FakeItem());
+    assert.equal(candidate.venue, "ICLR 2025");
+    assert.equal(candidate.year, 2025);
+  }
+});
+
+test("candidate DOI metadata missing a journal uses its official article", async () => {
+  const retriever = new MetadataRetriever({}, {}, {});
+  retriever.identifier = async () => ({
+    ...published,
+    publicationTitle: undefined,
+  });
+  retriever.url = async () => ({
+    ...published,
+    publicationTitle: "Journal of Machine Learning Research",
+  });
+  const result = await retriever.candidate({
+    source: "Crossref",
+    title: published.title,
+    doi: published.DOI,
+    url: "https://www.nature.com/articles/example",
+  });
+  assert.equal(result.publicationTitle, "Journal of Machine Learning Research");
+});
+
+test("OpenReview unknown events and workshop identifiers retain their source venues", async () => {
+  for (const [venueid, venue] of [
+    ["Unknown.org/2025/Conference", "Unknown 2025 presentation"],
+    ["ICLR.cc/2025/Workshop", "ICLR 2025 Workshop poster"],
+    ["ICLR.cc/2025/Conference/Workshop", "ICLR 2025 Workshop"],
+  ]) {
+    const finder = new PublicationFinder({
+      json: async () => ({
+        notes: [
+          {
+            id: "accepted",
+            content: {
+              title: published.title,
+              authors: ["Zhi Lu"],
+              venue,
+              venueid,
+            },
+          },
+        ],
+      }),
+    });
+    assert.equal((await finder.openreview(new FakeItem()))[0].venue, venue);
+  }
+});
+
+test("incomplete candidate metadata is supplemented across source types without erasing successful fields", async () => {
+  for (const [itemType, field] of [
+    ["journalArticle", "publicationTitle"],
+    ["conferencePaper", "proceedingsTitle"],
+    ["bookSection", "bookTitle"],
+  ]) {
+    const retriever = new MetadataRetriever({}, {}, {});
+    const partial = {
+      ...published,
+      itemType,
+      publicationTitle: undefined,
+      abstractNote: "Keep this abstract",
+    };
+    retriever.url = async () => partial;
+    retriever.bibtex = async () => ({
+      ...partial,
+      [field]: "Published container",
+      abstractNote: "Other abstract",
+    });
+    const result = await retriever.candidate({
+      source: "Index",
+      title: published.title,
+      url: "https://www.nature.com/articles/example",
+      bibtex: "bibliography",
+    });
+    assert.equal(result[field], "Published container");
+    assert.equal(result.abstractNote, "Keep this abstract");
+  }
+});
+
+test("failed or conflicting supplementary sources retain successful partial metadata", async () => {
+  for (const conflict of [false, true]) {
+    const retriever = new MetadataRetriever({}, {}, {});
+    const partial = { ...published, publicationTitle: undefined };
+    retriever.identifier = async () => partial;
+    retriever.url = async () => {
+      if (!conflict) throw new Error("Offline");
+      return { ...published, DOI: "10.1000/different" };
+    };
+    assert.deepEqual(
+      await retriever.candidate({
+        source: "Index",
+        title: published.title,
+        doi: published.DOI,
+        url: "https://www.nature.com/articles/example",
+      }),
+      partial,
+    );
+  }
+});
+
+test("linked article bibliography corrects a generic web journal type through the import translator", async () => {
+  const official =
+    "https://proceedings.iclr.cc/paper_files/paper/2025/hash/paper-Abstract-Conference.html";
+  const link = {
+    textContent: "Bibtex",
+    getAttribute: (key) => (key === "href" ? "/bibliography" : null),
+  };
+  const document = {
+    querySelectorAll: (selector) => (selector === "a[href]" ? [link] : []),
+  };
+  const calls = [];
+  const retriever = new MetadataRetriever(
+    {},
+    {},
+    {
+      text: async (url) => {
+        calls.push(url);
+        return "@inproceedings{paper,title={Learning}}";
+      },
+    },
+    () => true,
+    async () => document,
+  );
+  retriever.bibtex = async () => ({
+    ...published,
+    itemType: "conferencePaper",
+    publicationTitle: undefined,
+    proceedingsTitle: "International Conference on Learning Representations",
+  });
+  class Web {
+    setDocument() {}
+    async getTranslators() {
+      return ["web"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate() {
+      return [
+        {
+          ...published,
+          publicationTitle:
+            "International Conference on Learning Representations",
+        },
+      ];
+    }
+  }
+  retriever.zotero = { Translate: { Web } };
+  const metadata = await retriever.url(official);
+  assert.equal(metadata.itemType, "conferencePaper");
+  assert.equal(
+    metadata.proceedingsTitle,
+    "International Conference on Learning Representations",
+  );
+  assert.deepEqual(calls, ["https://proceedings.iclr.cc/bibliography"]);
+});
+
+test("article bibliography links must be unique and belong to the official origin", async () => {
+  const { articleEvidence } = await import("../.tests-build/metadata.js");
+  const official =
+    "https://proceedings.iclr.cc/paper_files/paper/2025/hash/paper-Abstract-Conference.html";
+  const link = (href) => ({
+    textContent: "Bibtex",
+    getAttribute: (key) => (key === "href" ? href : null),
+  });
+  for (const links of [
+    [link("https://other.test/paper.bib")],
+    [link("/one"), link("/two")],
+  ]) {
+    const doc = {
+      querySelectorAll: (selector) => (selector === "a[href]" ? links : []),
+    };
+    assert.equal(articleEvidence(doc, official).bibliographyURL, undefined);
+  }
+  const doc = {
+    querySelectorAll: (selector) =>
+      selector === "a[href]" ? [link("/bib")] : [],
+  };
+  assert.equal(
+    articleEvidence(doc, "https://unknown.test/paper").bibliographyURL,
+    undefined,
+  );
+});

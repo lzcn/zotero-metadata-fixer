@@ -48,8 +48,6 @@ export function rankCandidates(
 ): Candidate[] {
   const title = item.getField("title");
   const surname = normalize(item.getCreators()[0]?.lastName || "");
-  const year =
-    Number(item.getField("date").match(/\b(\d{4})\b/)?.[1]) || undefined;
   const ranked = candidates
     .filter((candidate) => {
       if (candidate.doi && preprintDOI(candidate.doi)) return false;
@@ -57,7 +55,8 @@ export function rankCandidates(
       if (candidate.linked) return true;
       if (!candidate.title || titleScore(title, candidate.title) < 0.75)
         return false;
-      if (year && candidate.year && candidate.year < year) return false;
+      // Item dates can describe revisions or be incorrect; they do not establish identity.
+      // Publication years only break ranking ties after title and author validation.
       if (!matchesAuthor(surname, candidate.authors)) return false;
       return true;
     })

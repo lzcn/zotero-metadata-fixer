@@ -27,7 +27,7 @@ Abbreviations use a source-backed local journal catalog from publisher directori
 - Fill missing fields and correct clear metadata errors.
 - Standardize proceedings titles using the selected naming style.
 
-The plugin searches by identifiers and publication links before falling back to the title. It checks the title, authors and publication status before applying a match. Conflicting or unverified records are skipped; a failed source does not stop the other searches. Sources include Zotero translators, Crossref, PubMed, Semantic Scholar, DBLP, OpenReview and Google Scholar, with publisher pages used for verification and missing fields.
+The plugin searches by identifiers and publication links before falling back to the title. A verified article’s linked BibTeX can correct types inferred from generic web metadata. Item dates do not exclude earlier publications because preprint revisions can postdate the published version. It checks the title, authors and publication status before applying a match. Conflicting or unverified records are skipped; a failed source does not stop the other searches. Sources include Zotero translators, Crossref, PubMed, Semantic Scholar, DBLP, OpenReview and Google Scholar, with publisher pages used for verification and missing fields.
 
 Updates preserve the original item, attachments, annotations, notes, collections, tags and relations. Empty results never erase existing fields, and cosmetic differences in casing or spacing leave the original value intact. Preprint identifiers stay in Extra. If you edit an item during retrieval, stale results will not overwrite your changes.
 

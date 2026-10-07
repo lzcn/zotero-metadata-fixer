@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Metadata Fixer",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Find published versions and fix metadata in existing items.",
   "author": "Zhi Lu",
   "icons": {
