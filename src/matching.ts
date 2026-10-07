@@ -1,5 +1,5 @@
 import type { Candidate, Item } from "./model";
-import { cleanDOI, preprintDOI } from "./identifiers";
+import { cleanDOI, preprintDOI, preprintVenue } from "./identifiers";
 
 export function normalize(value: string): string {
   return value
@@ -28,7 +28,8 @@ export function titleScore(a: string, b: string): number {
 export function publishedVenue(venue: string): boolean {
   return (
     Boolean(venue.trim()) &&
-    !/\b(?:arxiv|corr|biorxiv|medrxiv|ssrn|pre-?prints?|submitted|under\s+review|rejected|withdrawn|desk_rejected|research\s*square)\b/i.test(
+    !preprintVenue(venue) &&
+    !/\b(?:submitted|under\s+review|rejected|withdrawn|desk_rejected)\b/i.test(
       venue,
     )
   );

@@ -8,7 +8,17 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
 let metadataRequests = 0;
+const failedRequests = { "/throttled": 0, "/unavailable": 0 };
 const server = createServer((request, response) => {
+  if (Object.hasOwn(failedRequests, request.url)) {
+    failedRequests[request.url]++;
+    response.writeHead(request.url === "/throttled" ? 429 : 503, {
+      "Retry-After": "120",
+      "Content-Type": "application/json",
+    });
+    response.end('{"error":"Temporarily unavailable"}');
+    return;
+  }
   if (request.url === "/citation-article") {
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(`<!doctype html><html><head>
@@ -358,30 +368,34 @@ startup = async function(data) {
       MLRuntime.request = scholarRequest;
       for (const window of [...MLRuntime.dialogs]) window.close();
 
-      // Real web and BibTeX translators, isolated local responses, no source substitutions.
-      const mislabeled = new Zotero.Item('journalArticle');
-      mislabeled.setField('title', 'Host Conference Paper');
-      mislabeled.setField('publicationTitle', 'International Conference on Learning Representations');
-      mislabeled.setField('url', 'https://proceedings.iclr.cc/paper_files/paper/2025/hash/host-Abstract-Conference.html');
-      mislabeled.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
-      await mislabeled.saveTx();
-      const mislabeledIdentity = {id:mislabeled.id,key:mislabeled.key};
-      await win.ZoteroPane.selectItem(mislabeled.id);
-      const bibliographyCalls = [];
-      MLRuntime.request = (url, ...args) => {
-        bibliographyCalls.push(url);
-        if (url === mislabeled.getField('url')) return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-article"))}, ...args);
-        if (url === 'https://proceedings.iclr.cc/citation-bibliography') return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-bibliography"))}, ...args);
-        throw new Error('Unexpected online request: ' + url);
-      };
-      MLRuntime.finder = undefined;
-      MLRuntime.retriever = undefined;
-      await MLRuntime.run(win, 'lint');
-      result.bibliographyTypeRepair = {type:mislabeled.itemType,venue:mislabeled.getField('proceedingsTitle'),requests:bibliographyCalls.length,status:MLRuntime.progressState.rows.at(-1).status};
-      if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result.bibliographyTypeRepair.status !== 'Updated' || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result.bibliographyTypeRepair));
-      MLRuntime.request = scholarRequest;
-      for (const window of [...MLRuntime.dialogs]) window.close();
+      // Real web and BibTeX translators for known and uncatalogued article origins.
+      for (const genericPublisher of [false, true]) {
+        const mislabeled = new Zotero.Item('journalArticle');
+        mislabeled.setField('title', 'Host Conference Paper');
+        mislabeled.setField('publicationTitle', 'International Conference on Learning Representations');
+        mislabeled.setField('url', genericPublisher ? ${JSON.stringify(slowURL.replace("/pending", "/citation-article"))} : 'https://proceedings.iclr.cc/paper_files/paper/2025/hash/host-Abstract-Conference.html');
+        mislabeled.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+        await mislabeled.saveTx();
+        const mislabeledIdentity = {id:mislabeled.id,key:mislabeled.key};
+        await win.ZoteroPane.selectItem(mislabeled.id);
+        const bibliographyCalls = [];
+        MLRuntime.request = (url, ...args) => {
+          bibliographyCalls.push(url);
+          if (url === mislabeled.getField('url')) return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-article"))}, ...args);
+          if (url === new URL('/citation-bibliography', mislabeled.getField('url')).href) return scholarRequest(${JSON.stringify(slowURL.replace("/pending", "/citation-bibliography"))}, ...args);
+          throw new Error('Unexpected online request: ' + url);
+        };
+        MLRuntime.finder = genericPublisher ? {find:async()=>({candidates:[],warnings:[],answered:1})} : undefined;
+        MLRuntime.retriever = undefined;
+        await MLRuntime.run(win, 'lint');
+        const repairKey = genericPublisher ? 'genericBibliographyTypeRepair' : 'bibliographyTypeRepair';
+        result[repairKey] = {type:mislabeled.itemType,venue:mislabeled.getField('proceedingsTitle'),requests:bibliographyCalls.length,status:MLRuntime.progressState.rows.at(-1).status};
+        if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result[repairKey].status !== 'Updated' || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result[repairKey]));
+        MLRuntime.request = scholarRequest;
+        for (const window of [...MLRuntime.dialogs]) window.close();
 
+      }
+      MLRuntime.finder = undefined;
       const originalSearch = Zotero.Translate.Search;
       const originalWeb = Zotero.Translate.Web;
       try {
@@ -468,11 +482,11 @@ startup = async function(data) {
       await win.ZoteroPane.selectItem(batch[0].id);
       MLRuntime.retriever = {retrieveCurrent:async paper => {
         await new Promise(resolve => setTimeout(resolve, 200));
-        if (paper.id === batch[1].id) throw new Error('Fixture failure');
+        if (paper.id === batch[1].id) throw new Error('HTTP 429: Too Many Requests');
         return {metadata:{...paper.toJSON(),abstractNote:'Filled in batch'},source:'DOI',warnings:[]};
       }};
       const batchRunning = MLRuntime.run(win, 'lint');
-      const batchDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.querySelector('tbody')));
+      const batchDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.querySelector('.virtualized-table .row')));
       await win.ZoteroPane.itemsView.selectItems(batch.map(paper => paper.id));
       await MLRuntime.run(win, 'lint');
       await MLRuntime.run(win, 'lint');
@@ -481,14 +495,33 @@ startup = async function(data) {
       result.queue = {total:progressState.total,windows:[...MLRuntime.dialogs].filter(window => !window.closed).length,waiting:progressState.rows.filter(row => row.status === 'Waiting').length,native:cancelButton.namespaceURI === 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',appearance:batchDialog.getComputedStyle(cancelButton).MozAppearance};
       if (result.queue.total !== 3 || result.queue.windows !== 1 || !result.queue.waiting || !result.queue.native || cancelButton.getAttribute('label') !== 'Cancel' || cancelButton.getBoundingClientRect().width < 40) throw new Error('Shared queue or native Cancel button failed');
       await wait(() => progressState.rows[0].status === 'Updated' && !batchDialog.closed);
-      if (batchDoc.querySelectorAll('tbody tr').length !== 3) throw new Error('Queue did not retain completed and waiting rows');
+      if (batchDoc.querySelectorAll('.virtualized-table .row').length !== 3) throw new Error('Queue did not retain completed and waiting rows');
       await batchRunning;
       result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),closed:batchDialog.closed};
       if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
       if (batchDoc.getElementById('actions').firstElementChild.getAttribute('label') !== 'Close') throw new Error('Finished queue did not offer Close');
+      const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
+      if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== 'Source rate-limited') throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
+      const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };
+      sort(headings[0]);
+      await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.ascending'));
+      sort(headings[0]);
+      await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.descending'));
+      if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 2' || progressState.rows[0].itemID !== batch[0].id) throw new Error('Title sorting changed the task order');
+      sort(headings[2]);
+      await wait(() => batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 1');
+      if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 1') throw new Error('Problem sorting did not put the failed row first');
+      const actionBounds = batchDoc.getElementById('actions').firstElementChild.getBoundingClientRect();
+      const bodyBounds = batchDoc.body.getBoundingClientRect();
+      if (actionBounds.right > bodyBounds.right - 12 || actionBounds.bottom > bodyBounds.bottom - 10 || actionBounds.width < 80) throw new Error('Native action has insufficient spacing');
+      const gridBounds = batchDoc.querySelector('.virtualized-table').getBoundingClientRect();
+      const headerBounds = batchDoc.querySelector('.virtualized-table-header').getBoundingClientRect();
+      result.progressWindow = {width:batchDialog.innerWidth,height:batchDialog.innerHeight,header:headerBounds.height,row:batchDoc.querySelector('.row').getBoundingClientRect().height};
+      if (batchDoc.querySelector('th,thead,table') || batchDialog.innerWidth > 800 || batchDialog.innerHeight > 300 || batchDialog.innerHeight < 150 || headerBounds.height < 18 || gridBounds.bottom > actionBounds.top || gridBounds.width < 600) throw new Error('Native table or initial window dimensions failed: ' + JSON.stringify(result.progressWindow));
+      result.progressProblemsAndSorting = true;
       await win.ZoteroPane.selectItem(batch[0].id);
       await MLRuntime.run(win, 'lint');
-      if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('tbody tr').length !== 4) throw new Error('Completed window was not reused with history retained');
+      if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('.virtualized-table .row').length !== 4) throw new Error('Completed window was not reused with history retained');
       batchDoc.getElementById('actions').firstElementChild.dispatchEvent(new batchDialog.Event('command'));
       await wait(() => batchDialog.closed);
       const dmlnet = new Zotero.Item('journalArticle');
@@ -549,10 +582,17 @@ startup = async function(data) {
       MLRuntime.request = (...args) => { requested = true; return originalRequest(...args); };
       MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
       MLRuntime.retriever = {retrieveCurrent:async () => { const metadataURL = ${JSON.stringify(slowURL.replace("/pending", "/metadata"))};
+        const failureStart = Date.now();
+        const failures = await Promise.allSettled([
+          MLRuntime.request(${JSON.stringify(slowURL.replace("/pending", "/throttled"))}),
+          MLRuntime.request(${JSON.stringify(slowURL.replace("/pending", "/unavailable"))})
+        ]);
+        if (failures.some(failure => failure.status !== 'rejected') || Date.now() - failureStart > 5000) throw new Error('Host retried a failed discovery source');
         const values = await Promise.all([MLRuntime.request(metadataURL), MLRuntime.request(metadataURL)]);
         values.push(await MLRuntime.request(metadataURL));
         if (values.some(value => value !== 'shared metadata')) throw new Error('Shared native response was corrupted');
         result.requestReuse = true;
+        result.failedSourcesDoNotBlock = true;
         await Promise.all([MLRuntime.request(${JSON.stringify(slowURL)}), MLRuntime.request(${JSON.stringify(slowURL)})]); return {metadata:item.toJSON(),source:'URL',warnings:[]}; }};
       const exitingRuntime = MLRuntime;
       const pending = exitingRuntime.run(win, 'lint');
@@ -608,6 +648,8 @@ try {
   if (!result.ok) throw new Error(JSON.stringify(result));
   if (metadataRequests !== 1 || abortedRequests !== 1)
     throw new Error("Native requests were not deduplicated");
+  if (Object.values(failedRequests).some((count) => count !== 1))
+    throw new Error("Native HTTP retried failed discovery sources");
   if (!abortedRequests)
     throw new Error("Shutdown did not abort the pending native HTTP request");
   console.log(JSON.stringify({ ...result, abortedRequests }));

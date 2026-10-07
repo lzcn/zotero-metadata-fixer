@@ -20,7 +20,14 @@ export function canonicalDOI(value: string): string | undefined {
 
 export function preprintDOI(doi: string): boolean {
   return /^(10\.48550\/arxiv\.|10\.1101\/|10\.26434\/chemrxiv|10\.2139\/ssrn|10\.31234\/osf|10\.21203\/rs\.)/i.test(
-    doi,
+    cleanDOI(doi) || "",
+  );
+}
+
+// Use the same repository evidence for stored items and discovered venues.
+export function preprintVenue(venue: string): boolean {
+  return /\b(?:arxiv|corr|biorxiv|medrxiv|chemrxiv|ssrn|osf(?:\s+preprints)?|pre-?prints?|research\s*square)\b/i.test(
+    venue,
   );
 }
 
@@ -127,10 +134,10 @@ export function isPreprint(
     item.getField("proceedingsTitle") ||
     "";
   // A published item may retain an arXiv identifier in Extra for provenance.
-  if (venue && !/^(corr|arxiv|biorxiv|medrxiv)(?:\s|$)/i.test(venue))
-    return false;
+  if (venue && !preprintVenue(venue)) return false;
   return Boolean(
-    ids.arXiv ||
+    preprintVenue(venue) ||
+      ids.arXiv ||
       (ids.DOI && preprintDOI(ids.DOI)) ||
       /https?:\/\/(?:www\.)?(?:biorxiv\.org|medrxiv\.org|chemrxiv\.org|osf\.io)\//i.test(
         ids.URL || "",

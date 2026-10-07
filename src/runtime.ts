@@ -10,7 +10,7 @@ import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
-import { parseJSONResponse } from "./responses";
+import { parseJSONResponse, summarizeProblem } from "./responses";
 import { buildRepairPlan } from "./repair";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { selectPublication } from "./selection";
@@ -155,6 +155,9 @@ export class Runtime {
                 : "application/json, application/xml;q=0.9, text/plain;q=0.8",
           },
           timeout: 20000,
+          // Host retries can outlast discovery and discard other successful sources.
+          errorDelayMax: 0,
+          noRetryOnThrottle: true,
           cancellerReceiver: (cancel: () => void) => {
             release();
             release = operation.onCancel(cancel);
@@ -766,6 +769,7 @@ export class Runtime {
           row.detail += `\n${String(error)}`;
           if (host.active()) Zotero.logError(error);
         } finally {
+          row.problem = summarizeProblem(row.detail, this.s);
           if (!progress.window.closed)
             this.cleanup(() => progress.window.renderProgress?.());
         }

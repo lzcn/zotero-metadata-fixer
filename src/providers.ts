@@ -331,11 +331,12 @@ export class PublicationFinder {
     const failures: string[] = [];
     for (const host of ["dblp.org", "dblp.dagstuhl.de", "dblp.uni-trier.de"]) {
       try {
-        data = await this.net.json(
+        const response = await this.net.json(
           `https://${host}/search/publ/api?q=${encode(query)}&format=json&h=25`,
         );
-        if (!data?.result?.hits || typeof data.result.hits !== "object")
+        if (!response?.result?.hits || typeof response.result.hits !== "object")
           throw new JSONResponseError("Unexpected DBLP response");
+        data = response;
         resolvedHost = host;
         break;
       } catch (error) {
@@ -349,7 +350,7 @@ export class PublicationFinder {
         failures.push(`${host}: ${String(error)}`);
       }
     }
-    if (failures.length === 3) throw new Error(failures.join("; "));
+    if (!data) throw new Error(failures.join("; "));
     return list<any>(data.result?.hits?.hit).flatMap((hit) => {
       const info = hit.info;
       if (!info || !publishedVenue(info.venue || "")) return [];

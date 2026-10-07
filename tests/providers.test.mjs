@@ -699,14 +699,16 @@ test("article DOI metadata is used first, with official web fallback and no refe
   let linkLabel = "References";
   const doc = {
     querySelectorAll: (selector) =>
-      selector.startsWith("meta")
+      selector.includes("citation_doi")
         ? metas
-        : [
-            {
-              parentElement: { textContent: linkLabel },
-              getAttribute: () => "https://doi.org/" + published.DOI,
-            },
-          ],
+        : selector.startsWith("meta")
+          ? []
+          : [
+              {
+                parentElement: { textContent: linkLabel },
+                getAttribute: () => "https://doi.org/" + published.DOI,
+              },
+            ],
   };
   class Web {
     setDocument() {}
@@ -994,5 +996,185 @@ test("article bibliography links must be unique and belong to the official origi
   assert.equal(
     articleEvidence(doc, "https://unknown.test/paper").bibliographyURL,
     undefined,
+  );
+});
+
+function citationDocument(values, links = ["/paper.bib"]) {
+  return {
+    querySelectorAll(selector) {
+      const name = selector.includes("citation_doi")
+        ? "citation_doi"
+        : selector.match(/^meta\[name="([^"]+)"\]$/)?.[1];
+      if (name)
+        return [values[name]]
+          .flat()
+          .filter(Boolean)
+          .map((content) => ({
+            getAttribute: (key) => (key === "content" ? content : null),
+          }));
+      if (selector === "a[href]")
+        return links.map((href) => ({
+          textContent: "BibTeX",
+          getAttribute: (key) => (key === "href" ? href : null),
+        }));
+      return [];
+    },
+  };
+}
+const articleCitation = {
+  citation_title: published.title,
+  citation_author: "Zhi Lu",
+  citation_conference_title: "New Research Symposium",
+};
+
+test("article-level citation metadata permits same-origin bibliography on uncatalogued publishers", async () => {
+  const { articleEvidence } = await import("../.tests-build/metadata.js");
+  const url = "https://new-publisher.test/articles/paper";
+  assert.equal(
+    articleEvidence(citationDocument(articleCitation), url).bibliographyURL,
+    "https://new-publisher.test/paper.bib",
+  );
+  for (const values of [
+    { ...articleCitation, citation_title: undefined },
+    { ...articleCitation, citation_author: undefined },
+    { ...articleCitation, citation_conference_title: undefined },
+    {
+      ...articleCitation,
+      citation_title: [published.title, "Another article"],
+    },
+  ])
+    assert.equal(
+      articleEvidence(citationDocument(values), url).bibliographyURL,
+      undefined,
+    );
+  for (const links of [
+    ["https://other.test/paper.bib"],
+    ["/one.bib", "/two.bib"],
+  ])
+    assert.equal(
+      articleEvidence(citationDocument(articleCitation, links), url)
+        .bibliographyURL,
+      undefined,
+    );
+});
+
+test("generic bibliography recovery retains identity checks and explicit entry types", async () => {
+  const values = { ...articleCitation };
+  const doc = citationDocument(values);
+  class Web {
+    setDocument() {}
+    getTranslators() {
+      return ["web"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate() {
+      return [{ ...published, publicationTitle: "New Research Symposium" }];
+    }
+  }
+  const calls = [];
+  const retriever = new MetadataRetriever(
+    { Translate: { Web } },
+    {},
+    {
+      text: async (url) => {
+        calls.push(url);
+        return "@inproceedings{paper,title={Research}}";
+      },
+    },
+    () => true,
+    async () => doc,
+  );
+  const bibliography = {
+    ...published,
+    itemType: "conferencePaper",
+    publicationTitle: undefined,
+    proceedingsTitle: "New Research Symposium",
+  };
+  retriever.bibtex = async () => bibliography;
+  const url = "https://new-publisher.test/articles/paper";
+  assert.equal((await retriever.url(url)).itemType, "conferencePaper");
+  assert.deepEqual(calls, ["https://new-publisher.test/paper.bib"]);
+  // Partial DOI records must not undo the explicit BibTeX conference type.
+  values.citation_doi = published.DOI;
+  retriever.identifier = async () => ({
+    ...published,
+    publicationTitle: undefined,
+  });
+  assert.equal((await retriever.url(url)).itemType, "conferencePaper");
+  delete values.citation_doi;
+  retriever.bibtex = async () => ({
+    ...bibliography,
+    title: "Different reference",
+  });
+  assert.equal((await retriever.url(url)).itemType, "journalArticle");
+  for (const change of [
+    { DOI: "10.1000/different" },
+    {
+      creators: [
+        { firstName: "Other", lastName: "Author", creatorType: "author" },
+      ],
+    },
+  ]) {
+    retriever.bibtex = async () => ({ ...bibliography, ...change });
+    await assert.rejects(retriever.url(url), /Conflicting article metadata/);
+  }
+});
+
+test("current identifier metadata can use an uncatalogued article to fill its container", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, {
+    itemType: "journalArticle",
+    publicationTitle: published.publicationTitle,
+    DOI: published.DOI,
+    url: "https://new-publisher.test/articles/paper",
+  });
+  const retriever = new MetadataRetriever({}, {}, {});
+  const calls = [];
+  retriever.retrieve = async (item, source) => {
+    calls.push(source);
+    return { ...published, publicationTitle: undefined };
+  };
+  retriever.url = async (url) => {
+    calls.push(url);
+    return published;
+  };
+  const result = await retriever.retrieveCurrent(item);
+  assert.equal(result.metadata.publicationTitle, published.publicationTitle);
+  assert.deepEqual(calls, ["DOI", item.data.url]);
+});
+
+test("DOI identity is checked in direct translations and every candidate fallback", async () => {
+  let returnedDOI = "https://doi.org/10.1000/PUBLISHED";
+  class Search {
+    setIdentifier() {}
+    getTranslators() {
+      return ["DOI"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate() {
+      return [{ ...published, DOI: returnedDOI }];
+    }
+  }
+  const retriever = new MetadataRetriever({ Translate: { Search } }, {}, {});
+  assert.equal(
+    (await retriever.identifier({ DOI: published.DOI })).DOI,
+    returnedDOI,
+  );
+  returnedDOI = "10.1000/different";
+  await assert.rejects(
+    retriever.identifier({ DOI: published.DOI }),
+    /Conflicting DOI/,
+  );
+  retriever.url = async () => ({ ...published, DOI: returnedDOI });
+  await assert.rejects(
+    retriever.candidate({
+      source: "Index",
+      title: published.title,
+      doi: published.DOI,
+      url: "https://new-publisher.test/paper",
+    }),
+    /Conflicting DOI/,
   );
 });

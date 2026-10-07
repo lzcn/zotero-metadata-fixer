@@ -4,6 +4,7 @@ import {
   isPreprint,
   preprintDOI,
   cleanDOI,
+  canonicalDOI,
   officialPublicationURL,
 } from "./identifiers";
 import {
@@ -14,6 +15,7 @@ import {
   supplementMetadata,
 } from "./metadata";
 import { checkAccess } from "./responses";
+import { titleScore } from "./matching";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -59,7 +61,14 @@ export class MetadataRetriever {
   }): Promise<Metadata> {
     const translate = new this.zotero.Translate.Search();
     translate.setIdentifier(identifier);
-    return this.run(translate);
+    const metadata = await this.run(translate);
+    if (
+      identifier.DOI &&
+      metadata.DOI &&
+      canonicalDOI(identifier.DOI) !== canonicalDOI(String(metadata.DOI))
+    )
+      throw new Error("Conflicting DOI metadata");
+    return metadata;
   }
 
   async bibtex(text: string): Promise<Metadata> {
@@ -95,11 +104,16 @@ export class MetadataRetriever {
     this.checkActive();
     if (!docs[0]) throw new Error("Unable to load item URL");
     const doc: Document = docs[0];
-    const { doi, bibtex, bibliographyURL } = articleEvidence(doc, url);
+    const { doi, bibtex, bibliographyURL, title } = articleEvidence(doc, url);
+    const verifyTitle = (record: Metadata) => {
+      if (title && titleScore(title, record.title) < 0.9)
+        throw new Error("Conflicting article metadata");
+      return record;
+    };
     let identified: Metadata | undefined;
     if (doi && !preprintDOI(doi)) {
       try {
-        const resolved = await this.identifier({ DOI: doi });
+        const resolved = verifyTitle(await this.identifier({ DOI: doi }));
         if (!needsContainerTitle(resolved)) return resolved;
         identified = resolved;
       } catch (error) {
@@ -123,7 +137,7 @@ export class MetadataRetriever {
             : bibliographyEvidence(this.net.html(response));
         }
         if (!text) throw new Error("No article bibliography found");
-        bibliography = await this.bibtex(text);
+        bibliography = verifyTitle(await this.bibtex(text));
       } catch (error) {
         this.checkActive();
         // A web translator can still retrieve the article when BibTeX is malformed.
@@ -133,7 +147,7 @@ export class MetadataRetriever {
     try {
       const translate = new this.zotero.Translate.Web();
       translate.setDocument(doc);
-      metadata = await this.run(translate);
+      metadata = verifyTitle(await this.run(translate));
     } catch (error) {
       this.checkActive();
       if (!bibliography && !identified) throw error;
@@ -141,7 +155,10 @@ export class MetadataRetriever {
     }
     // Explicit bibliography entry types outrank generic web citation meta tags.
     if (bibliography) metadata = supplementMetadata(bibliography, metadata);
-    if (identified) metadata = supplementMetadata(identified, metadata);
+    if (identified)
+      metadata = bibliography
+        ? supplementMetadata(metadata, identified)
+        : supplementMetadata(identified, metadata);
     if (!metadata.url) metadata.url = url;
     return doi && !preprintDOI(doi) && !metadata.DOI
       ? { ...metadata, DOI: doi }
@@ -186,12 +203,7 @@ export class MetadataRetriever {
       try {
         let metadata = await this.retrieve(item, source);
         if (!active()) throw new Error("Operation cancelled");
-        if (
-          source !== "URL" &&
-          needsContainerTitle(metadata) &&
-          ids.URL &&
-          officialPublicationURL(ids.URL)
-        ) {
+        if (source !== "URL" && needsContainerTitle(metadata) && ids.URL) {
           try {
             metadata = supplementMetadata(metadata, await this.url(ids.URL));
             if (!active()) throw new Error("Operation cancelled");
@@ -216,10 +228,17 @@ export class MetadataRetriever {
     active: () => boolean = () => true,
   ): Promise<Metadata> {
     if (!active()) throw new Error("Operation cancelled");
-    const complete = (metadata: Metadata): Metadata =>
-      candidate.doi && !metadata.DOI
+    const complete = (metadata: Metadata): Metadata => {
+      if (
+        candidate.doi &&
+        metadata.DOI &&
+        canonicalDOI(candidate.doi) !== canonicalDOI(String(metadata.DOI))
+      )
+        throw new Error("Conflicting DOI metadata");
+      return candidate.doi && !metadata.DOI
         ? { ...metadata, DOI: candidate.doi }
         : metadata;
+    };
     const sources: [string, () => Promise<Metadata>][] = [];
     if (candidate.doi)
       sources.push(["DOI", () => this.identifier({ DOI: candidate.doi })]);

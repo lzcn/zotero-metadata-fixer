@@ -71,7 +71,26 @@ export function bibliographyEvidence(doc: Document): string | undefined {
 export function articleEvidence(
   doc: Document,
   url: string,
-): { doi?: string; bibtex?: string; bibliographyURL?: string } {
+): { doi?: string; bibtex?: string; bibliographyURL?: string; title?: string } {
+  const citation = (name: string) =>
+    Array.from(doc.querySelectorAll?.(`meta[name="${name}"]`) || [])
+      .map((meta) => meta.getAttribute("content")?.trim() || "")
+      .filter(Boolean);
+  const titles = [...new Set(citation("citation_title"))];
+  const title = titles.length === 1 ? titles[0] : undefined;
+  // Structured article metadata can establish the page role on new publishers.
+  // A homepage or an unlabelled reference list cannot authorize bibliography extraction.
+  const article =
+    officialPublicationURL(url) ||
+    Boolean(
+      title &&
+        citation("citation_author").length &&
+        [
+          "citation_journal_title",
+          "citation_conference_title",
+          "citation_book_title",
+        ].some((name) => citation(name).length),
+    );
   // Read only the article's identifier, not arbitrary DOI links in references.
   let doi = Array.from(
     doc.querySelectorAll?.(
@@ -80,7 +99,7 @@ export function articleEvidence(
   )
     .map((meta) => cleanDOI(meta.getAttribute("content") || ""))
     .find((value) => value && !preprintDOI(value));
-  if (!doi && officialPublicationURL(url)) {
+  if (!doi && article) {
     const link = Array.from(doc.querySelectorAll?.("a[href]") || []).find(
       (anchor) =>
         (/^DOI\s*:/i.test(anchor.parentElement?.textContent?.trim() || "") ||
@@ -92,7 +111,7 @@ export function articleEvidence(
     );
     doi = cleanDOI(link?.getAttribute("href") || "");
   }
-  const bibliographyLinks = officialPublicationURL(url)
+  const bibliographyLinks = article
     ? Array.from(doc.querySelectorAll?.("a[href]") || [])
         .filter(
           (anchor) =>
@@ -111,7 +130,8 @@ export function articleEvidence(
   const uniqueLinks = [...new Set(bibliographyLinks)];
   return {
     doi,
-    bibtex: officialPublicationURL(url) ? bibliographyEvidence(doc) : undefined,
+    title,
+    bibtex: article ? bibliographyEvidence(doc) : undefined,
     bibliographyURL: uniqueLinks.length === 1 ? uniqueLinks[0] : undefined,
   };
 }

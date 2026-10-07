@@ -264,3 +264,54 @@ test("retrieved empty values do not erase populated fields", () => {
     ),
   );
 });
+
+test("repository evidence is shared by stored items and publication candidates", () => {
+  for (const venue of [
+    "arXiv",
+    "CoRR",
+    "bioRxiv",
+    "medRxiv",
+    "ChemRxiv",
+    "SSRN Electronic Journal",
+    "OSF Preprints",
+    "Research Square",
+    "Preprints",
+  ]) {
+    const item = new FakeItem();
+    Object.assign(item.data, {
+      itemType: "journalArticle",
+      publicationTitle: venue,
+      url: "",
+      archiveID: "",
+      extra: "",
+      DOI: "",
+    });
+    assert.equal(isPreprint(item), true, venue);
+    assert.equal(publishedVenue(venue), false, venue);
+    assert.deepEqual(
+      rankCandidates(item, [
+        { source: "Index", title: item.data.title, venue, authors: ["Zhi Lu"] },
+      ]),
+      [],
+    );
+    item.data.publicationTitle = "Journal of Useful Research";
+    item.data.url = "https://arxiv.org/abs/2501.01234";
+    assert.equal(isPreprint(item), false);
+  }
+});
+
+test("preprint DOI wrappers cannot masquerade as publication identifiers", () => {
+  const item = new FakeItem();
+  for (const doi of [
+    "doi:10.48550/arXiv.2501.01234",
+    "https://doi.org/10.1101/2025.01.01.123456",
+    "https://doi.org/10.26434/ChemRxiv.123",
+  ]) {
+    assert.deepEqual(
+      rankCandidates(item, [
+        { source: "Index", title: item.data.title, doi, linked: true },
+      ]),
+      [],
+    );
+  }
+});
