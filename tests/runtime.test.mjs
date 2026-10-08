@@ -1335,3 +1335,37 @@ test("publication initialization creates no custom column and cancels deferred l
     Zotero.File = previousFile;
   }
 });
+
+test("response reuse stays bounded and does not retain oversized text bodies", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  let calls = 0;
+  globalThis.Zotero.HTTP = {
+    request: async (_method, url) => {
+      calls++;
+      return {
+        responseText: url.endsWith("large")
+          ? "x".repeat(1024 * 1024 + 1)
+          : "metadata",
+      };
+    },
+  };
+  try {
+    for (let index = 0; index < 140; index++)
+      await runtime.request(`https://cache.test/${index}`, operation);
+    assert.equal(runtime.responses.get(operation).size, 128);
+    const before = calls;
+    await runtime.request("https://cache.test/139", operation);
+    assert.equal(calls, before);
+    await runtime.request("https://cache.test/large", operation);
+    await runtime.request("https://cache.test/large", operation);
+    assert.equal(calls, before + 2);
+    operation.cancel();
+    assert.equal(runtime.responses.get(operation).size, 0);
+  } finally {
+    delete globalThis.Zotero.HTTP;
+  }
+});

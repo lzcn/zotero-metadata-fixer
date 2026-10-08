@@ -12,7 +12,10 @@ let entries = [];
 let sortField;
 let sortDirection = 1;
 let sized = false;
+let renderFrame = null;
+let disposed = false;
 function done() {
+  if (!data.finished && !data.cancelled) data.cancel();
   data.onResult(null);
   window.close();
 }
@@ -57,7 +60,8 @@ action.addEventListener(
   false,
   true,
 );
-window.renderProgress = () => {
+function flushProgress() {
+  if (disposed || window.closed) return;
   entries = [...data.rows];
   if (sortField)
     entries.sort((left, right) => {
@@ -73,8 +77,15 @@ window.renderProgress = () => {
     "label",
     data.finished || data.cancelled ? s.close : s.cancel,
   );
+}
+window.renderProgress = () => {
+  if (disposed || window.closed || renderFrame !== null) return;
+  renderFrame = window.requestAnimationFrame(() => {
+    renderFrame = null;
+    flushProgress();
+  });
 };
-window.renderProgress();
+flushProgress();
 const root = ReactDOM.createRoot(content);
 root.render(
   React.createElement(VirtualizedTable, {
@@ -141,13 +152,35 @@ root.render(
     },
     ref(instance) {
       table = instance;
-      if (table) window.requestAnimationFrame(sizeWindow);
+      if (table) {
+        flushProgress();
+        window.requestAnimationFrame(() => {
+          sizeWindow();
+          action.focus();
+        });
+      }
     },
   }),
 );
-window.addEventListener("unload", () => root.unmount(), { once: true });
+window.addEventListener(
+  "unload",
+  () => {
+    disposed = true;
+    if (renderFrame !== null) window.cancelAnimationFrame(renderFrame);
+    if (!data.finished && !data.cancelled) data.cancel();
+    root.unmount();
+  },
+  { once: true },
+);
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229)
+    return;
+  const accel = (Zotero.isMac ? event.metaKey : event.ctrlKey) && !event.altKey;
+  if (accel && event.key.toLowerCase() === "w") {
+    event.preventDefault();
+    done();
+  } else if (event.key === "Escape") {
+    event.preventDefault();
     if (!data.finished && !data.cancelled) data.cancel();
     else done();
   }

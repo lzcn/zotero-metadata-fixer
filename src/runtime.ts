@@ -112,16 +112,24 @@ export class Runtime {
       operation.onCancel(() => batch.clear());
     }
     let pending = responses.get(url);
+    if (pending) {
+      responses.delete(url);
+      responses.set(url, pending);
+    }
     if (!pending) {
       pending = this.fetchResponse(url, operation, responseType).catch(
         (error) => {
-          responses.delete(url);
+          if (responses.get(url) === pending) responses.delete(url);
           throw error;
         },
       );
       responses.set(url, pending);
+      while (responses.size > 128)
+        responses.delete(responses.keys().next().value!);
     }
     const result = await pending;
+    if (result.length > 1024 * 1024 && responses.get(url) === pending)
+      responses.delete(url);
     if (!operation.active() || !this.alive) throw new Error(this.s.cancelled);
     return result;
   }

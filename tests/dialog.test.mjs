@@ -24,6 +24,9 @@ class Element {
   getBoundingClientRect() {
     return { height: 40 };
   }
+  focus() {
+    this.focused = true;
+  }
   querySelector() {
     return new Element();
   }
@@ -49,6 +52,13 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
       );
     },
   };
+  const frames = new Map();
+  let frameID = 0;
+  const flushFrames = () => {
+    const pending = [...frames.values()];
+    frames.clear();
+    for (const frame of pending) frame();
+  };
   const win = {
     arguments: [data],
     screen,
@@ -57,12 +67,18 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
     outerWidth: 1000,
     outerHeight: 628,
     events: new Map(),
-    close() {},
+    close() {
+      this.closed = true;
+    },
     addEventListener(name, run) {
       this.events.set(name, run);
     },
     requestAnimationFrame(run) {
-      run();
+      frames.set(++frameID, run);
+      return frameID;
+    },
+    cancelAnimationFrame(id) {
+      frames.delete(id);
     },
     resizeBy(dx, dy) {
       this.innerWidth += dx;
@@ -106,10 +122,19 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
       window: win,
       document,
       require: (id) => modules[id],
-      Zotero: { UIProperties: { registerRoot() {} } },
+      Zotero: { isMac: true, UIProperties: { registerRoot() {} } },
     },
   );
-  return { content, actions, win, props, unmounted: () => unmounted };
+  flushFrames();
+  return {
+    content,
+    actions,
+    win,
+    props,
+    flushFrames,
+    pendingFrames: () => frames.size,
+    unmounted: () => unmounted,
+  };
 }
 
 test("native progress keeps problems, live results and a single action", async () => {
@@ -154,6 +179,7 @@ test("native progress keeps problems, live results and a single action", async (
   state.rows.push({ title: "Last", status: en.noChanges });
   state.finished = true;
   ui.win.renderProgress();
+  ui.flushFrames();
   assert.equal(ui.content.children.length, 4);
   assert.equal(ui.content.children[2].children[1].textContent, en.updated);
   assert.equal(ui.actions.children[0].label, en.close);
@@ -177,17 +203,23 @@ test("native sorting affects display without reordering processing", async () =>
   const titles = () =>
     ui.content.children.map((row) => row.children[0].textContent);
   ui.props.onColumnSort(0, 1);
+  ui.flushFrames();
   assert.deepEqual(titles(), ["Alpha", "Beta", "Zulu"]);
   ui.props.onColumnSort(0, -1);
+  ui.flushFrames();
   assert.deepEqual(titles(), ["Zulu", "Beta", "Alpha"]);
   ui.props.onColumnSort(1, 1);
+  ui.flushFrames();
   assert.deepEqual(titles(), ["Alpha", "Beta", "Zulu"]);
   state.rows[0].status = en.cancelled;
   ui.win.renderProgress();
+  ui.flushFrames();
   assert.deepEqual(titles(), ["Zulu", "Alpha", "Beta"]);
   ui.props.onColumnSort(2, 1);
+  ui.flushFrames();
   assert.equal(titles().at(-1), "Zulu");
   ui.props.onColumnSort(2, -1);
+  ui.flushFrames();
   assert.equal(titles().at(-1), "Zulu");
   assert.deepEqual(state.rows, original);
 });
@@ -212,4 +244,35 @@ test("initial window fits rows and available screen without resizing on updates"
   assert.equal(single.win.innerWidth, 1000);
   const small = await dialog(state, { availWidth: 640, availHeight: 400 });
   assert.ok(small.win.outerWidth < 640 && small.win.outerHeight < 400);
+});
+
+test("progress coalesces redraws and platform shortcuts preserve IME and cancel on close", async () => {
+  let cancelled = 0;
+  const state = {
+    rows: [{ title: "Before" }],
+    strings: en,
+    finished: false,
+    cancel: () => cancelled++,
+    onResult() {},
+  };
+  const ui = await dialog(state);
+  state.rows[0].title = "After";
+  ui.win.renderProgress();
+  ui.win.renderProgress();
+  ui.win.renderProgress();
+  assert.equal(ui.pendingFrames(), 1);
+  assert.equal(ui.content.children[0].children[0].textContent, "Before");
+  ui.flushFrames();
+  assert.equal(ui.content.children[0].children[0].textContent, "After");
+  const keydown = ui.win.events.get("keydown");
+  const key = (options) => ({ key: "w", preventDefault() {}, ...options });
+  keydown(key({ ctrlKey: true }));
+  keydown(key({ metaKey: true, isComposing: true }));
+  assert.equal(ui.win.closed, undefined);
+  keydown(key({ metaKey: true }));
+  assert.equal(cancelled, 1);
+  assert.equal(ui.win.closed, true);
+  ui.win.renderProgress();
+  ui.win.events.get("unload")();
+  assert.equal(ui.pendingFrames(), 0);
 });

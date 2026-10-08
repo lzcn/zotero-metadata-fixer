@@ -1,5 +1,6 @@
 :root {
   height: 100%;
+  color-scheme: light dark;
 }
 body.progress-dialog {
   box-sizing: border-box;
@@ -7,6 +8,7 @@ body.progress-dialog {
   flex-direction: column;
   height: 100%;
   margin: 0;
+  font: menu;
   padding: 12px;
   background: var(--material-background);
   color: var(--fill-primary);
@@ -26,4 +28,14 @@ body.progress-dialog {
 #actions button {
   min-width: 80px;
   margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

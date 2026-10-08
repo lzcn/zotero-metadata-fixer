@@ -499,14 +499,14 @@ startup = async function(data) {
       await batchRunning;
       result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),closed:batchDialog.closed};
       if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
-      if (batchDoc.getElementById('actions').firstElementChild.getAttribute('label') !== 'Close') throw new Error('Finished queue did not offer Close');
+      await wait(() => batchDoc.getElementById('actions').firstElementChild.getAttribute('label') === 'Close');
       const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
       if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== 'Source rate-limited') throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
       const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };
       sort(headings[0]);
       await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.ascending'));
       sort(headings[0]);
-      await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.descending'));
+      await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.descending') && batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 2');
       if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 2' || progressState.rows[0].itemID !== batch[0].id) throw new Error('Title sorting changed the task order');
       sort(headings[2]);
       await wait(() => batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 1');
@@ -518,9 +518,18 @@ startup = async function(data) {
       const headerBounds = batchDoc.querySelector('.virtualized-table-header').getBoundingClientRect();
       result.progressWindow = {width:batchDialog.innerWidth,height:batchDialog.innerHeight,header:headerBounds.height,row:batchDoc.querySelector('.row').getBoundingClientRect().height};
       if (batchDoc.querySelector('th,thead,table') || batchDialog.innerWidth > 800 || batchDialog.innerHeight > 300 || batchDialog.innerHeight < 150 || headerBounds.height < 18 || gridBounds.bottom > actionBounds.top || gridBounds.width < 600) throw new Error('Native table or initial window dimensions failed: ' + JSON.stringify(result.progressWindow));
+      const originalRAF = batchDialog.requestAnimationFrame.bind(batchDialog);
+      let repaintRequests = 0;
+      batchDialog.requestAnimationFrame = callback => { repaintRequests++; return originalRAF(callback); };
+      batchDialog.renderProgress(); batchDialog.renderProgress(); batchDialog.renderProgress();
+      batchDialog.requestAnimationFrame = originalRAF;
+      if (repaintRequests > 1) throw new Error("Progress redraws were not coalesced");
+      await new Promise(resolve => setTimeout(resolve, 50));
+      result.coalescedProgress = true;
       result.progressProblemsAndSorting = true;
       await win.ZoteroPane.selectItem(batch[0].id);
       await MLRuntime.run(win, 'lint');
+      await wait(() => batchDoc.querySelectorAll('.virtualized-table .row').length === 4);
       if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('.virtualized-table .row').length !== 4) throw new Error('Completed window was not reused with history retained');
       batchDoc.getElementById('actions').firstElementChild.dispatchEvent(new batchDialog.Event('command'));
       await wait(() => batchDialog.closed);
@@ -577,6 +586,15 @@ startup = async function(data) {
       result.conferenceRules = {count:configured.rules.length,visible:!!settings.document.getElementById('ml-conference-rules')};
       if (result.conferenceRules.count !== 513 || result.conferenceRules.visible) throw new Error('Internal conference rules are missing or advanced configuration is exposed');
       await win.ZoteroPane.selectItem(item.id);
+      const completedDialog = [...MLRuntime.dialogs].find(dialog => !dialog.closed && dialog.arguments?.[0]?.kind === "progress");
+      if (Zotero.isMac) {
+        completedDialog.dispatchEvent(new completedDialog.KeyboardEvent("keydown",{key:"w",metaKey:true,isComposing:true,cancelable:true}));
+        completedDialog.dispatchEvent(new completedDialog.KeyboardEvent("keydown",{key:"w",ctrlKey:true,cancelable:true}));
+        if (completedDialog.closed) throw new Error("IME or Control-W closed progress");
+      }
+      completedDialog.dispatchEvent(new completedDialog.KeyboardEvent("keydown",{key:"w",metaKey:!!Zotero.isMac,ctrlKey:!Zotero.isMac,cancelable:true}));
+      await wait(() => completedDialog.closed);
+      result.platformShortcuts = true;
       const originalRequest = MLRuntime.request.bind(MLRuntime);
       let requested = false;
       MLRuntime.request = (...args) => { requested = true; return originalRequest(...args); };
