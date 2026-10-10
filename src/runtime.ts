@@ -11,14 +11,12 @@ import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
 import { parseJSONResponse, summarizeProblem } from "./responses";
+import { normalizeMetadata } from "./metadata";
 import { buildRepairPlan } from "./repair";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { selectPublication } from "./selection";
 import { en, zh } from "./strings";
-import {
-  addJournalAliases,
-  addJournalTitleAbbreviations,
-} from "./publication-short";
+import { addJournalAliases } from "./publication-short";
 import {
   PublicationColumnView,
   REPLACE_PUBLICATION_PREF,
@@ -64,7 +62,7 @@ export class Runtime {
   private network(operation: Operation): Network {
     return {
       json: async (url) =>
-        parseJSONResponse(await this.request(url, operation), {
+        parseJSONResponse(await this.request(url, operation, "text", 8000), {
           blocked: this.s.apiBlocked,
           invalid: this.s.apiInvalid,
         }),
@@ -93,6 +91,7 @@ export class Runtime {
     url: string,
     operation = this.operation,
     responseType = "text",
+    timeout = 20000,
   ): Promise<any> {
     if (
       !operation?.active() ||
@@ -103,7 +102,7 @@ export class Runtime {
       throw new Error(this.s.cancelled);
     // Keep immutable responses within one batch; documents remain private to translators.
     if (responseType !== "text")
-      return this.fetchResponse(url, operation, responseType);
+      return this.fetchResponse(url, operation, responseType, timeout);
     let responses = this.responses.get(operation);
     if (!responses) {
       responses = new Map();
@@ -117,7 +116,7 @@ export class Runtime {
       responses.set(url, pending);
     }
     if (!pending) {
-      pending = this.fetchResponse(url, operation, responseType).catch(
+      pending = this.fetchResponse(url, operation, responseType, timeout).catch(
         (error) => {
           if (responses.get(url) === pending) responses.delete(url);
           throw error;
@@ -138,6 +137,7 @@ export class Runtime {
     url: string,
     operation: Operation,
     responseType: string,
+    timeout: number,
   ): Promise<any> {
     if (url.startsWith("https://export.arxiv.org/")) {
       const wait = 3000 - (Date.now() - this.lastArxivRequest);
@@ -162,7 +162,7 @@ export class Runtime {
                 ? "text/html"
                 : "application/json, application/xml;q=0.9, text/plain;q=0.8",
           },
-          timeout: 20000,
+          timeout,
           // Host retries can outlast discovery and discard other successful sources.
           errorDelayMax: 0,
           noRetryOnThrottle: true,
@@ -346,14 +346,6 @@ export class Runtime {
   }
 
   private loadPublicationAbbreviations(): void {
-    if (Zotero.File?.getContentsFromURL) {
-      const abbreviations = JSON.parse(
-        Zotero.File.getContentsFromURL(
-          "resource://zotero/schema/abbreviations.json",
-        ),
-      );
-      addJournalTitleAbbreviations(abbreviations.default["container-title"]);
-    }
     if (Zotero.Cite?.getAbbreviation) {
       addJournalAliases((name) => {
         const abbreviations = {
@@ -739,8 +731,16 @@ export class Runtime {
                   settings.rules,
                   settings.publicationStyle,
                 );
-                if ((!local.rule && !missingDOI) || preprint) throw error;
-                metadata = item.toJSON();
+                const current = normalizeMetadata(item.toJSON());
+                const typeRepair =
+                  current.itemType !== item.itemType ||
+                  Boolean(
+                    local.overrides?.itemType &&
+                      local.overrides.itemType !== item.itemType,
+                  );
+                if (((!local.rule && !missingDOI) || preprint) && !typeRepair)
+                  throw error;
+                metadata = current;
                 row.detail = [row.detail, String(error)]
                   .filter(Boolean)
                   .join("\n");
@@ -751,7 +751,7 @@ export class Runtime {
           if (!host.active()) break;
           const settings = this.conferenceSettings();
           const conference = normalizeConferenceUpdate(
-            metadata,
+            normalizeMetadata(metadata),
             item.toJSON(),
             settings.rules,
             settings.publicationStyle ?? "original",

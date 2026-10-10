@@ -104,6 +104,16 @@ await writeFile(
     )
     .join("\n"),
 );
+const catalog = JSON.parse(
+  await readFile(new URL("../data/conferences.json", import.meta.url), "utf8"),
+);
+const supplements = JSON.parse(
+  await readFile(
+    new URL("../data/conference-supplements.json", import.meta.url),
+    "utf8",
+  ),
+);
+const expectedConferenceCount = catalog.length + supplements.additions.length;
 const files = unzipSync(
   await readFile(new URL("../dist/zotero-metadata-fixer.xpi", import.meta.url)),
 );
@@ -152,7 +162,7 @@ startup = async function(data) {
         return view._renderCell(index, view.getCellText(index, 'publicationTitle'), column, false).textContent;
       };
       result.publicationColumn = [];
-      for (const [type, field, title, expected] of [
+      for (const [type, field, title, expected, abbreviation] of [
         ['conferencePaper', 'proceedingsTitle', '2025 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)', 'CVPR'],
         ['conferencePaper', 'proceedingsTitle', 'European Conference on Computer Vision', 'ECCV'],
         ['journalArticle', 'publicationTitle', 'IEEE Transactions on Multimedia', 'TMM'],
@@ -171,14 +181,20 @@ startup = async function(data) {
         ['computerProgram', 'company', 'Software Publisher', 'Software Publisher'],
         ['webpage', 'websiteTitle', 'Example Website', 'Example Website'],
         ['blogPost', 'blogTitle', 'Example Blog', 'Example Blog'],
-        ['journalArticle', 'publicationTitle', 'Nature Communications', 'Nat Commun'],
+        ['journalArticle', 'publicationTitle', 'Nature Communications', 'Nature Communications'],
+        ['journalArticle', 'publicationTitle', 'Nature Communications', 'Nature Communications', 'Nat. Comm'],
+        ['journalArticle', 'publicationTitle', 'Nature Communications', 'Nature Communications', 'Nat. Commun.'],
+        ['journalArticle', 'publicationTitle', 'Neural Computation', 'Neural Computation', 'Neural Comput.'],
+        ['journalArticle', 'publicationTitle', 'Uncommon Host Journal', 'Uncommon Host Journal', 'Uncommon Host J.'],
         ['preprint', 'url', 'https://arxiv.org/abs/2601.01234', 'arXiv'],
         ['journalArticle', 'url', 'https://arxiv.org/abs/2601.01234', 'arXiv'],
         ['bookSection', 'bookTitle', 'European Conference on Computer Vision', 'ECCV'],
+        ['conferencePaper', 'proceedingsTitle', 'ECCV 2026 Workshop AICity', 'ECCV 2026 Workshop AICity'],
       ]) {
         const entry = new Zotero.Item(type);
         entry.setField('title', 'Column Host Fixture');
         entry.setField(field, title);
+        if (abbreviation) entry.setField('journalAbbreviation', abbreviation);
         await entry.saveTx();
         const before = JSON.stringify(entry.toJSON());
         const value = await renderPublication(entry);
@@ -363,7 +379,7 @@ startup = async function(data) {
         return {itemType:'conferencePaper',title:'SCHOLAR HOST TEST PAPER',DOI:candidate.doi,proceedingsTitle:'CVPR 2026',creators:scholarItem.getCreators()};
       }};
       await MLRuntime.run(win, 'lint');
-      result.scholar = {requests:scholarCalls.length,type:scholarItem.itemType,DOI:scholarItem.getField('DOI'),id:scholarItem.id};
+      result.scholar = {requests:scholarCalls.filter(url => url.startsWith('https://scholar.google.com/')).length,type:scholarItem.itemType,DOI:scholarItem.getField('DOI'),id:scholarItem.id};
       if (result.scholar.requests !== 1 || result.scholar.type !== 'conferencePaper' || result.scholar.DOI !== '10.1000/host-scholar' || scholarItem.id !== scholarID || scholarItem.getField('title') !== 'Scholar Host Test Paper') throw new Error('Native Scholar discovery or in-place DOI upgrade failed');
       MLRuntime.request = scholarRequest;
       for (const window of [...MLRuntime.dialogs]) window.close();
@@ -396,6 +412,32 @@ startup = async function(data) {
 
       }
       MLRuntime.finder = undefined;
+      result.localTypeRepairs = [];
+      for (const [type, venue, url, doi, expected] of [
+        ['document', '', 'https://arxiv.org/abs/2401.01234', '', 'preprint'],
+        ['journalArticle', 'Proceedings of the AAAI Conference on Artificial Intelligence', '', '10.1609/aaai.host', 'conferencePaper'],
+        ['journalArticle', 'Proceedings of the ACM on Management of Data', '', '10.1145/host-journal', 'journalArticle'],
+        ['journalArticle', 'Journal of Artificial Intelligence Research', 'https://arxiv.org/abs/2401.01234', '10.1613/host-journal', 'journalArticle'],
+      ]) {
+        const paper = new Zotero.Item(type);
+        paper.setField('title', 'Local Type Host Paper');
+        if (venue) paper.setField('publicationTitle', venue);
+        if (url) paper.setField('url', url);
+        if (doi) paper.setField('DOI', doi);
+        paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+        await paper.saveTx();
+        const identity = {id:paper.id,key:paper.key};
+        await win.ZoteroPane.selectItem(paper.id);
+        MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
+        MLRuntime.retriever = {retrieveCurrent:async () => {throw new Error('Offline fixture');}};
+        await MLRuntime.run(win, 'lint');
+        if (paper.itemType !== expected || paper.id !== identity.id || paper.key !== identity.key || paper.getField('title') !== 'Local Type Host Paper') throw new Error('Local type repair failed: ' + type + ' -> ' + paper.itemType);
+        if (expected === 'conferencePaper' && paper.getField('proceedingsTitle') !== venue) throw new Error('Conference container was lost');
+        if (url && paper.getField('url') !== url) throw new Error('Source URL was lost');
+        result.localTypeRepairs.push({before:type,after:paper.itemType,status:MLRuntime.progressState.rows.at(-1).status});
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      }
+
       const originalSearch = Zotero.Translate.Search;
       const originalWeb = Zotero.Translate.Web;
       try {
@@ -469,6 +511,31 @@ startup = async function(data) {
         Zotero.Translate.Search = originalSearch;
         Zotero.Translate.Web = originalWeb;
         MLRuntime.request = scholarRequest;
+      }
+
+      const ror = new Zotero.Item('conferencePaper');
+      const rorTitle = 'Reason or Recite: Complementary Specialists with an LLM Judge for Traffic Anomaly Reasoning';
+      ror.setField('title', rorTitle);
+      ror.setField('proceedingsTitle', 'NeurIPS');
+      ror.setField('url', 'https://openreview.net/forum?id=kPcY8AfCgk');
+      ror.setCreators([{firstName:'Mayur',lastName:'Kulkarni',creatorType:'author'}]);
+      await ror.saveTx();
+      const rorIdentity = {id:ror.id,key:ror.key};
+      await win.ZoteroPane.selectItem(ror.id);
+      const rorRequest = MLRuntime.request;
+      try {
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+        MLRuntime.request = async url => {
+          if (url === 'https://api2.openreview.net/notes?id=kPcY8AfCgk') return JSON.stringify({notes:[{id:'kPcY8AfCgk',content:{title:{value:rorTitle},authors:{value:['Mayur Kulkarni']},venue:{value:'AICity Oral'},venueid:{value:'thecvf.com/ECCV/2026/Workshop/AICity'},_bibtex:{value:'@inproceedings{ror,title={' + rorTitle + '},author={Kulkarni, Mayur},booktitle={AICity Oral},year={2026}}'}}}]});
+          throw new Error('Offline workshop fixture: ' + url);
+        };
+        await MLRuntime.run(win, 'lint');
+        result.rorWorkshop = {venue:ror.getField('proceedingsTitle'),display:await renderPublication(ror),status:MLRuntime.progressState.rows.at(-1).status};
+        if (result.rorWorkshop.venue !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.display !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.status !== 'Updated' || ror.id !== rorIdentity.id || ror.key !== rorIdentity.key || ror.getField('title') !== rorTitle || ror.getCreators()[0].lastName !== 'Kulkarni') throw new Error('OpenReview workshop repair failed: ' + JSON.stringify(result.rorWorkshop));
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = rorRequest;
       }
 
       const batch = [];
@@ -584,7 +651,7 @@ startup = async function(data) {
       if (MLRuntime.preferenceData().settings.formatPublication) throw new Error('Retrieved setting was not saved');
       const configured = MLRuntime.preferenceData().settings;
       result.conferenceRules = {count:configured.rules.length,visible:!!settings.document.getElementById('ml-conference-rules')};
-      if (result.conferenceRules.count !== 513 || result.conferenceRules.visible) throw new Error('Internal conference rules are missing or advanced configuration is exposed');
+      if (result.conferenceRules.count !== ${expectedConferenceCount} || result.conferenceRules.visible) throw new Error('Internal conference rules are missing or advanced configuration is exposed');
       await win.ZoteroPane.selectItem(item.id);
       const completedDialog = [...MLRuntime.dialogs].find(dialog => !dialog.closed && dialog.arguments?.[0]?.kind === "progress");
       if (Zotero.isMac) {

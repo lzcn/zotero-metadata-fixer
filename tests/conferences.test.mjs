@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   DEFAULT_CONFERENCE_RULES,
   normalizeConference,
@@ -263,7 +264,16 @@ test("settings validate unique IDs and persist the Publication switch", () => {
 
 test("the CCF catalog covers all 386 conferences and 10 categories with provenance", async () => {
   const { conferenceInfo } = await import("../.tests-build/conferences.js");
-  assert.equal(DEFAULT_CONFERENCE_RULES.length, 513);
+  const supplements = JSON.parse(
+    await readFile(
+      new URL("../data/conference-supplements.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.equal(
+    DEFAULT_CONFERENCE_RULES.length,
+    386 + supplements.additions.length,
+  );
   const info = DEFAULT_CONFERENCE_RULES.map((rule) =>
     conferenceInfo(rule.id),
   ).filter((row) => row.source.startsWith("https://www.ccf.org.cn/"));
@@ -653,4 +663,35 @@ test("catalog upgrades add rules and refresh untouched aliases without overridin
     "My Conference",
   );
   assert.deepEqual(parseConferenceSettings(JSON.stringify(settings)), settings);
+});
+
+test("conference container identity repairs journal types while genuine journals stay journals", () => {
+  for (const venue of [
+    "Proceedings of the AAAI Conference on Artificial Intelligence",
+    "AAAI",
+    "International Conference on Learning Representations",
+  ]) {
+    const metadata = {
+      itemType: "journalArticle",
+      title: "Paper",
+      publicationTitle: venue,
+    };
+    const result = normalizeConference(
+      metadata,
+      DEFAULT_CONFERENCE_RULES,
+      "original",
+    );
+    assert.equal(result.metadata.itemType, "conferencePaper", venue);
+    assert.equal(result.metadata.proceedingsTitle, venue);
+  }
+  const journal = {
+    itemType: "journalArticle",
+    title: "Paper",
+    publicationTitle: "Journal of Artificial Intelligence Research",
+    conferenceName: "AAAI",
+  };
+  assert.deepEqual(
+    normalizeConference(journal, DEFAULT_CONFERENCE_RULES).metadata,
+    journal,
+  );
 });

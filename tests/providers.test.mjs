@@ -3,6 +3,160 @@ import assert from "node:assert/strict";
 import { PublicationFinder } from "../.tests-build/providers.js";
 import { MetadataRetriever } from "../.tests-build/translate.js";
 import { FakeItem, published } from "./helpers.mjs";
+import {
+  DEFAULT_CONFERENCE_RULES,
+  normalizeConferenceUpdate,
+} from "../.tests-build/conferences.js";
+import { publicationShort } from "../.tests-build/publication-short.js";
+import { buildRepairPlan } from "../.tests-build/repair.js";
+import { applyPlan } from "../.tests-build/update.js";
+import { hostFor } from "./helpers.mjs";
+import { supplementMetadata } from "../.tests-build/metadata.js";
+
+test("RoR OpenReview workshop identity survives presentation labels, retrieval and venue repair", async () => {
+  const title =
+    "Reason or Recite: Complementary Specialists with an LLM Judge for Traffic Anomaly Reasoning";
+  const url = "https://openreview.net/forum?id=kPcY8AfCgk";
+  const venue = "ECCV 2026 Workshop AICity";
+  for (const withBibtex of [true, false]) {
+    const finder = new PublicationFinder({
+      json: async () => ({
+        notes: [
+          {
+            id: "kPcY8AfCgk",
+            content: {
+              title: { value: title },
+              authors: { value: ["Mayur Kulkarni"] },
+              venue: { value: "AICity Oral" },
+              venueid: { value: "thecvf.com/ECCV/2026/Workshop/AICity" },
+              _bibtex: {
+                value: withBibtex ? "@inproceedings{ror}" : undefined,
+              },
+            },
+          },
+        ],
+      }),
+    });
+    let translated = {
+      itemType: "conferencePaper",
+      title,
+      proceedingsTitle: "AICity Oral",
+      creators: [
+        { firstName: "Mayur", lastName: "Kulkarni", creatorType: "author" },
+      ],
+    };
+    class Web {
+      setDocument() {}
+      getTranslators() {
+        return ["web"];
+      }
+      setTranslator() {}
+      setHandler() {}
+      async translate() {
+        return [translated];
+      }
+    }
+    const retriever = new MetadataRetriever(
+      { Translate: { Web } },
+      finder,
+      {},
+      () => true,
+      async () => ({ querySelectorAll: () => [] }),
+    );
+    retriever.bibtex = async () => translated;
+    const [candidate] = await finder.openreview(new FakeItem());
+    assert.equal(candidate.venue, venue);
+    assert.equal(candidate.year, 2026);
+    assert.equal((await retriever.url(url)).proceedingsTitle, venue);
+    const metadata = await retriever.candidate(candidate);
+    assert.equal(metadata.proceedingsTitle, venue);
+    assert.equal(publicationShort(metadata), venue);
+    const item = new FakeItem();
+    Object.assign(item.data, translated, { proceedingsTitle: "NeurIPS", url });
+    item.persisted = structuredClone(item.data);
+    item.itemTypeID = 3;
+    const before = item.toJSON();
+    for (const [style, expected] of [
+      ["original", venue],
+      ["standard", venue],
+      ["short", venue],
+    ]) {
+      const result = normalizeConferenceUpdate(
+        metadata,
+        before,
+        DEFAULT_CONFERENCE_RULES,
+        style,
+      );
+      assert.equal(result.rule, undefined);
+      assert.equal(result.venuePolicy.repair, true);
+      const plan = buildRepairPlan(
+        item,
+        result.metadata,
+        hostFor(item),
+        result.overrides,
+        false,
+        style !== "original",
+        result.venuePolicy,
+      );
+      assert.equal(
+        plan.changes.find((change) => change.field === "proceedingsTitle")
+          .after,
+        expected,
+      );
+      if (style === "short") await applyPlan(item, plan, hostFor(item));
+    }
+    assert.equal(item.getField("proceedingsTitle"), venue);
+    assert.equal(item.data.conferenceVenue, undefined);
+    for (const field of [
+      "creators",
+      "tags",
+      "notes",
+      "attachments",
+      "collections",
+      "relations",
+    ])
+      assert.deepEqual(item.data[field], before[field]);
+    translated = {
+      ...translated,
+      creators: [{ lastName: "Someone Else", creatorType: "author" }],
+    };
+    await assert.rejects(retriever.url(url), /Conflicting OpenReview metadata/);
+    translated = { ...translated, title: "An unrelated paper" };
+    await assert.rejects(retriever.url(url), /Conflicting OpenReview metadata/);
+  }
+});
+
+test("supplementation rejects conflicting structured event identities", () => {
+  const metadata = {
+    ...published,
+    conferenceVenue: {
+      id: "Event/2026/Workshop/One",
+      title: "Event Workshop One",
+    },
+  };
+  assert.throws(
+    () =>
+      supplementMetadata(metadata, {
+        ...metadata,
+        conferenceVenue: {
+          id: "Event/2026/Workshop/Two",
+          title: "Event Workshop Two",
+        },
+      }),
+    /Conflicting article metadata/,
+  );
+});
+
+function emptyIndexes(finder) {
+  for (const source of [
+    "semanticScholar",
+    "crossref",
+    "dblp",
+    "pubmed",
+    "openreview",
+  ])
+    finder[source] = async () => [];
+}
 
 test("DOI metadata is preferred over IEEE, with official URL fallback", async () => {
   const retriever = new MetadataRetriever({}, {}, {});
@@ -471,9 +625,10 @@ test("DBLP rate limiting suppresses further requests in the batch", async () => 
   assert.equal(requests, 1);
 });
 
-test("Google Scholar resolves a verified DOI before title-based fallback sources", async () => {
+test("Google Scholar supplies a DOI after structured indexes have no match", async () => {
   const calls = [];
   const finder = new PublicationFinder({});
+  emptyIndexes(finder);
   finder.related = async () => [];
   finder.googleScholar = async () => {
     calls.push("Scholar");
@@ -488,9 +643,7 @@ test("Google Scholar resolves a verified DOI before title-based fallback sources
       },
     ];
   };
-  finder.crossref = async () => {
-    throw new Error("must not query Crossref");
-  };
+
   const found = await finder.find(new FakeItem(), false);
   assert.deepEqual(calls, ["Scholar"]);
   assert.equal(found.candidates[0].doi, published.DOI);
@@ -522,7 +675,7 @@ test("DOI discovery runs before using a DOI-free Scholar match", async () => {
       async () => [];
   const lookup = await finder.find(new FakeItem(), false);
   const { selectPublication } = await import("../.tests-build/selection.js");
-  assert.deepEqual(calls, ["Scholar", "Crossref"]);
+  assert.deepEqual(calls, ["Crossref"]);
   assert.equal(
     selectPublication(new FakeItem(), lookup.candidates).doi,
     published.DOI,
@@ -595,6 +748,7 @@ test("verified official records stop DOI hunting, while failed or unverified pag
   item.data.url =
     "https://proceedings.neurips.cc/paper_files/paper/2023/hash/paper-Abstract-Conference.html";
   const finder = new PublicationFinder({});
+  emptyIndexes(finder);
   const calls = [];
   finder.related = async () => [];
   finder.googleScholar = async () => {
@@ -618,9 +772,10 @@ test("verified official records stop DOI hunting, while failed or unverified pag
   assert.match(failed.warnings[0], /Rejected author/);
 });
 
-test("a DOI-free Scholar official page is verified before querying extra sources", async () => {
+test("a DOI-free official indexed page is verified without querying Scholar", async () => {
   const item = new FakeItem();
   const finder = new PublicationFinder({});
+  emptyIndexes(finder);
   finder.related = async () => [];
   const candidate = {
     source: "Scholar",
@@ -631,9 +786,7 @@ test("a DOI-free Scholar official page is verified before querying extra sources
   };
   finder.googleScholar = async () => [candidate];
   finder.openreview = async () => [candidate];
-  finder.crossref = async () => {
-    throw new Error("Must not run");
-  };
+
   let verified = 0;
   const lookup = await finder.find(item, true, async (found) => {
     assert.equal(found.url, candidate.url);
@@ -840,11 +993,63 @@ test("candidate DOI metadata missing a journal uses its official article", async
   assert.equal(result.publicationTitle, "Journal of Machine Learning Research");
 });
 
-test("OpenReview unknown events and workshop identifiers retain their source venues", async () => {
-  for (const [venueid, venue] of [
-    ["Unknown.org/2025/Conference", "Unknown 2025 presentation"],
-    ["ICLR.cc/2025/Workshop", "ICLR 2025 Workshop poster"],
-    ["ICLR.cc/2025/Conference/Workshop", "ICLR 2025 Workshop"],
+test("OpenReview event hierarchy preserves unlisted workshops and tracks without dedicated rules", async () => {
+  for (const [venueid, venue, expected] of [
+    [
+      "Unknown.org/2025/Conference",
+      "Unknown 2025 presentation",
+      "Unknown 2025 presentation",
+    ],
+    [
+      "ICLR.cc/2025/Workshop",
+      "ICLR 2025 Workshop poster",
+      "ICLR 2025 Workshop",
+    ],
+    [
+      "ICLR.cc/2025/Conference/Workshop",
+      "ICLR 2025 Workshop",
+      "ICLR 2025 Workshop",
+    ],
+    [
+      "ICLR.cc/2025/Workshop/Unlisted_Event",
+      "Unlisted Event spotlight",
+      "ICLR 2025 Workshop Unlisted Event",
+    ],
+    [
+      "thecvf.com/CVPR/2026/Workshop/Another_Event",
+      "Another Event oral",
+      "CVPR 2026 Workshop Another Event",
+    ],
+    [
+      "NeurIPS.cc/2025/Datasets_and_Benchmarks_Track",
+      "NeurIPS 2025 poster",
+      "NeurIPS 2025 Datasets and Benchmarks Track",
+    ],
+    [
+      "NeurIPS.cc/2025/Position_Paper_Track",
+      "Position Paper oral",
+      "NeurIPS 2025 Position Paper Track",
+    ],
+    [
+      "ICML.cc/2026/Conference/Track/Unlisted_Event",
+      "ICML spotlight",
+      "ICML 2026 Track Unlisted Event",
+    ],
+    [
+      "Unknown.org/2025/Workshop/Unlisted",
+      "Unknown Workshop poster",
+      "Unknown Workshop poster",
+    ],
+    [
+      "ICLR.cc/2025/Conference/Authors",
+      "Unknown event label",
+      "Unknown event label",
+    ],
+    [
+      "ICLR.cc/2025/Conference/-/Submission",
+      "Unknown event label",
+      "Unknown event label",
+    ],
   ]) {
     const finder = new PublicationFinder({
       json: async () => ({
@@ -861,7 +1066,12 @@ test("OpenReview unknown events and workshop identifiers retain their source ven
         ],
       }),
     });
-    assert.equal((await finder.openreview(new FakeItem()))[0].venue, venue);
+    const [candidate] = await finder.openreview(new FakeItem());
+    assert.equal(candidate.venue, expected);
+    if (candidate.conferenceVenue) {
+      assert.equal(candidate.conferenceVenue.id, venueid);
+      assert.equal(candidate.conferenceVenue.title, expected);
+    }
   }
 });
 
@@ -1177,4 +1387,73 @@ test("DOI identity is checked in direct translations and every candidate fallbac
     }),
     /Conflicting DOI/,
   );
+});
+
+test("reliable structured results skip Scholar pacing and slow Scholar requests", async () => {
+  const finder = new PublicationFinder({});
+  emptyIndexes(finder);
+  finder.related = async () => [];
+  finder.crossref = async () => [
+    {
+      source: "Crossref",
+      title: published.title,
+      doi: published.DOI,
+      authors: ["Zhi Lu"],
+      venue: published.publicationTitle,
+    },
+  ];
+  let scholarCalls = 0;
+  finder.googleScholar = () => {
+    scholarCalls++;
+    return new Promise(() => {});
+  };
+  const item = new FakeItem();
+  item.data.title = published.title;
+  const result = await finder.find(item);
+  assert.equal(result.candidates[0].doi, published.DOI);
+  assert.equal(scholarCalls, 0);
+});
+
+test("parallel indexes wait for conflicting late results and cannot be overridden by Scholar", async () => {
+  const finder = new PublicationFinder({});
+  emptyIndexes(finder);
+  finder.related = async () => [];
+  const candidate = {
+    source: "Crossref",
+    title: published.title,
+    doi: published.DOI,
+    authors: ["Zhi Lu"],
+    venue: published.publicationTitle,
+  };
+  finder.crossref = async () => [candidate];
+  let finish;
+  let started = false;
+  finder.dblp = () => {
+    started = true;
+    return new Promise((resolve) => {
+      finish = resolve;
+    });
+  };
+  let scholarCalls = 0;
+  finder.googleScholar = async () => {
+    scholarCalls++;
+    return [candidate];
+  };
+  let completed = false;
+  const item = new FakeItem();
+  item.data.title = published.title;
+  const pending = finder.find(item).then((result) => {
+    completed = true;
+    return result;
+  });
+  for (let i = 0; i < 10 && !started; i++) await Promise.resolve();
+  assert.equal(started, true);
+  assert.equal(completed, false);
+  finish([{ ...candidate, source: "DBLP", doi: "10.1000/conflicting" }]);
+  const result = await pending;
+  const { selectPublication } = await import("../.tests-build/selection.js");
+  assert.equal(selectPublication(item, [candidate]).doi, published.DOI);
+  assert.equal(selectPublication(item, result.candidates), undefined);
+  assert.equal(result.candidates.length, 2);
+  assert.equal(scholarCalls, 0);
 });

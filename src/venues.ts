@@ -91,10 +91,34 @@ function topicPhrase(value: string): string {
     .filter((word) => !OPTIONAL_WORDS.has(word))
     .join(" ");
 }
+// A container equal to a catalog conference is type evidence; an event mention is not.
+export function isConferenceContainer(
+  metadata: Metadata,
+  rule: ConferenceRule,
+): boolean {
+  if (typeof metadata.publicationTitle !== "string") return false;
+  const venue = normalizeVenue(metadata.publicationTitle);
+  return rule.aliases.some((alias) => {
+    const name = normalizeVenue(alias);
+    return (
+      venue === name ||
+      (name.split(" ").length > 1 && topicPhrase(venue) === topicPhrase(name))
+    );
+  });
+}
+
 const SECONDARY_TRACK =
-  /\b(workshops?|companion|findings|demonstrations?|posters?|short papers?)\b/;
+  /\b(workshops?|tracks?|companion|findings|demonstrations?|posters?|short papers?)\b/;
+const isSecondary = (value: string) =>
+  SECONDARY_TRACK.test(value.replace(/\bmain (?:conference )?track\b/g, ""));
 type Alias = { phrase: string; topic: string; words: number };
-type Signature = { aliases: Alias[]; excluded: string[]; secondary: boolean };
+type Signature = {
+  aliases: Alias[];
+  excluded: string[];
+  secondary: boolean;
+  umbrellaParents: string[];
+  acronyms: Set<string>;
+};
 const signatures = new WeakMap<ConferenceRule, Signature>();
 function signature(rule: ConferenceRule): Signature {
   let result = signatures.get(rule);
@@ -112,7 +136,15 @@ function signature(rule: ConferenceRule): Signature {
         ...new Map(aliases.map((alias) => [alias.phrase, alias])).values(),
       ],
       excluded: rule.excludeAliases.map(normalizeVenue),
-      secondary: aliases.some((alias) => SECONDARY_TRACK.test(alias.phrase)),
+      secondary: aliases.some((alias) => isSecondary(alias.phrase)),
+      umbrellaParents: aliases
+        .filter((alias) => /\b(?:workshop|track)$/.test(alias.topic))
+        .map((alias) => alias.topic.replace(/\s+(?:workshop|track)$/, "")),
+      acronyms: new Set(
+        aliases
+          .filter((alias) => alias.words === 1)
+          .map((alias) => alias.phrase),
+      ),
     };
     signatures.set(rule, result);
   }
@@ -120,6 +152,11 @@ function signature(rule: ConferenceRule): Signature {
 }
 const contains = (text: string, phrase: string) =>
   Boolean(phrase) && ` ${text} `.includes(` ${phrase} `);
+const secondaryTopic = (topic: string, sig: Signature) =>
+  topic
+    .split(" ")
+    .filter((word) => !sig.acronyms.has(word))
+    .join(" ");
 
 // Stronger strategies run first. Acronyms remain the last resort and ties never pick a catalog row arbitrarily.
 const MATCHERS = [
@@ -160,7 +197,16 @@ export function matchConference(
         words: phrase.split(" ").length,
       };
     });
-  const secondary = venues.some((venue) => SECONDARY_TRACK.test(venue.phrase));
+  const secondary = venues.some((venue) => isSecondary(venue.phrase));
+  const mainTopics = secondary
+    ? new Set(
+        rules
+          .filter((rule) => rule.enabled && !signature(rule).secondary)
+          .flatMap((rule) =>
+            signature(rule).aliases.map((alias) => alias.topic),
+          ),
+      )
+    : undefined;
   type Match = { rule: ConferenceRule; tier: number; length: number };
   const compare = (a: Match, b: Match) =>
     a.tier - b.tier || b.length - a.length;
@@ -183,8 +229,21 @@ export function matchConference(
   });
   const venueMatches = venues.map((venue) =>
     eligible.flatMap((rule) => {
-      const matches = signature(rule)
-        .aliases.flatMap((alias) => {
+      const sig = signature(rule);
+      // An umbrella workshop/track alias must not erase an unlisted subevent.
+      if (
+        sig.umbrellaParents.some((parent) => mainTopics?.has(parent)) &&
+        isSecondary(venue.phrase) &&
+        !sig.aliases.some(
+          (alias) =>
+            isSecondary(alias.phrase) &&
+            secondaryTopic(alias.topic, sig) ===
+              secondaryTopic(venue.topic, sig),
+        )
+      )
+        return [];
+      const matches = sig.aliases
+        .flatMap((alias) => {
           const tier = MATCHERS.findIndex((strategy) =>
             strategy.matches(alias, venue),
           );

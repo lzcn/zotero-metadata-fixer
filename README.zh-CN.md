@@ -22,16 +22,17 @@
 
 **出版物列使用简称**在原生列中显示简称，默认开启。关闭后恢复原生显示，条目字段和列设置不变。请关闭 Zotero Style 的 **Publication Column**，避免冲突。
 
-简称来源包括由出版方目录和 NLM 建立、有来源记录的本地期刊目录、现有会议目录、条目的期刊简称字段，以及 Zotero 内置 MEDLINE 表中能匹配完整刊名的记录。TMC、TPAMI、TGRS、JSTARS 等已知简称优先于引用格式的缩写。未知名称保留全名。Preprint 显示 Repository 原文，Report 显示 Institution，Book 显示 Publisher，Thesis 显示 University，均不缩写。仅当预印本缺少仓储字段时，才依据明确的标识与 URL 补充 arXiv 等名称。渲染不发起网络请求。期刊来源网址和出版方 acronym 记录在 `data/journal-abbreviations.json`。
+期刊只使用本地目录中有来源的专用简称，例如 TMC、TPAMI、TGRS、JSTARS；其他期刊保留全名，包括 Nature Communications。条目“期刊简称”字段和 Zotero 提供的引用格式缩写仅用于识别目录中的期刊，不用作显示名称。会议使用现有会议目录，未知名称保留原名。Preprint 显示 Repository 原文，Report 显示 Institution，Book 显示 Publisher，Thesis 显示 University，均不缩写。仅当预印本缺少仓储字段时，才依据明确的标识与 URL 补充 arXiv 等名称。渲染不发起网络请求。期刊名称、别名和来源网址记录在 `data/journal-abbreviations.json`。
 
 ## 更新内容
 
 - 为预印本和仓储记录查找正式发表版本。
 - 找到可靠匹配后，补全缺失的 DOI。
 - 补充缺失字段，修正明确的元数据错误。
+- 将类型错置的 arXiv 记录修正为预印本、会议记录修正为会议论文；保留真正的期刊和带预印本来源链接的正式发表条目。
 - 按所选规则统一论文集名称。
 
-插件先使用标识符和发表链接检索，再尝试按标题查找。文章页的引用元数据包含题名、作者和刊名或论文集名时，即使出版网站未列入目录，也可读取其同站 BibTeX。BibTeX 明确给出的类型可纠正通用网页或不完整 DOI 元数据的分类；题名、作者或 DOI 存在冲突时拒绝合并。预印本修订可能晚于正式发表，因此不会仅凭条目日期排除较早的发表记录。更新前会核对标题、作者和发表状态，无法确认或存在冲突的记录会跳过；某个来源失败不会中断其他检索。检索来源包括 Zotero 翻译器、Crossref、PubMed、Semantic Scholar、DBLP、OpenReview 和 Google Scholar，出版社页面用于核实记录和补充字段。
+插件先使用标识符和发表链接检索，再尝试按标题查找。 结构化索引并行查询，Google Scholar 作为后续兜底。索引结果统一检查冲突；已有可靠结果时跳过 Scholar。JSON 请求超时为 8 秒，文章页请求仍保留 20 秒。文章页的引用元数据包含题名、作者和刊名或论文集名时，即使出版网站未列入目录，也可读取其同站 BibTeX。BibTeX 明确给出的类型可纠正通用网页或不完整 DOI 元数据的分类；题名、作者或 DOI 存在冲突时拒绝合并。预印本修订可能晚于正式发表，因此不会仅凭条目日期排除较早的发表记录。更新前会核对标题、作者和发表状态，无法确认或存在冲突的记录会跳过；某个来源失败不会中断其他检索。检索来源包括 Zotero 翻译器、Crossref、PubMed、Semantic Scholar、DBLP、OpenReview 和 Google Scholar，出版社页面用于核实记录和补充字段。
 
 更新保留原条目及其附件、批注、笔记、集合、标签和关系。空结果不会清空已有字段，仅大小写或空格不同的值也会保留。预印本标识符留在 Extra 中；如果你在检索期间修改条目，过期结果不会覆盖这些改动。
 
@@ -39,7 +40,7 @@
 
 在 **设置 → Metadata Fixer** 中选择 **原名**（默认）、**标准全名** 或 **缩写**。标准全名和缩写省略 Proceedings Title 中的届数、年份，论文日期和 Conference Name 不变。可修正错放的论文集名称、条目类型和 editor，保留真正的期刊及次级会场。
 
-匹配时先清理年份、届次等变化，再依次尝试完整名称、主题词和缩写。未知或有歧义的名称保留原值；workshop 等分会场单独识别。
+匹配时先清理年份、届次等变化，再依次尝试完整名称、主题词和缩写。未知或有歧义的名称保留原值；workshop 等分会场单独识别。OpenReview 的会议标识会保留所属会议和完整 workshop、track 层级，即使展示标签省略这些信息。未收录的子会场在所有命名方式下保留来源名称，无需新增专用目录项或编造简称。通用 workshop 别名不会替代具体子会场名称。经核验的会议身份信息可以修正错误会场，互相冲突的会议标识会被拒绝。
 
 会议规则包含 CCF 目录、补充会议及独立的 workshop 分会场。来源记录见 `data/conferences.json`、`data/conference-catalog.json` 和 `data/conference-supplements.json`。
 
@@ -58,7 +59,7 @@
 
 `npm run test:host` 使用临时配置及网络测试数据，检查取消本地 HTTP 请求和 Zotero 正常退出。真实在线检索仍需在测试文献库中验证。本地发布准备不创建 tag 或上传文件。共同开发规范见工作区根目录 `AGENTS.md`。
 
-`src/providers.ts` 负责发现正式版本，返回候选记录；`src/translate.ts` 通过 Zotero 翻译器取回记录，通用页面线索、字段映射及补全位于 `src/metadata.ts`；`src/venues.ts` 负责会议匹配与字段映射，`src/conferences.ts` 在取回后应用目录和命名规则。特定会议的名称和别名写入 JSON 目录，不在任务流程中新增分支。出版社专用检索作为兜底，不替代翻译器和名称规则。
+`src/providers.ts` 负责发现正式版本，返回候选记录；`src/translate.ts` 通过 Zotero 翻译器取回记录，通用页面线索、字段映射及补全位于 `src/metadata.ts`；`src/venues.ts` 负责会议匹配与字段映射，`src/conferences.ts` 在取回后应用目录和命名规则。官方名称和约定俗成的简称写入 JSON 目录。新增会场特例仅用于常见顶会；长尾 workshop 和 track 使用来源证据并保留名称。来源适配负责提取标识与书目信息，通用规则负责判断身份和格式，不添加单篇文章专用分支。出版社专用检索作为兜底，不替代翻译器和名称规则。
 
 ## 许可证
 

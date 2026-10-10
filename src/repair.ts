@@ -1,5 +1,5 @@
 import type { Item, Metadata, Plan, PlanOverrides, UpdateHost } from "./model";
-import { cleanDOI, preprintDOI } from "./identifiers";
+import { cleanDOI, preprintDOI, isPreprint, identifiers } from "./identifiers";
 import { normalize } from "./matching";
 import { buildPlan } from "./update";
 import { containerField, isProceedingsTitle } from "./venues";
@@ -63,6 +63,11 @@ export function buildRepairPlan(
       else if (oldDOI !== clean) fields.DOI = clean;
     }
   }
+  const existingDOI = identifiers(item).DOI;
+  const repairPreprint =
+    metadata.itemType === "preprint" &&
+    isPreprint(item) &&
+    (!existingDOI || preprintDOI(existingDOI));
   const plan = buildPlan(
     item,
     metadata,
@@ -72,7 +77,8 @@ export function buildRepairPlan(
       ...overrides,
       itemType:
         overrides?.itemType ||
-        (["journalArticle", "conferencePaper", "bookSection"].includes(
+        (repairPreprint ||
+        ["journalArticle", "conferencePaper", "bookSection"].includes(
           metadata.itemType,
         )
           ? metadata.itemType

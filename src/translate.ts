@@ -15,7 +15,7 @@ import {
   supplementMetadata,
 } from "./metadata";
 import { checkAccess } from "./responses";
-import { titleScore } from "./matching";
+import { titleScore, matchesAuthor } from "./matching";
 import type { PublicationFinder, Network } from "./providers";
 
 // Zotero translators are the host boundary. libraryID:false returns plain records.
@@ -30,6 +30,29 @@ export class MetadataRetriever {
 
   private checkActive(): void {
     if (!this.active()) throw new Error("Operation cancelled");
+  }
+
+  private applyConferenceVenue(
+    metadata: Metadata,
+    candidate?: Candidate,
+  ): Metadata {
+    if (!candidate?.conferenceVenue) return metadata;
+    if (
+      titleScore(metadata.title, candidate.title) < 0.9 ||
+      !matchesAuthor(
+        metadata.creators?.[0]?.lastName || "",
+        candidate.authors,
+      ) ||
+      (metadata.conferenceVenue &&
+        metadata.conferenceVenue.id !== candidate.conferenceVenue.id)
+    )
+      throw new Error("Conflicting OpenReview metadata");
+    return {
+      ...metadata,
+      itemType: "conferencePaper",
+      proceedingsTitle: candidate.conferenceVenue.title,
+      conferenceVenue: candidate.conferenceVenue,
+    };
   }
 
   private async run(translate: any): Promise<Metadata> {
@@ -84,19 +107,24 @@ export class MetadataRetriever {
       return this.bibtex(await this.net.text(url));
     this.checkActive();
     const page = new URL(url);
+    let accepted: Candidate | undefined;
     if (
       page.hostname.replace(/^www\./, "") === "openreview.net" &&
       page.pathname === "/forum"
     ) {
       const forum = page.searchParams.get("id");
-      const accepted = forum
+      accepted = forum
         ? (await this.finder.openreview({ getField: () => "" }, forum)).find(
             (record) => new URL(record.url!).searchParams.get("id") === forum,
           )
         : undefined;
       this.checkActive();
       if (!accepted) throw new Error("No published OpenReview record found");
-      if (accepted.bibtex) return this.bibtex(accepted.bibtex);
+      if (accepted.bibtex)
+        return this.applyConferenceVenue(
+          await this.bibtex(accepted.bibtex),
+          accepted,
+        );
     }
     const docs = this.document
       ? [await this.document(url)]
@@ -160,6 +188,7 @@ export class MetadataRetriever {
         ? supplementMetadata(metadata, identified)
         : supplementMetadata(identified, metadata);
     if (!metadata.url) metadata.url = url;
+    metadata = this.applyConferenceVenue(metadata, accepted);
     return doi && !preprintDOI(doi) && !metadata.DOI
       ? { ...metadata, DOI: doi }
       : metadata;
@@ -229,6 +258,7 @@ export class MetadataRetriever {
   ): Promise<Metadata> {
     if (!active()) throw new Error("Operation cancelled");
     const complete = (metadata: Metadata): Metadata => {
+      metadata = this.applyConferenceVenue(metadata, candidate);
       if (
         candidate.doi &&
         metadata.DOI &&

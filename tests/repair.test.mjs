@@ -332,3 +332,20 @@ test("a proceedings title misplaced in Conference Name repairs Proceedings Title
   assert.equal(item.getField("proceedingsTitle"), misplaced);
   assert.equal(item.getField("conferenceName"), misplaced);
 });
+
+test("preprint type repair does not downgrade a published item retaining arXiv provenance", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, published);
+  item.itemTypeID = 2;
+  const { normalizeMetadata } = await import("../.tests-build/metadata.js");
+  assert.equal(normalizeMetadata(item.toJSON()).itemType, "journalArticle");
+  const result = buildRepairPlan(
+    item,
+    { ...item.toJSON(), itemType: "preprint" },
+    hostFor(item),
+  );
+  assert.equal(
+    result.changes.some((change) => change.field === "itemType"),
+    false,
+  );
+});

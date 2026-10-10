@@ -11,32 +11,21 @@ const journalKey = (value: string) =>
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "");
 const journalNames = new Map(
-  journals.flatMap((journal) =>
-    [journal.name, journal.acronym, ...journal.aliases].map(
-      (name) => [journalKey(name), journal.acronym] as const,
-    ),
-  ),
+  journals.flatMap((journal) => {
+    const display = journal.acronym || journal.name;
+    return [journal.name, display, ...journal.aliases].map(
+      (name) => [journalKey(name), display] as const,
+    );
+  }),
 );
-
-const medlineKey = (value: string) =>
-  journalKey(value.toLowerCase().replace(/\b(and|et|y|und|la|le|the)\b/g, ""));
-const fullJournalAbbreviations = new Map<string, string>();
-
-export function addJournalTitleAbbreviations(
-  entries: Record<string, string>,
-): void {
-  for (const [name, abbreviation] of Object.entries(entries)) {
-    if (typeof abbreviation === "string" && abbreviation.trim())
-      fullJournalAbbreviations.set(medlineKey(name), abbreviation);
-  }
-}
 
 export function addJournalAliases(
   abbreviate: (name: string) => string | undefined,
 ): void {
   for (const journal of journals) {
     const alias = abbreviate(journal.name);
-    if (alias) journalNames.set(journalKey(alias), journal.acronym);
+    if (alias)
+      journalNames.set(journalKey(alias), journal.acronym || journal.name);
   }
 }
 
@@ -53,9 +42,7 @@ export function publicationShort(metadata: Metadata): string {
     const abbreviation = String(metadata.journalAbbreviation || "").trim();
     return (
       journalNames.get(journalKey(publication)) ||
-      (abbreviation &&
-        (journalNames.get(journalKey(abbreviation)) || abbreviation)) ||
-      fullJournalAbbreviations.get(medlineKey(publication)) ||
+      (abbreviation && journalNames.get(journalKey(abbreviation))) ||
       publication
     );
   }

@@ -1,4 +1,10 @@
-import type { Candidate, Item, Lookup, Metadata } from "./model";
+import type {
+  Candidate,
+  ConferenceVenue,
+  Item,
+  Lookup,
+  Metadata,
+} from "./model";
 import {
   identifiers,
   cleanDOI,
@@ -23,6 +29,41 @@ const list = <T>(value: T | T[] | undefined): T[] =>
 export function openReviewValue(note: any, key: string): any {
   const raw = note.content?.[key];
   return raw && typeof raw === "object" && "value" in raw ? raw.value : raw;
+}
+
+function openReviewVenue(
+  id: string,
+): (ConferenceVenue & { secondary: boolean }) | undefined {
+  const parts = id.split("/");
+  const yearIndex = parts.findIndex((part) => /^(?:19|20)\d{2}$/.test(part));
+  if (yearIndex < 1) return undefined;
+  const parent = normalizeConference(
+    {
+      itemType: "conferencePaper",
+      title: "",
+      proceedingsTitle: parts.slice(0, yearIndex).join(" ").replace(/\./g, " "),
+    },
+    DEFAULT_CONFERENCE_RULES,
+    "short",
+  );
+  if (!parent.rule) return undefined;
+  const event = parts.slice(yearIndex + 1);
+  if (/^Conference$/i.test(event[0] || "")) event.shift();
+  // Preserve the whole subevent path, including names absent from the catalog.
+  if (
+    event.length &&
+    (!/^(?:Workshops?|Track|\w+_Track)$/i.test(event[0]) ||
+      event.some((part) => !/^[\w -]+$/.test(part)))
+  )
+    return undefined;
+  if (!event.length && !/\/Conference$/i.test(id)) return undefined;
+  return {
+    id,
+    secondary: event.length > 0,
+    title: [parent.metadata.proceedingsTitle, parts[yearIndex], ...event]
+      .join(" ")
+      .replace(/_/g, " "),
+  };
 }
 
 export class PublicationFinder {
@@ -436,29 +477,18 @@ export class PublicationFinder {
         return [];
       const forum = note.forum || note.id;
       if (!forum) return [];
-      // Resolve the structured event identifier through the shared venue catalog.
-      // Display labels may include presentation categories; unknown events retain them.
-      const event = /\/Conference$/i.test(venueID)
-        ? normalizeConference(
-            {
-              itemType: "conferencePaper",
-              title: String(get("title") || ""),
-              proceedingsTitle: venueID.replace(/[/.]/g, " "),
-            },
-            DEFAULT_CONFERENCE_RULES,
-            "short",
-          )
-        : undefined;
+      const event = openReviewVenue(venueID);
       const year =
-        Number(`${venue} ${venueID}`.match(/\b\d{4}\b/)?.[0]) || undefined;
+        Number(`${venueID} ${venue}`.match(/\b\d{4}\b/)?.[0]) || undefined;
       return [
         {
           source: "OpenReview",
           title: String(get("title") || ""),
           authors,
-          venue: event?.rule
-            ? [event.metadata.proceedingsTitle, year].filter(Boolean).join(" ")
-            : venue,
+          venue: event?.title || venue,
+          conferenceVenue: event?.secondary
+            ? { id: event.id, title: event.title }
+            : undefined,
           year,
           url: `https://openreview.net/forum?id=${encode(forum)}`,
           bibtex:
@@ -553,17 +583,6 @@ export class PublicationFinder {
     const rankedLinked = rankCandidates(item, linked);
     if (rankedLinked.length)
       return { candidates: rankedLinked, warnings, answered };
-    let scholar: Candidate[] = [];
-    try {
-      scholar = rankCandidates(item, await this.googleScholar(item));
-      answered++;
-      const selected = selectPublication(item, scholar);
-      if (selected?.doi) return { candidates: scholar, warnings, answered };
-      if (selected && (await official(selected)))
-        return { candidates: scholar, warnings, answered };
-    } catch (error) {
-      warnings.push(`Google Scholar: ${String(error)}`);
-    }
     const sources = [
       ["Semantic Scholar", () => this.semanticScholar(item)],
       ["Crossref", () => this.crossref(item, publicationHint)],
@@ -573,20 +592,34 @@ export class PublicationFinder {
     ] as const;
     const results = await Promise.allSettled(sources.map(([, run]) => run()));
     // Unknown or unavailable pages still need independent publication evidence.
-    const candidates: Candidate[] = [...scholar];
+    const candidates: Candidate[] = [];
     results.forEach((result, index) => {
       if (result.status === "fulfilled") {
         answered++;
         candidates.push(...result.value);
       } else warnings.push(`${sources[index][0]}: ${String(result.reason)}`);
     });
-    const ranked = rankCandidates(item, candidates);
-    const selected = selectPublication(item, ranked);
+    let ranked = rankCandidates(item, candidates);
+    let selected = selectPublication(item, ranked);
     if (selected) {
       if (selected.doi || (await official(selected)))
         return { candidates: ranked, warnings, answered };
     }
     // An additional publisher must not override conflicting strong indexed matches.
+    if (!selected && ranked.some((candidate) => (candidate.score || 0) >= 0.9))
+      return { candidates: ranked, warnings, answered };
+    // Structured indexes avoid Scholar's mandatory pacing and bot checks on common matches.
+    // Merge fallback results before selecting so a new source cannot hide an existing conflict.
+    try {
+      candidates.push(...(await this.googleScholar(item)));
+      answered++;
+    } catch (error) {
+      warnings.push(`Google Scholar: ${String(error)}`);
+    }
+    ranked = rankCandidates(item, candidates);
+    selected = selectPublication(item, ranked);
+    if (selected && (selected.doi || (await official(selected))))
+      return { candidates: ranked, warnings, answered };
     if (!selected && ranked.some((candidate) => (candidate.score || 0) >= 0.9))
       return { candidates: ranked, warnings, answered };
     // Search results locate records; only a verified article can authorize an update.

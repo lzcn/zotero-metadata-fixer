@@ -1304,6 +1304,7 @@ test("failed text responses are retried within a batch", async () => {
 test("publication initialization creates no custom column and cancels deferred loading on stop", async () => {
   const previousManager = Zotero.ItemTreeManager;
   const previousFile = Zotero.File;
+  const previousCite = Zotero.Cite;
   let loads = 0;
   Zotero.ItemTreeManager = {
     registerColumn() {
@@ -1312,8 +1313,14 @@ test("publication initialization creates no custom column and cancels deferred l
   };
   Zotero.File = {
     getContentsFromURL() {
+      throw new Error("Citation abbreviations must not supply display names");
+    },
+  };
+  Zotero.Cite = {
+    getAbbreviation(_style, abbreviations, _jurisdiction, _category, name) {
+      if (name !== "Nature Communications") return;
       loads++;
-      return JSON.stringify({ default: { "container-title": {} } });
+      abbreviations.default["container-title"][name] = "Nat. Commun.";
     },
   };
   const runtime = new Runtime();
@@ -1333,6 +1340,7 @@ test("publication initialization creates no custom column and cancels deferred l
     runtime.stop();
     Zotero.ItemTreeManager = previousManager;
     Zotero.File = previousFile;
+    Zotero.Cite = previousCite;
   }
 });
 
@@ -1367,5 +1375,85 @@ test("response reuse stays bounded and does not retain oversized text bodies", a
     assert.equal(runtime.responses.get(operation).size, 0);
   } finally {
     delete globalThis.Zotero.HTTP;
+  }
+});
+
+test("lint repairs arXiv documents locally when retrieval is unavailable", async () => {
+  const item = new FakeItem();
+  item.data.itemType = "document";
+  const { runtime, state, win } = runFixture(item);
+  runtime.finder = {
+    find: async () => ({ candidates: [], warnings: [], answered: 1 }),
+  };
+  runtime.retriever = {
+    retrieveCurrent: async () => {
+      throw new Error("Offline");
+    },
+  };
+  await runtime.run(win, "lint");
+  assert.equal(item.itemType, "preprint");
+  assert.equal(item.id, 42);
+  assert.equal(item.getField("url"), "https://arxiv.org/abs/2501.01234v1");
+  assert.equal(state.progress.rows[0].status, "Updated");
+});
+
+test("lint repairs mislabeled conference journals locally without replacing user fields", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, {
+    itemType: "journalArticle",
+    url: "",
+    archiveID: "",
+    publicationTitle:
+      "Proceedings of the AAAI Conference on Artificial Intelligence",
+    DOI: "10.1609/aaai.host",
+  });
+  item.itemTypeID = 2;
+  const { runtime, state, win } = runFixture(item);
+  runtime.retriever = {
+    retrieveCurrent: async () => {
+      throw new Error("Offline");
+    },
+  };
+  await runtime.run(win, "lint");
+  assert.equal(item.itemType, "conferencePaper");
+  assert.equal(
+    item.getField("proceedingsTitle"),
+    "Proceedings of the AAAI Conference on Artificial Intelligence",
+  );
+  assert.equal(item.getField("DOI"), "10.1609/aaai.host");
+  assert.equal(state.progress.rows[0].status, "Updated");
+});
+
+test("structured JSON requests have a short timeout while article requests retain their budget", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  const timeouts = [];
+  const originalHTTP = globalThis.Zotero.HTTP;
+  globalThis.Zotero.HTTP = {
+    request: async (_, __, options) => {
+      timeouts.push(options.timeout);
+      return {
+        responseText: '{"notes":[]}',
+        response: {},
+        responseURL: "https://example.test/article",
+      };
+    },
+    wrapDocument: (doc) => doc,
+  };
+  try {
+    await runtime.network(operation).json("https://example.test/api");
+    await runtime.request(
+      "https://example.test/article",
+      operation,
+      "document",
+    );
+    assert.deepEqual(timeouts, [8000, 20000]);
+    assert.equal(operation.active(), true);
+  } finally {
+    globalThis.Zotero.HTTP = originalHTTP;
+    operation.cancel();
   }
 });

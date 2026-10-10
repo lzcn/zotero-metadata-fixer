@@ -71,13 +71,17 @@ export function rankCandidates(
     // Canonical keys fold case, DOI prefixes/URLs and title typography so that
     // the same record from different sources is not processed twice.
     const doi = candidate.doi ? cleanDOI(candidate.doi) : undefined;
-    const key = doi
+    const recordKey = doi
       ? `doi:${doi.toLowerCase()}`
       : candidate.url
         ? `url:${candidate.url.trim().toLowerCase()}`
         : candidate.bibtex
           ? `bibtex:${normalize(candidate.bibtex)}`
           : `title:${normalize(candidate.title)}`;
+    // Keep contradictory structured venues visible to publication selection.
+    const key = candidate.conferenceVenue
+      ? `${recordKey}|event:${candidate.conferenceVenue.id}`
+      : recordKey;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

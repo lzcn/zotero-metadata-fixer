@@ -56,6 +56,13 @@ test("matching keeps numeric topic names and distinguishes workshops from main t
   for (const venue of [
     "ECCV Unlisted Workshop",
     "CVPR Unlisted Findings",
+    "CVPR Workshop on Unlisted Topic",
+    "CVPR Workshop on Unlisted Topic (CVPRW)",
+    "ICCV 2023 Workshops, Unlisted Event",
+    "NeurIPS 2025 Datasets and Benchmarks Track",
+    "The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track",
+    "NeurIPS 2025 Position Paper Track",
+    "ICML 2026 Unlisted Track",
     "FSE'24",
     "SEC2024",
     "Pattern Recognition",
@@ -70,6 +77,14 @@ test("matching keeps numeric topic names and distinguishes workshops from main t
     assert.equal(result.rule, undefined, venue);
     assert.deepEqual(result.metadata, metadata);
   }
+});
+
+test("main-track labels do not turn the main conference into a secondary venue", () => {
+  for (const venue of [
+    "NeurIPS 2025 Main Track",
+    "NeurIPS 2025 Main Conference Track",
+  ])
+    assert.equal(identify(venue).rule?.id, "neurips");
 });
 
 test("conflicting event and proceedings identities are not normalized", () => {

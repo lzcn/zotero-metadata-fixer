@@ -39,6 +39,10 @@ export function selectPublication(
   const peers = ranked.filter(
     (candidate) => (candidate.score || 0) >= (first.score || 0) - 0.05,
   );
+  const eventIDs = new Set(
+    peers.map((candidate) => candidate.conferenceVenue?.id).filter(Boolean),
+  );
+  if (eventIDs.size > 1) return;
   const samePublication = peers.every((candidate) => {
     if (candidate === first) return true;
     if (first.doi && candidate.doi) {
@@ -60,5 +64,12 @@ export function selectPublication(
   const official = peers.find((candidate) =>
     officialPublicationURL(candidate.url || ""),
   );
-  return official ? { ...selected, url: official.url } : selected;
+  const conferenceVenue = peers.find(
+    (candidate) => candidate.conferenceVenue,
+  )?.conferenceVenue;
+  return {
+    ...selected,
+    ...(official ? { url: official.url } : {}),
+    ...(conferenceVenue ? { conferenceVenue } : {}),
+  };
 }

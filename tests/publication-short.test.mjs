@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   publicationShort,
-  addJournalTitleAbbreviations,
+  addJournalAliases,
 } from "../.tests-build/publication-short.js";
 
 const journal = (publicationTitle) => ({
@@ -23,7 +23,7 @@ test("publication column recognizes conferences without changing the record", ()
     ["European Conference on Computer Vision", "ECCV"],
     ["ECCV2024", "ECCV"],
     ["CVPRW", "CVPRW"],
-    ["CVPR Workshop on Unlisted Topic", "CVPRW"],
+    ["CVPR Workshop on Unlisted Topic", "CVPR Workshop on Unlisted Topic"],
   ]) {
     const metadata = conference(name);
     const before = structuredClone(metadata);
@@ -82,13 +82,13 @@ test("unknown, ambiguous, missing and secondary publications are preserved", () 
   );
 });
 
-test("publication column reads explicit journal abbreviations and repositories", () => {
+test("publication column uses only cataloged journal abbreviations and reads repositories", () => {
   assert.equal(
     publicationShort({
       ...journal("Unlisted Journal"),
       journalAbbreviation: "UJ",
     }),
-    "UJ",
+    "Unlisted Journal",
   );
   assert.equal(
     publicationShort({
@@ -153,17 +153,44 @@ test("source-backed catalog covers the library's frequent IEEE and ACM journals"
     assert.equal(publicationShort(journal(name)), expected);
 });
 
-test("only full-title native abbreviation records are used for unknown journals", () => {
-  addJournalTitleAbbreviations({
-    "the exact journal of testing": "Exact J. Test.",
-  });
+test("journals without dedicated acronyms retain full titles despite citation abbreviations", () => {
+  for (const [name, abbreviation] of [
+    ["Nature Communications", "Nat. Commun."],
+    ["Nature Communications", "Nat. Comm"],
+    ["Neural Computation", "Neural Comput."],
+    ["Science China Information Sciences", "Sci China Inf Sci"],
+    ["The Exact Journal of Testing", "Exact J. Test."],
+  ]) {
+    const metadata = { ...journal(name), journalAbbreviation: abbreviation };
+    const before = structuredClone(metadata);
+    assert.equal(publicationShort(metadata), name);
+    assert.deepEqual(metadata, before);
+  }
   assert.equal(
-    publicationShort(journal("The Exact Journal of Testing")),
-    "Exact J. Test.",
+    publicationShort(journal("Nat. Commun.")),
+    "Nature Communications",
+  );
+});
+
+test("native citation abbreviations serve only as aliases for cataloged journal names", () => {
+  const aliases = {
+    "IEEE Transactions on Geoscience and Remote Sensing":
+      "IEEE Trans. Geosci. Remote Sens.",
+    "Nature Communications": "Nat. Communications",
+    "The Exact Journal of Testing": "Exact J. Test.",
+  };
+  addJournalAliases((name) => aliases[name]);
+  assert.equal(
+    publicationShort(journal("IEEE Trans. Geosci. Remote Sens.")),
+    "TGRS",
   );
   assert.equal(
-    publicationShort(journal("Another Journal of Testing")),
-    "Another Journal of Testing",
+    publicationShort(journal("Nat. Communications")),
+    "Nature Communications",
+  );
+  assert.equal(
+    publicationShort(journal("The Exact Journal of Testing")),
+    "The Exact Journal of Testing",
   );
 });
 
@@ -213,7 +240,7 @@ test("preprints reports and books display their own source fields verbatim", () 
   assert.equal(publicationShort({ itemType: "book" }), "");
 });
 
-test("every catalog full name resolves to its recorded abbreviation and source", async () => {
+test("every catalog full name resolves to its dedicated acronym or full name with a source", async () => {
   const { readFile } = await import("node:fs/promises");
   const rows = JSON.parse(
     await readFile(
@@ -226,6 +253,10 @@ test("every catalog full name resolves to its recorded abbreviation and source",
     assert.ok(/^https:\/\//.test(row.source), row.name);
     assert.ok(!names.has(row.name.toLowerCase()), row.name);
     names.add(row.name.toLowerCase());
-    assert.equal(publicationShort(journal(row.name)), row.acronym, row.name);
+    assert.equal(
+      publicationShort(journal(row.name)),
+      row.acronym || row.name,
+      row.name,
+    );
   }
 });

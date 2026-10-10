@@ -5,6 +5,8 @@ import {
   containerTitle,
   isProceedingsTitle,
   matchConference,
+  isConferenceContainer,
+  normalizeVenue,
 } from "./venues";
 import ccfCatalog from "../data/conferences.json";
 import supplements from "../data/conference-supplements.json";
@@ -202,7 +204,11 @@ export function normalizeConference(
   const rule = matchConference(metadata, rules);
   if (!rule) return { metadata };
   // Conference events can publish in genuine journals (PACMPL, PACMMOD, PVLDB, TOG…).
-  if (metadata.itemType === "journalArticle" && rule.preserveJournalArticles)
+  if (
+    metadata.itemType === "journalArticle" &&
+    rule.preserveJournalArticles &&
+    !isConferenceContainer(metadata, rule)
+  )
     return { metadata };
   const normalized: Metadata = { ...metadata, itemType: rule.itemType };
   const fields: Record<string, string> = {};
@@ -247,6 +253,19 @@ export function normalizeConferenceUpdate(
   const sameConference = Boolean(
     result.rule && result.rule.id === existing.rule?.id,
   );
+  // Verified event evidence can repair an unknown subevent without a catalog row.
+  const sourceVenue = metadata.conferenceVenue?.title;
+  const existingTitle = containerTitle(previous);
+  const sourceRepair = Boolean(
+    sourceVenue &&
+      existingTitle &&
+      normalizeVenue(sourceVenue) !== normalizeVenue(existingTitle),
+  );
+  if (sourceRepair && !result.rule) {
+    result.overrides = {
+      fields: { proceedingsTitle: sourceVenue! },
+    };
+  }
   if (
     style === "original" &&
     sameConference &&
@@ -260,7 +279,9 @@ export function normalizeConferenceUpdate(
     ...result,
     venuePolicy: {
       preserve: sameConference,
-      repair: Boolean(result.rule && existing.rule && !sameConference),
+      repair:
+        sourceRepair ||
+        Boolean(result.rule && existing.rule && !sameConference),
     },
   };
 }

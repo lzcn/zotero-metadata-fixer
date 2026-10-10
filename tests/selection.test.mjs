@@ -42,6 +42,48 @@ test("equivalent source records combine a DOI with the official IEEE URL", () =>
   assert.equal(selected.doi, candidate.doi);
   assert.equal(selected.url, "https://ieeexplore.ieee.org/document/123456");
 });
+
+test("conflicting workshop identities are not selected even when a DOI agrees", () => {
+  const workshop = {
+    ...candidate,
+    conferenceVenue: {
+      id: "Event/2026/Workshop/One",
+      title: "Event Workshop One",
+    },
+  };
+  assert.equal(
+    selectPublication(item, [
+      candidate,
+      workshop,
+      {
+        ...workshop,
+        conferenceVenue: {
+          id: "Event/2026/Workshop/Two",
+          title: "Event Workshop Two",
+        },
+      },
+    ]),
+    undefined,
+  );
+});
+
+test("equivalent records retain structured workshop evidence alongside a DOI", () => {
+  const conferenceVenue = {
+    id: "Event/2026/Workshop/One",
+    title: "Event Workshop One",
+  };
+  const selected = selectPublication(item, [
+    candidate,
+    {
+      ...candidate,
+      source: "OpenReview",
+      conferenceVenue,
+      url: "https://openreview.net/forum?id=accepted",
+    },
+  ]);
+  assert.equal(selected.doi, candidate.doi);
+  assert.deepEqual(selected.conferenceVenue, conferenceVenue);
+});
 test("conflicting DOI records are skipped; a server-linked publication takes precedence", () => {
   const other = { ...candidate, doi: "10.1000/another" };
   assert.equal(selectPublication(item, [candidate, other]), undefined);

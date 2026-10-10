@@ -433,11 +433,11 @@
   },
   {
     "venue": "IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops, CVPR Workshops 2022, New Orleans, LA, USA, June 19-20, 2022",
-    "rule": "cvpr-workshops"
+    "rule": null
   },
   {
     "venue": "IEEE/CVF International Conference on Computer Vision Workshops, ICCVW 2021, Montreal, BC, Canada, October 11-17, 2021",
-    "rule": "iccv-workshops"
+    "rule": null
   },
   {
     "venue": "Proceedings of the 1st Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and the 10th International Joint Conference on Natural Language Processing: System Demonstrations",
@@ -549,7 +549,7 @@
   },
   {
     "venue": "IEEE/CVF International Conference on Computer Vision, ICCV 2023 - Workshops, Paris, France, October 2-6, 2023",
-    "rule": "iccv-workshops"
+    "rule": null
   },
   {
     "venue": "2015 IEEE Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",

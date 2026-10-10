@@ -6,7 +6,6 @@
     "source": "https://dl.acm.org/journal/csur"
   },
   {
-    "acronym": "ACM Trans Comput Healthc",
     "name": "ACM Transactions on Computing for Healthcare",
     "aliases": [
       "ACM transactions on computing for healthcare",
@@ -55,7 +54,6 @@
     "source": "https://dl.acm.org/journal/tomm"
   },
   {
-    "acronym": "ACM IMS Trans Data Sci",
     "name": "ACM/IMS Transactions on Data Science",
     "aliases": [
       "ACM/IMS transactions on data science",
@@ -65,14 +63,12 @@
     "nlmID": "9918316882406676"
   },
   {
-    "acronym": "Acta Paediatr (Stockh)",
     "name": "Acta Paediatrica",
     "aliases": ["Acta paediatrica", "Acta Paediatr (Stockh)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0000213",
     "nlmID": "0000213"
   },
   {
-    "acronym": "Adapt Behav",
     "name": "Adaptive Behavior",
     "aliases": ["Adaptive behavior", "Adapt Behav"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9438485",
@@ -89,14 +85,12 @@
     "source": "https://proceedings.neurips.cc/"
   },
   {
-    "acronym": "Am Heart J",
     "name": "American Heart Journal",
     "aliases": ["American heart journal", "Am Heart J"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0370465",
     "nlmID": "0370465"
   },
   {
-    "acronym": "Am J Physiol Heart Circ Physiol",
     "name": "American Journal of Physiology. Heart and Circulatory Physiology",
     "aliases": [
       "American journal of physiology. Heart and circulatory physiology",
@@ -106,28 +100,24 @@
     "nlmID": "100901228"
   },
   {
-    "acronym": "Ann Emerg Med",
     "name": "Annals of Emergency Medicine",
     "aliases": ["Annals of emergency medicine", "Ann Emerg Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8002646",
     "nlmID": "8002646"
   },
   {
-    "acronym": "Ann Intern Med",
     "name": "Annals of Internal Medicine",
     "aliases": ["Annals of internal medicine", "Ann Intern Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0372351",
     "nlmID": "0372351"
   },
   {
-    "acronym": "Ann Math",
     "name": "Annals of Mathematics",
     "aliases": ["Annals of mathematics", "Ann Math"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101581697",
     "nlmID": "101581697"
   },
   {
-    "acronym": "Annu Rev Clin Psychol",
     "name": "Annual Review of Clinical Psychology",
     "aliases": [
       "Annual review of clinical psychology",
@@ -137,7 +127,6 @@
     "nlmID": "101235325"
   },
   {
-    "acronym": "Annu Rev Stat Appl",
     "name": "Annual Review of Statistics and Its Application",
     "aliases": [
       "Annual review of statistics and its application",
@@ -147,7 +136,6 @@
     "nlmID": "101622422"
   },
   {
-    "acronym": "APSIPA Trans Signal Inf Process",
     "name": "APSIPA Transactions on Signal and Information Processing",
     "aliases": [
       "APSIPA Transactions on Signal and Information Processing",
@@ -157,49 +145,42 @@
     "nlmID": "101694868"
   },
   {
-    "acronym": "Artif Intell",
     "name": "Artificial Intelligence",
     "aliases": ["Artificial intelligence", "Artif Intell"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0262613",
     "nlmID": "0262613"
   },
   {
-    "acronym": "Artif Intell Med",
     "name": "Artificial Intelligence in Medicine",
     "aliases": ["Artificial intelligence in medicine", "Artif Intell Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8915031",
     "nlmID": "8915031"
   },
   {
-    "acronym": "Artif Intell Rev",
     "name": "Artificial Intelligence Review",
     "aliases": ["Artificial intelligence review", "Artif Intell Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883087",
     "nlmID": "9883087"
   },
   {
-    "acronym": "Bayesian Anal",
     "name": "Bayesian Analysis",
     "aliases": ["Bayesian analysis", "Bayesian Anal"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101307045",
     "nlmID": "101307045"
   },
   {
-    "acronym": "Behav Res Methods",
     "name": "Behavior Research Methods",
     "aliases": ["Behavior research methods", "Behav Res Methods"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101244316",
     "nlmID": "101244316"
   },
   {
-    "acronym": "Behav Sci",
     "name": "Behavioral Science",
     "aliases": ["Behavioral science", "Behav Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/2984722R",
     "nlmID": "2984722R"
   },
   {
-    "acronym": "Behav Sci (Basel)",
     "name": "Behavioral sciences (Basel, Switzerland)",
     "aliases": [
       "Behavioral sciences (Basel, Switzerland)",
@@ -209,35 +190,30 @@
     "nlmID": "101576826"
   },
   {
-    "acronym": "Biochem Med (Zagreb)",
     "name": "Biochemia Medica",
     "aliases": ["Biochemia medica", "Biochem Med (Zagreb)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9610305",
     "nlmID": "9610305"
   },
   {
-    "acronym": "Biol Cybern",
     "name": "Biological Cybernetics",
     "aliases": ["Biological cybernetics", "Biol Cybern"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7502533",
     "nlmID": "7502533"
   },
   {
-    "acronym": "Biol Psychol",
     "name": "Biological Psychology",
     "aliases": ["Biological psychology", "Biol Psychol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0375566",
     "nlmID": "0375566"
   },
   {
-    "acronym": "Biomed Res Int",
     "name": "BioMed Research International",
     "aliases": ["BioMed research international", "Biomed Res Int"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101600173",
     "nlmID": "101600173"
   },
   {
-    "acronym": "Biomed Signal Process Control",
     "name": "Biomedical Signal Processing and Control",
     "aliases": [
       "Biomedical signal processing and control",
@@ -247,28 +223,24 @@
     "nlmID": "101317299"
   },
   {
-    "acronym": "BMC Med",
     "name": "BMC Medicine",
     "aliases": ["BMC medicine", "BMC Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101190723",
     "nlmID": "101190723"
   },
   {
-    "acronym": "BMJ Glob Health",
     "name": "BMJ Global Health",
     "aliases": ["BMJ global health", "BMJ Glob Health"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101685275",
     "nlmID": "101685275"
   },
   {
-    "acronym": "Br J Sports Med",
     "name": "British Journal of Sports Medicine",
     "aliases": ["British journal of sports medicine", "Br J Sports Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0432520",
     "nlmID": "0432520"
   },
   {
-    "acronym": "Bull World Health Organ",
     "name": "Bulletin of the World Health Organization",
     "aliases": [
       "Bulletin of the World Health Organization",
@@ -278,21 +250,18 @@
     "nlmID": "7507052"
   },
   {
-    "acronym": "Cardiol Clin",
     "name": "Cardiology Clinics",
     "aliases": ["Cardiology clinics", "Cardiol Clin"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8300331",
     "nlmID": "8300331"
   },
   {
-    "acronym": "Chaos Solitons Fractals",
     "name": "Chaos, Solitons & Fractals",
     "aliases": ["Chaos, solitons, and fractals", "Chaos Solitons Fractals"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100971564",
     "nlmID": "100971564"
   },
   {
-    "acronym": "Circuits Syst Signal Process",
     "name": "Circuits, Systems, and Signal Processing",
     "aliases": [
       "Circuits, systems, and signal processing",
@@ -302,14 +271,12 @@
     "nlmID": "101771471"
   },
   {
-    "acronym": "Circ Res",
     "name": "Circulation Research",
     "aliases": ["Circulation research", "Circ Res"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0047103",
     "nlmID": "0047103"
   },
   {
-    "acronym": "Circ Cardiovasc Qual Outcomes",
     "name": "Circulation: Cardiovascular Quality and Outcomes",
     "aliases": [
       "Circulation. Cardiovascular quality and outcomes",
@@ -319,28 +286,24 @@
     "nlmID": "101489148"
   },
   {
-    "acronym": "Clin Cardiol",
     "name": "Clinical Cardiology",
     "aliases": ["Clinical cardiology", "Clin Cardiol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7903272",
     "nlmID": "7903272"
   },
   {
-    "acronym": "Clin Epidemiol",
     "name": "Clinical Epidemiology",
     "aliases": ["Clinical epidemiology", "Clin Epidemiol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101531700",
     "nlmID": "101531700"
   },
   {
-    "acronym": "Clin Kidney J",
     "name": "Clinical Kidney Journal",
     "aliases": ["Clinical kidney journal", "Clin Kidney J"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101579321",
     "nlmID": "101579321"
   },
   {
-    "acronym": "Clin Res Cardiol",
     "name": "Clinical Research in Cardiology: Official Journal of the German Cardiac Society",
     "aliases": [
       "Clinical research in cardiology : official journal of the German Cardiac Society",
@@ -350,28 +313,24 @@
     "nlmID": "101264123"
   },
   {
-    "acronym": "Cogn Sci",
     "name": "Cognitive Science",
     "aliases": ["Cognitive science", "Cogn Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7708195",
     "nlmID": "7708195"
   },
   {
-    "acronym": "Commun Biol",
     "name": "Communications Biology",
     "aliases": ["Communications biology", "Commun Biol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101719179",
     "nlmID": "101719179"
   },
   {
-    "acronym": "Commun Eng",
     "name": "Communications Engineering",
     "aliases": ["Communications engineering", "Commun Eng"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918523382506676",
     "nlmID": "9918523382506676"
   },
   {
-    "acronym": "Commun Partial Differ Equ",
     "name": "Communications in Partial Differential Equations",
     "aliases": [
       "Communications in partial differential equations",
@@ -381,7 +340,6 @@
     "nlmID": "9918284179806676"
   },
   {
-    "acronym": "Commun Med (Lond)",
     "name": "Communications Medicine",
     "aliases": ["Communications medicine", "Commun Med (Lond)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918250414506676",
@@ -394,7 +352,6 @@
     "source": "https://cacm.acm.org/"
   },
   {
-    "acronym": "Commun Pure Appl Math",
     "name": "Communications on Pure and Applied Mathematics",
     "aliases": [
       "Communications on pure and applied mathematics",
@@ -404,35 +361,30 @@
     "nlmID": "9890126"
   },
   {
-    "acronym": "Complex Intell Systems",
     "name": "Complex & Intelligent Systems",
     "aliases": ["Complex & intelligent systems", "Complex Intell Systems"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918284259706676",
     "nlmID": "9918284259706676"
   },
   {
-    "acronym": "Comput Mech",
     "name": "Computational mechanics",
     "aliases": ["Computational mechanics", "Comput Mech"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883520",
     "nlmID": "9883520"
   },
   {
-    "acronym": "Comput Aided Geom Des",
     "name": "Computer Aided Geometric Design",
     "aliases": ["Computer aided geometric design", "Comput Aided Geom Des"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101511481",
     "nlmID": "101511481"
   },
   {
-    "acronym": "Comput Commun",
     "name": "Computer Communications",
     "aliases": ["Computer communications", "Comput Commun"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101570583",
     "nlmID": "101570583"
   },
   {
-    "acronym": "Comput Methods Programs Biomed",
     "name": "Computer Methods and Programs in Biomedicine",
     "aliases": [
       "Computer methods and programs in biomedicine",
@@ -448,7 +400,6 @@
     "source": "https://www.sciencedirect.com/journal/computer-vision-and-image-understanding"
   },
   {
-    "acronym": "Comput Aided Civ Infrastruct Eng",
     "name": "Computer-Aided Civil and Infrastructure Engineering",
     "aliases": [
       "Computer-aided civil and infrastructure engineering",
@@ -458,28 +409,24 @@
     "nlmID": "9919066770906676"
   },
   {
-    "acronym": "Comput Geosci",
     "name": "Computers & Geosciences",
     "aliases": ["Computers & geosciences", "Comput Geosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101092352",
     "nlmID": "101092352"
   },
   {
-    "acronym": "Comput Secur",
     "name": "Computers & Security",
     "aliases": ["Computers & security", "Comput Secur"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9881584",
     "nlmID": "9881584"
   },
   {
-    "acronym": "Comput Biol Med",
     "name": "Computers in Biology and Medicine",
     "aliases": ["Computers in biology and medicine", "Comput Biol Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/1250250",
     "nlmID": "1250250"
   },
   {
-    "acronym": "Comput Environ Urban Syst",
     "name": "Computers, Environment and Urban Systems",
     "aliases": [
       "Computers, environment and urban systems",
@@ -489,35 +436,30 @@
     "nlmID": "101092368"
   },
   {
-    "acronym": "Crit Care Med",
     "name": "Critical Care Medicine",
     "aliases": ["Critical care medicine", "Crit Care Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0355501",
     "nlmID": "0355501"
   },
   {
-    "acronym": "Decis Support Syst",
     "name": "Decision Support Systems",
     "aliases": ["Decision support systems", "Decis Support Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101550449",
     "nlmID": "101550449"
   },
   {
-    "acronym": "Ecol Indic",
     "name": "Ecological Indicators",
     "aliases": ["Ecological indicators", "Ecol Indic"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101174880",
     "nlmID": "101174880"
   },
   {
-    "acronym": "Electronics (Basel)",
     "name": "Electronics",
     "aliases": ["Electronics", "Electronics (Basel)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101630280",
     "nlmID": "101630280"
   },
   {
-    "acronym": "Eng Appl Artif Intell",
     "name": "Engineering Applications of Artificial Intelligence",
     "aliases": [
       "Engineering applications of artificial intelligence",
@@ -527,7 +469,6 @@
     "nlmID": "101469722"
   },
   {
-    "acronym": "Environ Dev Sustain",
     "name": "Environment, Development and Sustainability",
     "aliases": [
       "Environment, development and sustainability",
@@ -537,21 +478,18 @@
     "nlmID": "101769312"
   },
   {
-    "acronym": "Environ Sci Technol",
     "name": "Environmental Science & Technology",
     "aliases": ["Environmental science & technology", "Environ Sci Technol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0213155",
     "nlmID": "0213155"
   },
   {
-    "acronym": "Eur Heart J",
     "name": "European Heart Journal",
     "aliases": ["European heart journal", "Eur Heart J"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8006263",
     "nlmID": "8006263"
   },
   {
-    "acronym": "Eur Heart J Digit Health",
     "name": "European Heart Journal - Digital Health",
     "aliases": [
       "European heart journal. Digital health",
@@ -561,14 +499,12 @@
     "nlmID": "101778323"
   },
   {
-    "acronym": "Eur Heart J Open",
     "name": "European Heart Journal Open",
     "aliases": ["European heart journal open", "Eur Heart J Open"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918282081406676",
     "nlmID": "9918282081406676"
   },
   {
-    "acronym": "Eur J Echocardiogr",
     "name": "European Journal of Echocardiography: The Journal of the Working Group on Echocardiography of the European Society of Cardiology",
     "aliases": [
       "European journal of echocardiography : the journal of the Working Group on Echocardiography of the European Society of Cardiology",
@@ -578,7 +514,6 @@
     "nlmID": "100890618"
   },
   {
-    "acronym": "Expert Syst Appl",
     "name": "Expert Systems with Applications",
     "aliases": ["Expert systems with applications", "Expert Syst Appl"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9884333",
@@ -599,63 +534,54 @@
     "source": "https://www.nowpublishers.com/Public-Content/LaTex/LateX_Instructions.pdf"
   },
   {
-    "acronym": "Front Hum Neurosci",
     "name": "Frontiers in Human Neuroscience",
     "aliases": ["Frontiers in human neuroscience", "Front Hum Neurosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101477954",
     "nlmID": "101477954"
   },
   {
-    "acronym": "Front Neurosci",
     "name": "Frontiers in Neuroscience",
     "aliases": ["Frontiers in neuroscience", "Front Neurosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101478481",
     "nlmID": "101478481"
   },
   {
-    "acronym": "Front Physiol",
     "name": "Frontiers in Physiology",
     "aliases": ["Frontiers in physiology", "Front Physiol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101549006",
     "nlmID": "101549006"
   },
   {
-    "acronym": "Front Psychiatry",
     "name": "Frontiers in Psychiatry",
     "aliases": ["Frontiers in psychiatry", "Front Psychiatry"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101545006",
     "nlmID": "101545006"
   },
   {
-    "acronym": "Front Psychol",
     "name": "Frontiers in Psychology",
     "aliases": ["Frontiers in psychology", "Front Psychol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101550902",
     "nlmID": "101550902"
   },
   {
-    "acronym": "Glob Heart",
     "name": "Global Heart",
     "aliases": ["Global heart", "Glob Heart"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101584391",
     "nlmID": "101584391"
   },
   {
-    "acronym": "Health Aff",
     "name": "Health Affairs",
     "aliases": ["Health affairs", "Health Aff"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0351302",
     "nlmID": "0351302"
   },
   {
-    "acronym": "Health Aff (Millwood)",
     "name": "Health Affairs (Project Hope)",
     "aliases": ["Health affairs (Project Hope)", "Health Aff (Millwood)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8303128",
     "nlmID": "8303128"
   },
   {
-    "acronym": "Health Data Sci",
     "name": "Health Data Science",
     "aliases": ["Health data science", "Health Data Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918419276606676",
@@ -1298,7 +1224,6 @@
     "publisherAcronym": "L-SP"
   },
   {
-    "acronym": "IEEE Signal Process Mag",
     "name": "IEEE Signal Processing Magazine",
     "aliases": ["IEEE signal processing magazine", "IEEE Signal Process Mag"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101212681",
@@ -2043,7 +1968,6 @@
     "publisherAcronym": "T-STE"
   },
   {
-    "acronym": "IEEE Trans Syst Man Cybern",
     "name": "IEEE Transactions on Systems, Man, and Cybernetics",
     "aliases": [
       "IEEE transactions on systems, man, and cybernetics",
@@ -2182,35 +2106,30 @@
     "publisherAcronym": "T-MECH"
   },
   {
-    "acronym": "IET Image Process",
     "name": "IET Image Processing",
     "aliases": ["IET image processing", "IET Image Process"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101660828",
     "nlmID": "101660828"
   },
   {
-    "acronym": "Image Vis Comput",
     "name": "Image and Vision Computing",
     "aliases": ["Image and vision computing", "Image Vis Comput"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101151810",
     "nlmID": "101151810"
   },
   {
-    "acronym": "Inf Process Manag",
     "name": "Information Processing & Management",
     "aliases": ["Information processing & management", "Inf Process Manag"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9877091",
     "nlmID": "9877091"
   },
   {
-    "acronym": "Inf Syst",
     "name": "Information Systems",
     "aliases": ["Information systems", "Inf Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9875802",
     "nlmID": "9875802"
   },
   {
-    "acronym": "Infrared Phys Technol",
     "name": "Infrared Physics & Technology",
     "aliases": ["Infrared physics & technology", "Infrared Phys Technol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101610606",
@@ -2223,14 +2142,12 @@
     "source": "https://www.sciencedirect.com/science/article/pii/S0303243411001772"
   },
   {
-    "acronym": "Int J Arrhythmia",
     "name": "International Journal of Arrhythmia",
     "aliases": ["International journal of arrhythmia", "Int J Arrhythmia"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101685981",
     "nlmID": "101685981"
   },
   {
-    "acronym": "Int J Cardiol",
     "name": "International Journal of Cardiology",
     "aliases": ["International journal of cardiology", "Int J Cardiol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8200291",
@@ -2249,14 +2166,12 @@
     "source": "https://www.tandfonline.com/doi/full/10.1080/17538940902746199"
   },
   {
-    "acronym": "Int J Forecast",
     "name": "International Journal of Forecasting",
     "aliases": ["International journal of forecasting", "Int J Forecast"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101084857",
     "nlmID": "101084857"
   },
   {
-    "acronym": "Int J Mach Learn Cybern",
     "name": "International Journal of Machine Learning and Cybernetics",
     "aliases": [
       "International journal of machine learning and cybernetics",
@@ -2266,14 +2181,12 @@
     "nlmID": "101777117"
   },
   {
-    "acronym": "Int J Mol Med",
     "name": "International Journal of Molecular Medicine",
     "aliases": ["International journal of molecular medicine", "Int J Mol Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9810955",
     "nlmID": "9810955"
   },
   {
-    "acronym": "Int J Multimed Inf Retr",
     "name": "International Journal of Multimedia Information Retrieval",
     "aliases": [
       "International journal of multimedia information retrieval",
@@ -2283,21 +2196,18 @@
     "nlmID": "101600562"
   },
   {
-    "acronym": "Int J Neural Syst",
     "name": "International Journal of Neural Systems",
     "aliases": ["International journal of neural systems", "Int J Neural Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9100527",
     "nlmID": "9100527"
   },
   {
-    "acronym": "Int J Remote Sens",
     "name": "International Journal of Remote Sensing",
     "aliases": ["International journal of remote sensing", "Int J Remote Sens"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9878707",
     "nlmID": "9878707"
   },
   {
-    "acronym": "Invent Math",
     "name": "Inventiones mathematicae",
     "aliases": ["Inventiones mathematicae", "Invent Math"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101690572",
@@ -2316,70 +2226,60 @@
     "source": "https://isprs.org/news/newsletter/2021-05/index.html"
   },
   {
-    "acronym": "JACC Adv",
     "name": "JACC: Advances",
     "aliases": ["JACC. Advances", "JACC Adv"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918419284106676",
     "nlmID": "9918419284106676"
   },
   {
-    "acronym": "JACC Heart Fail",
     "name": "JACC: Heart Failure",
     "aliases": ["JACC. Heart failure", "JACC Heart Fail"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101598241",
     "nlmID": "101598241"
   },
   {
-    "acronym": "JAMA Intern Med",
     "name": "JAMA Internal Medicine",
     "aliases": ["JAMA internal medicine", "JAMA Intern Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101589534",
     "nlmID": "101589534"
   },
   {
-    "acronym": "JAMA Netw Open",
     "name": "JAMA Network Open",
     "aliases": ["JAMA network open", "JAMA Netw Open"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101729235",
     "nlmID": "101729235"
   },
   {
-    "acronym": "JMIR Mhealth Uhealth",
     "name": "JMIR mHealth and uHealth",
     "aliases": ["JMIR mHealth and uHealth", "JMIR Mhealth Uhealth"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101624439",
     "nlmID": "101624439"
   },
   {
-    "acronym": "J Appl Behav Anal",
     "name": "Journal of Applied Behavior Analysis",
     "aliases": ["Journal of applied behavior analysis", "J Appl Behav Anal"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0174763",
     "nlmID": "0174763"
   },
   {
-    "acronym": "J Arrhythm",
     "name": "Journal of Arrhythmia",
     "aliases": ["Journal of arrhythmia", "J Arrhythm"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101263026",
     "nlmID": "101263026"
   },
   {
-    "acronym": "J Big Data",
     "name": "Journal of Big Data",
     "aliases": ["Journal of big data", "J Big Data"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101659495",
     "nlmID": "101659495"
   },
   {
-    "acronym": "J Causal Inference",
     "name": "Journal of Causal Inference",
     "aliases": ["Journal of causal inference", "J Causal Inference"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101628371",
     "nlmID": "101628371"
   },
   {
-    "acronym": "J Chem Inf Model",
     "name": "Journal of Chemical Information and Modeling",
     "aliases": [
       "Journal of chemical information and modeling",
@@ -2395,7 +2295,6 @@
     "source": "https://jcsm.aasm.org/"
   },
   {
-    "acronym": "J Community Hosp Intern Med Perspect",
     "name": "Journal of Community Hospital Internal Medicine Perspectives",
     "aliases": [
       "Journal of community hospital internal medicine perspectives",
@@ -2411,42 +2310,36 @@
     "source": "https://www.amstat.org/publications/journals"
   },
   {
-    "acronym": "J Comput Phys",
     "name": "Journal of Computational Physics",
     "aliases": ["Journal of computational physics", "J Comput Phys"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9883524",
     "nlmID": "9883524"
   },
   {
-    "acronym": "J Electrocardiol",
     "name": "Journal of Electrocardiology",
     "aliases": ["Journal of electrocardiology", "J Electrocardiol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0153605",
     "nlmID": "0153605"
   },
   {
-    "acronym": "J Gen Intern Med",
     "name": "Journal of General Internal Medicine",
     "aliases": ["Journal of general internal medicine", "J Gen Intern Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8605834",
     "nlmID": "8605834"
   },
   {
-    "acronym": "J Geophys Eng",
     "name": "Journal of Geophysics and Engineering",
     "aliases": ["Journal of geophysics and engineering", "J Geophys Eng"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918521384906676",
     "nlmID": "9918521384906676"
   },
   {
-    "acronym": "J Hydrol (Amst)",
     "name": "Journal of Hydrology",
     "aliases": ["Journal of hydrology", "J Hydrol (Amst)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9882987",
     "nlmID": "9882987"
   },
   {
-    "acronym": "J Intell Robot Syst",
     "name": "Journal of Intelligent and Robotic Systems",
     "aliases": [
       "Journal of intelligent & robotic systems",
@@ -2462,21 +2355,18 @@
     "source": "https://www.jmlr.org/"
   },
   {
-    "acronym": "J Math Biol",
     "name": "Journal of Mathematical Biology",
     "aliases": ["Journal of mathematical biology", "J Math Biol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7502105",
     "nlmID": "7502105"
   },
   {
-    "acronym": "J Math Psychol",
     "name": "Journal of Mathematical Psychology",
     "aliases": ["Journal of mathematical psychology", "J Math Psychol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/2985082R",
     "nlmID": "2985082R"
   },
   {
-    "acronym": "J Med Biol Eng",
     "name": "Journal of medical and biological engineering",
     "aliases": [
       "Journal of medical and biological engineering",
@@ -2486,49 +2376,42 @@
     "nlmID": "101123071"
   },
   {
-    "acronym": "J Med Syst",
     "name": "Journal of Medical Systems",
     "aliases": ["Journal of medical systems", "J Med Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7806056",
     "nlmID": "7806056"
   },
   {
-    "acronym": "J Multivar Anal",
     "name": "Journal of Multivariate Analysis",
     "aliases": ["Journal of multivariate analysis", "J Multivar Anal"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9890139",
     "nlmID": "9890139"
   },
   {
-    "acronym": "J Neural Eng",
     "name": "Journal of Neural Engineering",
     "aliases": ["Journal of neural engineering", "J Neural Eng"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101217933",
     "nlmID": "101217933"
   },
   {
-    "acronym": "J Neurosci Methods",
     "name": "Journal of Neuroscience Methods",
     "aliases": ["Journal of neuroscience methods", "J Neurosci Methods"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7905558",
     "nlmID": "7905558"
   },
   {
-    "acronym": "J Philos Logic",
     "name": "Journal of Philosophical Logic",
     "aliases": ["Journal of philosophical logic", "J Philos Logic"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101670470",
     "nlmID": "101670470"
   },
   {
-    "acronym": "J Phys D Appl Phys",
     "name": "Journal of Physics D: Applied Physics",
     "aliases": ["Journal of physics D: Applied physics", "J Phys D Appl Phys"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/1256300",
     "nlmID": "1256300"
   },
   {
-    "acronym": "J Reliab Intell Environ",
     "name": "Journal of Reliable Intelligent Environments",
     "aliases": [
       "Journal of reliable intelligent environments",
@@ -2538,14 +2421,12 @@
     "nlmID": "101679298"
   },
   {
-    "acronym": "J Sci Comput",
     "name": "Journal of Scientific Computing",
     "aliases": ["Journal of scientific computing", "J Sci Comput"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9882378",
     "nlmID": "9882378"
   },
   {
-    "acronym": "J Sleep Res",
     "name": "Journal of Sleep Research",
     "aliases": ["Journal of sleep research", "J Sleep Res"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9214441",
@@ -2564,7 +2445,6 @@
     "source": "https://www.jacc.org/"
   },
   {
-    "acronym": "J Am Heart Assoc",
     "name": "Journal of the American Heart Association",
     "aliases": [
       "Journal of the American Heart Association",
@@ -2580,7 +2460,6 @@
     "source": "https://academic.oup.com/jamia"
   },
   {
-    "acronym": "J Am Med Inform Assoc",
     "name": "Journal of the American Medical Informatics Association: JAMIA",
     "aliases": [
       "Journal of the American Medical Informatics Association : JAMIA",
@@ -2596,7 +2475,6 @@
     "source": "https://www.amstat.org/publications/journals"
   },
   {
-    "acronym": "J R Stat Soc Series B Stat Methodol",
     "name": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
     "aliases": [
       "Journal of the Royal Statistical Society. Series B, Statistical methodology",
@@ -2606,14 +2484,12 @@
     "nlmID": "100890344"
   },
   {
-    "acronym": "J Theor Probab",
     "name": "Journal of Theoretical Probability",
     "aliases": ["Journal of theoretical probability", "J Theor Probab"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101770672",
     "nlmID": "101770672"
   },
   {
-    "acronym": "J Vis Commun Image Represent",
     "name": "Journal of Visual Communication and Image Representation",
     "aliases": [
       "Journal of visual communication and image representation",
@@ -2623,42 +2499,36 @@
     "nlmID": "9422637"
   },
   {
-    "acronym": "Knowl Inf Syst",
     "name": "Knowledge and Information Systems",
     "aliases": ["Knowledge and information systems", "Knowl Inf Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101511283",
     "nlmID": "101511283"
   },
   {
-    "acronym": "Knowl Based Syst",
     "name": "Knowledge-Based Systems",
     "aliases": ["Knowledge-based systems", "Knowl Based Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101634338",
     "nlmID": "101634338"
   },
   {
-    "acronym": "Mach Learn",
     "name": "Machine Learning",
     "aliases": ["Machine learning", "Mach Learn"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9881780",
     "nlmID": "9881780"
   },
   {
-    "acronym": "Math Program",
     "name": "Mathematical Programming",
     "aliases": ["Mathematical programming", "Math Program"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101595505",
     "nlmID": "101595505"
   },
   {
-    "acronym": "Math Comput",
     "name": "Mathematics of Computation",
     "aliases": ["Mathematics of computation", "Math Comput"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/18430630R",
     "nlmID": "18430630R"
   },
   {
-    "acronym": "Med Biol Eng Comput",
     "name": "Medical & Biological Engineering & Computing",
     "aliases": [
       "Medical & biological engineering & computing",
@@ -2668,7 +2538,6 @@
     "nlmID": "7704869"
   },
   {
-    "acronym": "Med Sci Sports Exerc",
     "name": "Medicine & Science in Sports & Exercise",
     "aliases": [
       "Medicine and science in sports and exercise",
@@ -2678,14 +2547,12 @@
     "nlmID": "8005433"
   },
   {
-    "acronym": "Microsyst Nanoeng",
     "name": "Microsystems & Nanoengineering",
     "aliases": ["Microsystems & nanoengineering", "Microsyst Nanoeng"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101695458",
     "nlmID": "101695458"
   },
   {
-    "acronym": "Mon Not R Astron Soc",
     "name": "Monthly Notices of the Royal Astronomical Society",
     "aliases": [
       "Monthly notices of the Royal Astronomical Society",
@@ -2695,7 +2562,6 @@
     "nlmID": "100954591"
   },
   {
-    "acronym": "Mov Disord",
     "name": "Movement Disorders: Official Journal of the Movement Disorder Society",
     "aliases": [
       "Movement disorders : official journal of the Movement Disorder Society",
@@ -2705,181 +2571,155 @@
     "nlmID": "8610688"
   },
   {
-    "acronym": "Multimed Syst",
     "name": "Multimedia Systems",
     "aliases": ["Multimedia systems", "Multimed Syst"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101710967",
     "nlmID": "101710967"
   },
   {
-    "acronym": "Multimed Tools Appl",
     "name": "Multimedia Tools and Applications",
     "aliases": ["Multimedia tools and applications", "Multimed Tools Appl"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101555932",
     "nlmID": "101555932"
   },
   {
-    "acronym": "Natl Sci Rev",
     "name": "National Science Review",
     "aliases": ["National science review", "Natl Sci Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101633095",
     "nlmID": "101633095"
   },
   {
-    "acronym": "Nat Sci Sleep",
     "name": "Nature and Science of Sleep",
     "aliases": ["Nature and science of sleep", "Nat Sci Sleep"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101537767",
     "nlmID": "101537767"
   },
   {
-    "acronym": "Nat Biomed Eng",
     "name": "Nature Biomedical Engineering",
     "aliases": ["Nature biomedical engineering", "Nat Biomed Eng"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101696896",
     "nlmID": "101696896"
   },
   {
-    "acronym": "Nat Biotechnol",
     "name": "Nature Biotechnology",
     "aliases": ["Nature biotechnology", "Nat Biotechnol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9604648",
     "nlmID": "9604648"
   },
   {
-    "acronym": "Nat Commun",
     "name": "Nature Communications",
     "aliases": ["Nature communications", "Nat Commun"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101528555",
     "nlmID": "101528555"
   },
   {
-    "acronym": "Nat Comput Sci",
     "name": "Nature Computational Science",
     "aliases": ["Nature computational science", "Nat Comput Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101775476",
     "nlmID": "101775476"
   },
   {
-    "acronym": "Nat Ecol Evol",
     "name": "Nature Ecology & Evolution",
     "aliases": ["Nature ecology & evolution", "Nat Ecol Evol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101698577",
     "nlmID": "101698577"
   },
   {
-    "acronym": "Nat Electron",
     "name": "Nature Electronics",
     "aliases": ["Nature electronics", "Nat Electron"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101719173",
     "nlmID": "101719173"
   },
   {
-    "acronym": "Nat Geosci",
     "name": "Nature Geoscience",
     "aliases": ["Nature geoscience", "Nat Geosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101482213",
     "nlmID": "101482213"
   },
   {
-    "acronym": "Nat Mach Intell",
     "name": "Nature Machine Intelligence",
     "aliases": ["Nature machine intelligence", "Nat Mach Intell"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101740243",
     "nlmID": "101740243"
   },
   {
-    "acronym": "Nat Mater",
     "name": "Nature Materials",
     "aliases": ["Nature materials", "Nat Mater"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101155473",
     "nlmID": "101155473"
   },
   {
-    "acronym": "Nat Med",
     "name": "Nature Medicine",
     "aliases": ["Nature medicine", "Nat Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9502015",
     "nlmID": "9502015"
   },
   {
-    "acronym": "Nat Methods",
     "name": "Nature Methods",
     "aliases": ["Nature methods", "Nat Methods"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101215604",
     "nlmID": "101215604"
   },
   {
-    "acronym": "Nat Neurosci",
     "name": "Nature Neuroscience",
     "aliases": ["Nature neuroscience", "Nat Neurosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9809671",
     "nlmID": "9809671"
   },
   {
-    "acronym": "Nat Photonics",
     "name": "Nature Photonics",
     "aliases": ["Nature photonics", "Nat Photonics"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101283276",
     "nlmID": "101283276"
   },
   {
-    "acronym": "Nat Rev Clin Oncol",
     "name": "Nature Reviews Clinical Oncology",
     "aliases": ["Nature reviews. Clinical oncology", "Nat Rev Clin Oncol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101500077",
     "nlmID": "101500077"
   },
   {
-    "acronym": "Nat Rev Mater",
     "name": "Nature Reviews Materials",
     "aliases": ["Nature reviews. Materials", "Nat Rev Mater"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101692128",
     "nlmID": "101692128"
   },
   {
-    "acronym": "Nat Rev Neurosci",
     "name": "Nature Reviews Neuroscience",
     "aliases": ["Nature reviews. Neuroscience", "Nat Rev Neurosci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100962781",
     "nlmID": "100962781"
   },
   {
-    "acronym": "Nat Struct Mol Biol",
     "name": "Nature Structural & Molecular Biology",
     "aliases": ["Nature structural & molecular biology", "Nat Struct Mol Biol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101186374",
     "nlmID": "101186374"
   },
   {
-    "acronym": "Neural Comput.",
     "name": "Neural Computation",
-    "aliases": [],
+    "aliases": ["Neural Comput."],
     "source": "https://direct.mit.edu/neco"
   },
   {
-    "acronym": "Neural Comput Appl",
     "name": "Neural Computing and Applications",
     "aliases": ["Neural computing & applications", "Neural Comput Appl"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9313239",
     "nlmID": "9313239"
   },
   {
-    "acronym": "Neural Plast",
     "name": "Neural Plasticity",
     "aliases": ["Neural plasticity", "Neural Plast"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100883417",
     "nlmID": "100883417"
   },
   {
-    "acronym": "Neural Process Lett",
     "name": "Neural Processing Letters",
     "aliases": ["Neural processing letters", "Neural Process Lett"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9889249",
     "nlmID": "9889249"
   },
   {
-    "acronym": "Neurocomputing (Amst)",
     "name": "Neurocomputing",
     "aliases": ["Neurocomputing", "Neurocomputing (Amst)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9884927",
@@ -2892,28 +2732,24 @@
     "source": "https://www.nejm.org/"
   },
   {
-    "acronym": "NPJ Biomed Innov",
     "name": "npj Biomedical Innovations",
     "aliases": ["npj biomedical innovations", "NPJ Biomed Innov"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918994495106676",
     "nlmID": "9918994495106676"
   },
   {
-    "acronym": "NPJ Digit Med",
     "name": "npj Digital Medicine",
     "aliases": ["NPJ digital medicine", "NPJ Digit Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101731738",
     "nlmID": "101731738"
   },
   {
-    "acronym": "Npj Flex Electron",
     "name": "npj Flexible Electronics",
     "aliases": ["Npj flexible electronics", "Npj Flex Electron"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9918451387006676",
     "nlmID": "9918451387006676"
   },
   {
-    "acronym": "Ont Health Technol Assess Ser",
     "name": "Ontario Health Technology Assessment Series",
     "aliases": [
       "Ontario health technology assessment series",
@@ -2923,7 +2759,6 @@
     "nlmID": "101521610"
   },
   {
-    "acronym": "Opt Lett",
     "name": "Optics Letters",
     "aliases": ["Optics letters", "Opt Lett"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/7708433",
@@ -2942,7 +2777,6 @@
     "source": "https://www.sciencedirect.com/journal/pattern-recognition-letters"
   },
   {
-    "acronym": "Perspect Psychol Sci",
     "name": "Perspectives on Psychological Science: A Journal of the Association for Psychological Science",
     "aliases": [
       "Perspectives on psychological science : a journal of the Association for Psychological Science",
@@ -2952,42 +2786,36 @@
     "nlmID": "101274347"
   },
   {
-    "acronym": "Philos Psychol",
     "name": "Philosophical Psychology",
     "aliases": ["Philosophical psychology", "Philos Psychol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8810907",
     "nlmID": "8810907"
   },
   {
-    "acronym": "Phys Rev Lett",
     "name": "Physical Review Letters",
     "aliases": ["Physical review letters", "Phys Rev Lett"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0401141",
     "nlmID": "0401141"
   },
   {
-    "acronym": "Physiol Meas",
     "name": "Physiological Measurement",
     "aliases": ["Physiological measurement", "Physiol Meas"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9306921",
     "nlmID": "9306921"
   },
   {
-    "acronym": "Physiol Rev",
     "name": "Physiological Reviews",
     "aliases": ["Physiological reviews", "Physiol Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0231714",
     "nlmID": "0231714"
   },
   {
-    "acronym": "PLoS Comput Biol",
     "name": "PLoS Computational Biology",
     "aliases": ["PLoS computational biology", "PLoS Comput Biol"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101238922",
     "nlmID": "101238922"
   },
   {
-    "acronym": "Procedia Comput Sci",
     "name": "Procedia Computer Science",
     "aliases": ["Procedia computer science", "Procedia Comput Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101537771",
@@ -3014,7 +2842,6 @@
     "source": "https://dl.acm.org/journal/pacmmod"
   },
   {
-    "acronym": "Proc Am Thorac Soc",
     "name": "Proceedings of the American Thoracic Society",
     "aliases": [
       "Proceedings of the American Thoracic Society",
@@ -3043,34 +2870,29 @@
     "source": "https://www.pnas.org/"
   },
   {
-    "acronym": "Prog Brain Res",
     "name": "Progress in Brain Research",
     "aliases": ["Progress in brain research", "Prog Brain Res"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376441",
     "nlmID": "0376441"
   },
   {
-    "acronym": "Psychol Bull",
     "name": "Psychological bulletin",
     "aliases": ["Psychological bulletin", "Psychol Bull"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376473",
     "nlmID": "0376473"
   },
   {
-    "acronym": "Psychol Rev",
     "name": "Psychological Review",
     "aliases": ["Psychological review", "Psychol Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0376476",
     "nlmID": "0376476"
   },
   {
-    "acronym": "Remote Sensing",
     "name": "Remote Sensing",
     "aliases": ["Remote sensing", "Remote Sens (Basel)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101624426",
     "nlmID": "101624426",
-    "nlmAbbreviation": "Remote Sens (Basel)",
-    "displayNote": "Keep the full title for display."
+    "nlmAbbreviation": "Remote Sens (Basel)"
   },
   {
     "name": "Remote Sensing of Environment",
@@ -3079,13 +2901,11 @@
     "source": "https://shop.elsevier.com/journals/remote-sensing-of-environment/0034-4257"
   },
   {
-    "acronym": "Sci China Inf Sci",
     "name": "Science China Information Sciences",
-    "aliases": [],
+    "aliases": ["Sci China Inf Sci"],
     "source": "https://link.springer.com/journal/11432"
   },
   {
-    "acronym": "Sci China Phys Mech Astron",
     "name": "Science China Physics, Mechanics & Astronomy",
     "aliases": [
       "Science China. Physics, mechanics & astronomy",
@@ -3095,42 +2915,36 @@
     "nlmID": "101765261"
   },
   {
-    "acronym": "Sci Robot",
     "name": "Science Robotics",
     "aliases": ["Science robotics", "Sci Robot"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101733136",
     "nlmID": "101733136"
   },
   {
-    "acronym": "Sci Transl Med",
     "name": "Science Translational Medicine",
     "aliases": ["Science translational medicine", "Sci Transl Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101505086",
     "nlmID": "101505086"
   },
   {
-    "acronym": "Sci Data",
     "name": "Scientific Data",
     "aliases": ["Scientific data", "Sci Data"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101640192",
     "nlmID": "101640192"
   },
   {
-    "acronym": "Sci Rep",
     "name": "Scientific Reports",
     "aliases": ["Scientific reports", "Sci Rep"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101563288",
     "nlmID": "101563288"
   },
   {
-    "acronym": "SIAM J Imaging Sci",
     "name": "SIAM Journal on Imaging Sciences",
     "aliases": ["SIAM journal on imaging sciences", "SIAM J Imaging Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101530763",
     "nlmID": "101530763"
   },
   {
-    "acronym": "SIAM J Math Data Sci",
     "name": "SIAM Journal on Mathematics of Data Science",
     "aliases": [
       "SIAM journal on mathematics of data science",
@@ -3140,7 +2954,6 @@
     "nlmID": "101752933"
   },
   {
-    "acronym": "SIAM J Numer Anal",
     "name": "SIAM Journal on Numerical Analysis",
     "aliases": ["SIAM journal on numerical analysis", "SIAM J Numer Anal"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101588021",
@@ -3153,28 +2966,24 @@
     "source": "https://www.siam.org/publications/siam-journals/siam-journal-on-scientific-computing"
   },
   {
-    "acronym": "Sleep Med",
     "name": "Sleep Medicine",
     "aliases": ["Sleep medicine", "Sleep Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/100898759",
     "nlmID": "100898759"
   },
   {
-    "acronym": "Sleep Med Rev",
     "name": "Sleep Medicine Reviews",
     "aliases": ["Sleep medicine reviews", "Sleep Med Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9804678",
     "nlmID": "9804678"
   },
   {
-    "acronym": "SN Comput Sci",
     "name": "SN Computer Science",
     "aliases": ["SN computer science", "SN Comput Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101772308",
     "nlmID": "101772308"
   },
   {
-    "acronym": "Soc Personal Psychol Compass",
     "name": "Social and Personality Psychology Compass",
     "aliases": [
       "Social and personality psychology compass",
@@ -3184,21 +2993,18 @@
     "nlmID": "101514953"
   },
   {
-    "acronym": "Stat Comput",
     "name": "Statistics and Computing",
     "aliases": ["Statistics and computing", "Stat Comput"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101473218",
     "nlmID": "101473218"
   },
   {
-    "acronym": "Stat Med",
     "name": "Statistics in Medicine",
     "aliases": ["Statistics in medicine", "Stat Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8215016",
     "nlmID": "8215016"
   },
   {
-    "acronym": "Stoch Process Their Appl",
     "name": "Stochastic Processes and their Applications",
     "aliases": [
       "Stochastic processes and their applications",
@@ -3208,63 +3014,54 @@
     "nlmID": "101542179"
   },
   {
-    "acronym": "Symmetry (Basel)",
     "name": "Symmetry",
     "aliases": ["Symmetry", "Symmetry (Basel)"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101580302",
     "nlmID": "101580302"
   },
   {
-    "acronym": "Syst Rev",
     "name": "Systematic Reviews",
     "aliases": ["Systematic reviews", "Syst Rev"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101580575",
     "nlmID": "101580575"
   },
   {
-    "acronym": "Am J Med",
     "name": "The American Journal of Medicine",
     "aliases": ["The American journal of medicine", "Am J Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/0267200",
     "nlmID": "0267200"
   },
   {
-    "acronym": "EPMA J",
     "name": "The EPMA Journal",
     "aliases": ["The EPMA journal", "EPMA J"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101517307",
     "nlmID": "101517307"
   },
   {
-    "acronym": "Int J Biostat",
     "name": "The International Journal of Biostatistics",
     "aliases": ["The international journal of biostatistics", "Int J Biostat"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101313850",
     "nlmID": "101313850"
   },
   {
-    "acronym": "Lancet Digit Health",
     "name": "The Lancet Digital Health",
     "aliases": ["The Lancet. Digital health", "Lancet Digit Health"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101751302",
     "nlmID": "101751302"
   },
   {
-    "acronym": "Lancet Respir Med",
     "name": "The Lancet Respiratory Medicine",
     "aliases": ["The Lancet. Respiratory medicine", "Lancet Respir Med"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101605555",
     "nlmID": "101605555"
   },
   {
-    "acronym": "Milbank Q",
     "name": "The Milbank Quarterly",
     "aliases": ["The Milbank quarterly", "Milbank Q"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8607003",
     "nlmID": "8607003"
   },
   {
-    "acronym": "Vis Comput",
     "name": "The Visual Computer",
     "aliases": ["The Visual computer", "Vis Comput"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101584127",
@@ -3283,7 +3080,6 @@
     "source": "https://jmlr.org/tmlr/"
   },
   {
-    "acronym": "Transp Res Part C Emerg Technol",
     "name": "Transportation Research Part C: Emerging Technologies",
     "aliases": [
       "Transportation research. Part C, Emerging technologies",
@@ -3293,7 +3089,6 @@
     "nlmID": "101593943"
   },
   {
-    "acronym": "Transp Res D Transp Environ",
     "name": "Transportation Research Part D: Transport and Environment",
     "aliases": [
       "Transportation research. Part D, Transport and environment",
@@ -3303,14 +3098,12 @@
     "nlmID": "101643741"
   },
   {
-    "acronym": "Trends Cogn Sci",
     "name": "Trends in Cognitive Sciences",
     "aliases": ["Trends in cognitive sciences", "Trends Cogn Sci"],
     "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/9708669",
     "nlmID": "9708669"
   },
   {
-    "acronym": "Wiley Interdiscip Rev Comput Stat",
     "name": "Wiley Interdisciplinary Reviews: Computational Statistics",
     "aliases": [
       "Wiley interdisciplinary reviews. Computational statistics",

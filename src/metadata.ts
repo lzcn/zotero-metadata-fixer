@@ -4,6 +4,7 @@ import {
   cleanDOI,
   officialPublicationURL,
   preprintDOI,
+  isPreprint,
 } from "./identifiers";
 import { titleScore, matchesAuthor } from "./matching";
 
@@ -16,6 +17,17 @@ export function needsContainerTitle(metadata: Metadata): boolean {
 
 export function normalizeMetadata(record: Metadata): Metadata {
   const metadata = { ...record };
+  const doi = cleanDOI(String(metadata.DOI || ""));
+  if (
+    (!doi || preprintDOI(doi)) &&
+    isPreprint({
+      itemType: metadata.itemType,
+      isRegularItem: () => true,
+      getField: (field) =>
+        typeof metadata[field] === "string" ? (metadata[field] as string) : "",
+    })
+  )
+    metadata.itemType = "preprint";
   // Unsaved translator records can use Zotero's base field for the container title.
   const container = containerField(metadata.itemType);
   if (
@@ -35,6 +47,9 @@ export function supplementMetadata(
   const rightDOI = canonicalDOI(String(extra.DOI || ""));
   if (
     titleScore(primary.title, extra.title) < 0.9 ||
+    (primary.conferenceVenue &&
+      extra.conferenceVenue &&
+      primary.conferenceVenue.id !== extra.conferenceVenue.id) ||
     (leftDOI && rightDOI && leftDOI !== rightDOI) ||
     !matchesAuthor(
       primary.creators?.[0]?.lastName || "",
