@@ -52,7 +52,8 @@ No automatic scanning, scheduled updates, PDF downloads, title capitalization or
 
 Use Node.js 22.13+ (22.x) or 24+. Run `npm ci`, then `npm run check`.
 
-- `npm run build`: reuse valid output when inputs have not changed.
+- `npm run build`: reuse valid output when inputs have not changed. Run `npm run build` in the parent workspace to build and install all three plugins.
+- `npm run clean`: remove generated build output; retain downloaded tools, dependencies, research data and releases.
 - `npm run build:force`: force a rebuild.
 - `npm run check`: formatting, tests and type checking; reuse valid XPI output.
 - `npm run release`: full checks, then prepare the XPI, `SHA256SUMS` and `updates.json` under `release/v<version>/`.

@@ -52,7 +52,8 @@
 
 需要 Node.js 22.13+（22.x）或 24+。依次运行 `npm ci`、`npm run check`。
 
-- `npm run build`：输入未变化时复用有效产物。
+- `npm run build`：输入未变化时复用有效产物。在上级工作区运行同一命令，可统一构建并安装三个插件。
+- `npm run clean`：清理构建产物，保留已下载工具、依赖、研究数据和发布文件。
 - `npm run build:force`：强制重建。
 - `npm run check`：格式、测试和类型检查；复用有效 XPI。
 - `npm run release`：完整检查后，在 `release/v<版本>/` 准备 XPI、`SHA256SUMS` 和 `updates.json`。
