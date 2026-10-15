@@ -583,31 +583,39 @@ export class PublicationFinder {
     const rankedLinked = rankCandidates(item, linked);
     if (rankedLinked.length)
       return { candidates: rankedLinked, warnings, answered };
-    const sources = [
-      ["Semantic Scholar", () => this.semanticScholar(item)],
-      ["Crossref", () => this.crossref(item, publicationHint)],
-      ["DBLP", () => this.dblp(item)],
-      ["PubMed", () => this.pubmed(item)],
-      ["OpenReview", () => this.openreview(item)],
+    const stages = [
+      [
+        ["Crossref", () => this.crossref(item, publicationHint)],
+        ["DBLP", () => this.dblp(item)],
+        ["OpenReview", () => this.openreview(item)],
+      ],
+      [
+        ["PubMed", () => this.pubmed(item)],
+        ["Semantic Scholar", () => this.semanticScholar(item)],
+      ],
     ] as const;
-    const results = await Promise.allSettled(sources.map(([, run]) => run()));
-    // Unknown or unavailable pages still need independent publication evidence.
     const candidates: Candidate[] = [];
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        answered++;
-        candidates.push(...result.value);
-      } else warnings.push(`${sources[index][0]}: ${String(result.reason)}`);
-    });
-    let ranked = rankCandidates(item, candidates);
-    let selected = selectPublication(item, ranked);
-    if (selected) {
-      if (selected.doi || (await official(selected)))
+    let ranked: Candidate[] = [];
+    let selected: Candidate | undefined;
+    for (const sources of stages) {
+      const results = await Promise.allSettled(sources.map(([, run]) => run()));
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          answered++;
+          candidates.push(...result.value);
+        } else warnings.push(`${sources[index][0]}: ${String(result.reason)}`);
+      });
+      ranked = rankCandidates(item, candidates);
+      selected = selectPublication(item, ranked);
+      if (selected && (selected.doi || (await official(selected))))
+        return { candidates: ranked, warnings, answered };
+      // Later sources must not override a strong conflict from an earlier stage.
+      if (
+        !selected &&
+        ranked.some((candidate) => (candidate.score || 0) >= 0.9)
+      )
         return { candidates: ranked, warnings, answered };
     }
-    // An additional publisher must not override conflicting strong indexed matches.
-    if (!selected && ranked.some((candidate) => (candidate.score || 0) >= 0.9))
-      return { candidates: ranked, warnings, answered };
     // Structured indexes avoid Scholar's mandatory pacing and bot checks on common matches.
     // Merge fallback results before selecting so a new source cannot hide an existing conflict.
     try {

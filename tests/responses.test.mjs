@@ -41,7 +41,7 @@ test("problem summaries distinguish source limits, timeouts and matching failure
     assert.equal(summarizeProblem("", s), "");
     assert.equal(
       summarizeProblem("Semantic Scholar: HTTP 429", s),
-      s.rateLimited,
+      `${s.rateLimited}: Semantic Scholar`,
     );
     assert.equal(
       summarizeProblem("Error: Metadata request timed out", s),

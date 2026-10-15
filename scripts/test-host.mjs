@@ -8,6 +8,7 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 
 let abortedRequests = 0;
 let metadataRequests = 0;
+let cachedJSONRequests = 0;
 const failedRequests = { "/throttled": 0, "/unavailable": 0 };
 const server = createServer((request, response) => {
   if (Object.hasOwn(failedRequests, request.url)) {
@@ -34,6 +35,12 @@ const server = createServer((request, response) => {
     response.end(
       "@inproceedings{host,title={Host Conference Paper},author={Lu, Zhi},booktitle={International Conference on Learning Representations},year={2025},pages={1--8}}",
     );
+    return;
+  }
+  if (request.url === "/cached-json") {
+    cachedJSONRequests++;
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end('{"record":"cached"}');
     return;
   }
   if (request.url === "/metadata") {
@@ -538,6 +545,22 @@ startup = async function(data) {
         MLRuntime.request = rorRequest;
       }
 
+      const cachedItem = new Zotero.Item('journalArticle');
+      cachedItem.setField('title', 'Native Cache Host Paper');
+      cachedItem.setField('DOI', '10.1000/cache-host');
+      await cachedItem.saveTx();
+      await win.ZoteroPane.selectItem(cachedItem.id);
+      MLRuntime.retriever = {retrieveCurrent:async () => {
+        const json = await MLRuntime.network(MLRuntime.operation).json(${JSON.stringify(slowURL.replace("/pending", "/cached-json"))});
+        if (json.record !== 'cached') throw new Error('Cached JSON response changed');
+        return {metadata:cachedItem.toJSON(),source:'DOI',warnings:[]};
+      }};
+      await MLRuntime.run(win, 'lint');
+      for (const window of [...MLRuntime.dialogs]) window.close();
+      await MLRuntime.run(win, 'lint');
+      for (const window of [...MLRuntime.dialogs]) window.close();
+      result.nativeJSONCache = true;
+
       const batch = [];
       for (let i = 0; i < 3; i++) {
         const paper = new Zotero.Item('journalArticle');
@@ -669,7 +692,7 @@ startup = async function(data) {
       MLRuntime.retriever = {retrieveCurrent:async () => { const metadataURL = ${JSON.stringify(slowURL.replace("/pending", "/metadata"))};
         const failureStart = Date.now();
         const failures = await Promise.allSettled([
-          MLRuntime.request(${JSON.stringify(slowURL.replace("/pending", "/throttled"))}),
+          MLRuntime.request(${JSON.stringify(slowURL.replace("127.0.0.1", "localhost").replace("/pending", "/throttled"))}),
           MLRuntime.request(${JSON.stringify(slowURL.replace("/pending", "/unavailable"))})
         ]);
         if (failures.some(failure => failure.status !== 'rejected') || Date.now() - failureStart > 5000) throw new Error('Host retried a failed discovery source');
@@ -678,6 +701,13 @@ startup = async function(data) {
         if (values.some(value => value !== 'shared metadata')) throw new Error('Shared native response was corrupted');
         result.requestReuse = true;
         result.failedSourcesDoNotBlock = true;
+        try {
+          await MLRuntime.request(${JSON.stringify(slowURL.replace("127.0.0.1", "localhost").replace("/pending", "/throttled"))});
+          throw new Error('Rate-limited source was queried again');
+        } catch (error) {
+          if (!error.cooldown || error.status !== 429) throw error;
+          result.nativeSourceCooldown = true;
+        }
         await Promise.all([MLRuntime.request(${JSON.stringify(slowURL)}), MLRuntime.request(${JSON.stringify(slowURL)})]); return {metadata:item.toJSON(),source:'URL',warnings:[]}; }};
       const exitingRuntime = MLRuntime;
       const pending = exitingRuntime.run(win, 'lint');
@@ -731,6 +761,8 @@ try {
   if (timedOut) throw new Error("Zotero did not exit without being killed");
   const result = JSON.parse(await readFile(marker, "utf8"));
   if (!result.ok) throw new Error(JSON.stringify(result));
+  if (cachedJSONRequests !== 1)
+    throw new Error("JSON metadata was not reused across batches");
   if (metadataRequests !== 1 || abortedRequests !== 1)
     throw new Error("Native requests were not deduplicated");
   if (Object.values(failedRequests).some((count) => count !== 1))

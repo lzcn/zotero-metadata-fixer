@@ -10,6 +10,7 @@ import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
+import { SourcePolicy } from "./source-policy";
 import { parseJSONResponse, summarizeProblem } from "./responses";
 import { normalizeMetadata } from "./metadata";
 import { buildRepairPlan } from "./repair";
@@ -47,6 +48,7 @@ export class Runtime {
   private registeringPreferences = false;
   private settingsCache?: { raw?: string; value: ConferenceSettings };
   private operation?: Operation;
+  private sourcePolicy = new SourcePolicy();
   private responses = new WeakMap<Operation, Map<string, Promise<string>>>();
   private operationWindow?: any;
   private dialogOwners = new Map<any, any>();
@@ -61,11 +63,17 @@ export class Runtime {
 
   private network(operation: Operation): Network {
     return {
-      json: async (url) =>
-        parseJSONResponse(await this.request(url, operation, "text", 8000), {
+      json: async (url) => {
+        const cached = this.sourcePolicy.cached(url);
+        if (cached && operation.active()) return JSON.parse(cached);
+        const text = await this.request(url, operation, "text", 8000);
+        const value = parseJSONResponse(text, {
           blocked: this.s.apiBlocked,
           invalid: this.s.apiInvalid,
-        }),
+        });
+        this.sourcePolicy.remember(url, text);
+        return value;
+      },
       text: (url) => this.request(url, operation),
       html: (text) => {
         if (!operation.active()) throw new Error(this.s.cancelled);
@@ -150,6 +158,7 @@ export class Runtime {
       this.lastScholarRequest = Date.now();
     }
     if (!operation.active()) throw new Error(this.s.cancelled);
+    const releaseSource = await this.sourcePolicy.acquire(url, operation);
     let release = () => {};
     try {
       const response: any = await operation.wait(
@@ -176,8 +185,12 @@ export class Runtime {
       return responseType === "document"
         ? Zotero.HTTP.wrapDocument(response.response, response.responseURL)
         : response.responseText;
+    } catch (error) {
+      this.sourcePolicy.failed(url, error);
+      throw error;
     } finally {
       release();
+      releaseSource();
     }
   }
 
@@ -308,6 +321,7 @@ export class Runtime {
   stop(): void {
     if (!this.alive) return;
     this.alive = false;
+    this.sourcePolicy.clear();
     this.cancelPublicationAbbreviations();
     this.cleanup(() => this.publicationView.restore([...this.windows.keys()]));
     this.cleanup(() => this.cancel());
@@ -778,6 +792,13 @@ export class Runtime {
           if (host.active()) Zotero.logError(error);
         } finally {
           row.problem = summarizeProblem(row.detail, this.s);
+          if (
+            row.status === this.s.noChanges &&
+            /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
+              row.detail,
+            )
+          )
+            row.status = this.s.unchangedPartial;
           if (!progress.window.closed)
             this.cleanup(() => progress.window.renderProgress?.());
         }

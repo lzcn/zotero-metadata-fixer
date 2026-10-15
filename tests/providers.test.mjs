@@ -1393,6 +1393,11 @@ test("reliable structured results skip Scholar pacing and slow Scholar requests"
   const finder = new PublicationFinder({});
   emptyIndexes(finder);
   finder.related = async () => [];
+  finder.semanticScholar = finder.pubmed = async () => {
+    throw new Error(
+      "Secondary source must not run on a reliable primary match",
+    );
+  };
   finder.crossref = async () => [
     {
       source: "Crossref",

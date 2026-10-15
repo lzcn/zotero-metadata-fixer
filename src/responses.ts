@@ -3,8 +3,20 @@ import type { Strings } from "./strings";
 export function summarizeProblem(detail: string, s: Strings): string {
   if (!detail.trim()) return "";
   if (/timed?\s*out|timeout|超时/i.test(detail)) return s.requestTimeout;
-  if (/\b429\b|too many requests|rate.?limit|限流/i.test(detail))
-    return s.rateLimited;
+  if (/\b429\b|too many requests|rate.?limit|限流/i.test(detail)) {
+    const sources = detail
+      .split(/\r?\n/)
+      .filter((line) =>
+        /\b429\b|too many requests|rate.?limit|限流/i.test(line),
+      )
+      .map((line) => line.match(/^([\w .-]+):/)?.[1])
+      .filter(
+        (source): source is string => Boolean(source) && source !== "Error",
+      );
+    return sources.length
+      ? `${s.rateLimited}: ${[...new Set(sources)].join(", ")}`
+      : s.rateLimited;
+  }
   if (/\b403\b|access blocked|captcha|not a bot|访问受限/i.test(detail))
     return s.sourceBlocked;
   if (/No suitable Zotero translator/i.test(detail)) return s.noTranslator;

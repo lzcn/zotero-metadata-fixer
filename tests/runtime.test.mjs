@@ -764,6 +764,7 @@ test("network cancellation invokes Zotero's request canceller and refuses late f
       assert.rejects(request, /cancelled/),
       assert.rejects(shared, /cancelled/),
     ]);
+    for (let i = 0; i < 12 && !cancelled; i++) await Promise.resolve();
     operation.cancel();
     await rejected;
     assert.equal(cancelled, 1);
@@ -1243,6 +1244,7 @@ test("a batch shares pending and completed text responses but isolates documents
   try {
     const first = runtime.request("https://example.test", operation);
     const second = runtime.request("https://example.test", operation);
+    for (let i = 0; i < 12 && !calls; i++) await Promise.resolve();
     assert.equal(calls, 1);
     resolve({ responseText: "metadata" });
     assert.deepEqual(await Promise.all([first, second]), [
@@ -1455,5 +1457,38 @@ test("structured JSON requests have a short timeout while article requests retai
   } finally {
     globalThis.Zotero.HTTP = originalHTTP;
     operation.cancel();
+  }
+});
+
+test("validated JSON is reused across batches without sharing mutable objects", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  let calls = 0;
+  const old = globalThis.Zotero.HTTP;
+  globalThis.Zotero.HTTP = {
+    request: async () => {
+      calls++;
+      return { responseText: '{"notes":[{"id":"original"}]}' };
+    },
+  };
+  try {
+    const first = new Operation();
+    const value = await runtime
+      .network(first)
+      .json("https://example.test/json");
+    value.notes[0].id = "modified";
+    first.cancel();
+    const second = new Operation();
+    assert.equal(
+      (await runtime.network(second).json("https://example.test/json")).notes[0]
+        .id,
+      "original",
+    );
+    assert.equal(calls, 1);
+    second.cancel();
+  } finally {
+    globalThis.Zotero.HTTP = old;
   }
 });
