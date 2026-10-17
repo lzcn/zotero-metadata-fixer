@@ -10,6 +10,7 @@ import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
+import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
 import { SourcePolicy } from "./source-policy";
 import { parseJSONResponse, summarizeProblem } from "./responses";
 import { normalizeMetadata } from "./metadata";
@@ -438,6 +439,14 @@ export class Runtime {
         false,
         true,
       );
+    doc.getElementById("ml-update-pdfs").addEventListener(
+      "command",
+      (event: any) => {
+        Zotero.Prefs.set(UPDATE_PDFS_PREF, Boolean(event.target.checked), true);
+      },
+      false,
+      true,
+    );
     this.refreshPreferences(doc);
   }
 
@@ -445,6 +454,8 @@ export class Runtime {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
       "ml-settings-help": this.s.settingsHelp,
+      "ml-update-pdfs": this.s.updatePDFs,
+      "ml-update-pdfs-help": this.s.updatePDFsHelp,
       "ml-replace-publication": this.s.replacePublication,
       "ml-replace-publication-help": this.s.replacePublicationHelp,
       "ml-publication-label": this.s.publicationStyle,
@@ -462,6 +473,8 @@ export class Runtime {
     }
     doc.getElementById("ml-replace-publication").checked =
       this.publicationView.enabled();
+    doc.getElementById("ml-update-pdfs").checked =
+      Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false;
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
   }
@@ -561,6 +574,12 @@ export class Runtime {
     state.total = state.rows.length;
     if (!this.progressWindow?.closed)
       this.cleanup(() => this.progressWindow?.renderProgress?.());
+  }
+
+  private updatePDF(item: Item, operation: Operation) {
+    return new PDFUpdater(Zotero, (url) =>
+      this.request(url, operation, "document"),
+    ).update(item, operation);
   }
 
   async run(win: any, source: RetrievalSource | "lint"): Promise<void> {
@@ -780,12 +799,31 @@ export class Runtime {
             settings.publicationStyle !== "original",
             conference.venuePolicy,
           );
-          if (!plan.changes.length) {
-            row.status = this.s.noChanges;
-            continue;
-          }
           await applyPlan(item, plan, host, publication);
-          row.status = this.s.updated;
+          row.status = plan.changes.length ? this.s.updated : this.s.noChanges;
+          if (
+            source === "lint" &&
+            Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false
+          ) {
+            try {
+              const pdf = await this.updatePDF(item, operation);
+              if (!host.active()) throw new Error(this.s.cancelled);
+              if (pdf === "added") row.status = this.s.pdfUpdated;
+              if (pdf === "unavailable")
+                row.detail = [row.detail, this.s.pdfUnavailable]
+                  .filter(Boolean)
+                  .join("\n");
+            } catch (error) {
+              if (!host.active()) throw error;
+              row.detail = [
+                row.detail,
+                `${this.s.pdfUnavailable}: ${String(error)}`,
+              ]
+                .filter(Boolean)
+                .join("\n");
+              Zotero.logError(error);
+            }
+          }
         } catch (error) {
           row.status = host.active() ? this.s.failed : this.s.cancelled;
           row.detail += `\n${String(error)}`;
@@ -794,9 +832,10 @@ export class Runtime {
           row.problem = summarizeProblem(row.detail, this.s);
           if (
             row.status === this.s.noChanges &&
-            /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
-              row.detail,
-            )
+            (row.detail.includes(this.s.pdfUnavailable) ||
+              /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
+                row.detail,
+              ))
           )
             row.status = this.s.unchangedPartial;
           if (!progress.window.closed)

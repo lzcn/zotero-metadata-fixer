@@ -4,15 +4,11 @@ declare const Zotero: any;
 
 export const REPLACE_PUBLICATION_PREF =
   "extensions.zotero.metadata-linter.replace-publication-column";
-const RESTORE_PREF =
-  "extensions.zotero.metadata-linter.publication-column-visibility";
-const LEGACY_COLUMN = "metadata-linter\\@lzcn-publication-short";
 
 // Decorate only the native Publication cell and leave row data/sorting untouched.
 export class PublicationColumnView {
   private timers = new Map<any, ReturnType<typeof setTimeout>>();
   private views = new Map<any, { view: any; release: () => void }>();
-  private migrating = new Set<string>();
 
   enabled(): boolean {
     return Zotero.Prefs?.get(REPLACE_PUBLICATION_PREF, true) !== false;
@@ -26,49 +22,6 @@ export class PublicationColumnView {
 
   private redraw(view: any): void {
     view.tree?.invalidate();
-  }
-
-  private migrate(view: any): void {
-    const raw = Zotero.Prefs?.get(RESTORE_PREF, true);
-    if (!raw || this.migrating.has(view.id)) return;
-    const saved = JSON.parse(raw);
-    if (
-      !saved ||
-      typeof saved !== "object" ||
-      Array.isArray(saved) ||
-      Object.values(saved).some((value) => typeof value !== "boolean")
-    )
-      throw new Error("Invalid saved publication column visibility");
-    if (!(view.id in saved)) return;
-    const prefs = { ...view._getColumnPrefs() };
-    const legacy = prefs[LEGACY_COLUMN];
-    prefs.publicationTitle = {
-      ...prefs.publicationTitle,
-      hidden: legacy?.hidden === false ? false : saved[view.id],
-      ...(legacy?.width && { width: legacy.width }),
-      ...(legacy?.ordinal !== undefined && { ordinal: legacy.ordinal }),
-    };
-    delete prefs[LEGACY_COLUMN];
-    view._storeColumnPrefs(prefs);
-    this.migrating.add(view.id);
-    void view
-      ._writeColumnPrefsToFile(true)
-      .then(() => {
-        const current = JSON.parse(
-          Zotero.Prefs.get(RESTORE_PREF, true) || "{}",
-        );
-        delete current[view.id];
-        Zotero.Prefs.set(RESTORE_PREF, JSON.stringify(current), true);
-        this.migrating.delete(view.id);
-      })
-      .catch((error: unknown) => {
-        this.migrating.delete(view.id);
-        Zotero.logError(error);
-      });
-    if (view.tree)
-      void view
-        ._resetColumns()
-        .catch((error: unknown) => Zotero.logError(error));
   }
 
   sync(win: any, attempt = 0): void {
@@ -91,7 +44,6 @@ export class PublicationColumnView {
       );
       return;
     }
-    this.migrate(view);
     if (!this.enabled()) {
       this.restore([win]);
       return;

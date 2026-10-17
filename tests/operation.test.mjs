@@ -10,6 +10,17 @@ test("cancellation releases waiters without waiting for a remote promise", async
   assert.equal(operation.active(), false);
 });
 
+test("cancellation wins over completed work before or immediately after waiting", async () => {
+  for (const timing of ["before", "after"]) {
+    const operation = new Operation();
+    const error = new Error("Cancelled task must not return stale data");
+    if (timing === "before") operation.cancel(error);
+    const result = operation.wait(Promise.resolve("stale result"));
+    if (timing === "after") operation.cancel(error);
+    await assert.rejects(result, (actual) => actual === error);
+  }
+});
+
 test("cancellation releases every request even if one abort fails", () => {
   const operation = new Operation();
   const errors = [];

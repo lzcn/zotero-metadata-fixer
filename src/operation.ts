@@ -45,7 +45,8 @@ export class Operation {
       timeout,
     );
     try {
-      return await Promise.race([work, this.cancellation]);
+      const result = await Promise.race([this.cancellation, work]);
+      return this.stopped ? this.cancellation : result;
     } finally {
       clearTimeout(timer);
     }

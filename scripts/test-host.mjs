@@ -10,7 +10,73 @@ let abortedRequests = 0;
 let metadataRequests = 0;
 let cachedJSONRequests = 0;
 const failedRequests = { "/throttled": 0, "/unavailable": 0 };
+let pdfDownloads = 0;
+let pdfAborts = 0;
+let pdfRevision = 1;
+let pdfVersionChecks = 0;
+const pdfTitle =
+  "Unified Metric Learning for Personalized Fashion Recommendations with Fast User Adaptation";
+const pdfDOI = "10.1109/TMM.2026.3694502";
+function pdfFixture(label) {
+  const stream = `BT /F1 12 Tf 40 100 Td (${label}) Tj ET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+  ];
+  let content = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(content.length);
+    content += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xref = content.length;
+  content += `xref\n0 6\n0000000000 65535 f \n${offsets
+    .slice(1)
+    .map((offset) => String(offset).padStart(10, "0") + " 00000 n \n")
+    .join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return content;
+}
 const server = createServer((request, response) => {
+  if (request.url === "/pdf-article" || request.url === "/pdf-slow-article") {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(
+      `<html><head><meta name="citation_title" content="${pdfTitle}"><meta name="citation_doi" content="${pdfDOI}"><meta name="citation_pdf_url" content="http://127.0.0.1:${server.address().port}/${request.url === "/pdf-article" ? "pdf-current" : "pdf-pending"}"></head></html>`,
+    );
+    return;
+  }
+  if (request.url === "/pdf-current") {
+    const etag = `"published-${pdfRevision}"`;
+    if (request.method === "HEAD") pdfVersionChecks++;
+    if (request.headers["if-none-match"] === etag) {
+      response.writeHead(304, { ETag: etag });
+      response.end();
+      return;
+    }
+    if (request.method === "HEAD") {
+      response.writeHead(200, {
+        "Content-Type": "application/pdf",
+        ETag: etag,
+      });
+      response.end();
+      return;
+    }
+    pdfDownloads++;
+    response.writeHead(200, { "Content-Type": "application/pdf", ETag: etag });
+    response.end(pdfFixture(`Published PDF ${pdfRevision}`));
+    return;
+  }
+  if (request.url === "/pdf-revise") {
+    pdfRevision++;
+    response.end("revised");
+    return;
+  }
+  if (request.url === "/pdf-pending") {
+    request.on("aborted", () => pdfAborts++);
+    return;
+  }
   if (Object.hasOwn(failedRequests, request.url)) {
     failedRequests[request.url]++;
     response.writeHead(request.url === "/throttled" ? 429 : 503, {
@@ -101,6 +167,7 @@ const prefs = {
   "extensions.zotero.automaticScraperUpdates": false,
   "extensions.zoteroMacWordIntegration.skipInstallation": true,
   "extensions.zoteroOpenOfficeIntegration.skipInstallation": true,
+  "extensions.metadata-linter.updatePDFs": false,
 };
 await writeFile(
   join(profile, "user.js"),
@@ -153,15 +220,6 @@ startup = async function(data) {
       if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn')) throw new Error('Unexpected duplicate column');
       if (view._renderCell === MLHostNativeRenderer) throw new Error('Startup did not decorate native renderer');
       result.nativePublicationOnly = true;
-      const legacyKey = win.CSS.escape('metadata-linter@lzcn-publication-short');
-      const migratedPrefs = { ...view._getColumnPrefs(), publicationTitle: { ...view._getColumnPrefs().publicationTitle, hidden: true }, [legacyKey]: { hidden:false, width:180, ordinal:4 } };
-      view._storeColumnPrefs(migratedPrefs);
-      Zotero.Prefs.set('extensions.zotero.metadata-linter.publication-column-visibility', JSON.stringify({ [view.id]:true }), true);
-      MLRuntime.configurePublicationDisplay();
-      await wait(() => !JSON.parse(Zotero.Prefs.get('extensions.zotero.metadata-linter.publication-column-visibility', true) || '{}')[view.id]);
-      const migrated = view._getColumnPrefs();
-      if (migrated[legacyKey] || migrated.publicationTitle.hidden || migrated.publicationTitle.width !== 180 || migrated.publicationTitle.ordinal !== 4) throw new Error('Legacy replacement preferences did not migrate');
-      result.legacyColumnMigrated = true;
       const renderPublication = async entry => {
         await win.ZoteroPane.selectItem(entry.id);
         const index = view.getRowIndexByID(entry.id);
@@ -299,6 +357,14 @@ startup = async function(data) {
         return element?.querySelector('menuitem')?.label && element;
       });
       result.settings = [...select.querySelectorAll('menuitem')].map(option => option.label);
+      const updatePDFs = settings.document.getElementById('ml-update-pdfs');
+      if (!updatePDFs || updatePDFs.checked || updatePDFs.getAttribute('native') !== 'true') throw new Error('Missing native PDF preference');
+      updatePDFs.checked = true;
+      updatePDFs.dispatchEvent(new settings.Event('command'));
+      if (Zotero.Prefs.get('extensions.metadata-linter.updatePDFs', true) !== true) throw new Error('PDF preference was not saved');
+      updatePDFs.checked = false;
+      updatePDFs.dispatchEvent(new settings.Event('command'));
+      result.pdfPreference = true;
       const replace = settings.document.getElementById('ml-replace-publication');
       if (settings.document.getElementById('ml-replace-publication-help')?.textContent !== MLRuntime.preferenceData().strings.replacePublicationHelp) throw new Error('Missing localized Zotero Style compatibility reminder');
       if (!replace.checked || replace.getAttribute('native') !== 'true') throw new Error('Missing native replacement setting');
@@ -545,6 +611,78 @@ startup = async function(data) {
         MLRuntime.request = rorRequest;
       }
 
+      const pdfItem = new Zotero.Item('journalArticle');
+      pdfItem.setField('title', ${JSON.stringify(pdfTitle)});
+      pdfItem.setField('DOI', ${JSON.stringify(pdfDOI)});
+      pdfItem.setField('publicationTitle', 'IEEE Transactions on Multimedia');
+      pdfItem.setField('url', 'https://ieeexplore.ieee.org/document/11523638/');
+      await pdfItem.saveTx();
+      const oldPDFPath = ${JSON.stringify(join(root, "old.pdf"))};
+      await IOUtils.writeUTF8(oldPDFPath, ${JSON.stringify(pdfFixture("Original PDF"))});
+      const oldPDF = await Zotero.Attachments.importFromFile({file:oldPDFPath,parentItemID:pdfItem.id,contentType:'application/pdf'});
+      const annotation = new Zotero.Item('annotation');
+      annotation.libraryID = pdfItem.libraryID;
+      annotation.parentID = oldPDF.id;
+      annotation.annotationType = 'highlight';
+      annotation.annotationText = 'Keep this annotation';
+      annotation.annotationComment = 'Original PDF';
+      annotation.annotationColor = '#ffd400';
+      annotation.annotationPageLabel = '1';
+      annotation.annotationSortIndex = '00000|000000|00000';
+      annotation.annotationPosition = JSON.stringify({pageIndex:0,rects:[[40,90,150,110]]});
+      await annotation.saveTx();
+      const originalPDFHash = await oldPDF.attachmentHash;
+      const supplement = await Zotero.Attachments.importFromFile({file:oldPDFPath,parentItemID:pdfItem.id,contentType:'application/pdf',title:'Supplementary material'});
+      const pdfRequest = MLRuntime.request.bind(MLRuntime);
+      let slowPDF = false;
+      try {
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
+        MLRuntime.request = (url, ...args) => pdfRequest(url.startsWith('https://doi.org/') || url.startsWith('https://ieeexplore.ieee.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/pdf-article"))}.replace('/pdf-article', slowPDF ? '/pdf-slow-article' : '/pdf-article') : url, ...args);
+        MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:pdfItem.toJSON(),warnings:[]})};
+        await win.ZoteroPane.selectItem(pdfItem.id);
+        await MLRuntime.run(win, 'lint');
+        if (MLRuntime.progressState.rows.at(-1).status !== 'PDF updated' || pdfItem.getAttachments().length !== 3) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        await MLRuntime.run(win, 'lint');
+        if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'No changes') throw new Error('Identical PDF was duplicated');
+        if (await oldPDF.attachmentHash !== originalPDFHash || oldPDF.getAnnotations()[0]?.annotationText !== 'Keep this annotation') throw new Error('Existing PDF or annotation changed');
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        const firstPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
+        await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
+        await MLRuntime.run(win, 'lint');
+        if (!firstPublished.deleted || pdfItem.getAttachments().length !== 3 || oldPDF.deleted || supplement.deleted) throw new Error('Unannotated old PDF was not trashed or protected attachments changed');
+        const currentPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
+        const originalSave = currentPublished.save;
+        currentPublished.save = async function(...args) {
+          const value = await originalSave.apply(this, args);
+          if (this.deleted) MLRuntime.cancel();
+          return value;
+        };
+        try {
+          await MLRuntime.run(win, 'lint');
+          if (currentPublished.deleted || pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'Cancelled') throw new Error('Cancellation during replacement did not roll back');
+        } finally { currentPublished.save = originalSave; }
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        slowPDF = true;
+        let pdfStarted = false;
+        const nativeDownload = Zotero.HTTP.download;
+        Zotero.HTTP.download = (...args) => { pdfStarted = true; return nativeDownload.apply(Zotero.HTTP, args); };
+        try {
+          const pendingPDF = MLRuntime.run(win, 'lint');
+          await wait(() => pdfStarted);
+          await new Promise(resolve => setTimeout(resolve, 150));
+          MLRuntime.cancel();
+          await pendingPDF;
+          if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'Cancelled') throw new Error('PDF cancellation wrote an attachment');
+        } finally { Zotero.HTTP.download = nativeDownload; }
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        result.pdfUpdate = {added:true,unchangedBodySkipped:true,annotatedPDFPreserved:true,unannotatedPDFTrashed:true,supplementPreserved:true,cancelled:true,replacementRollback:true};
+      } finally {
+        MLRuntime.request = pdfRequest;
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
+      }
       const cachedItem = new Zotero.Item('journalArticle');
       cachedItem.setField('title', 'Native Cache Host Paper');
       cachedItem.setField('DOI', '10.1000/cache-host');
@@ -769,6 +907,10 @@ try {
     throw new Error("Native HTTP retried failed discovery sources");
   if (!abortedRequests)
     throw new Error("Shutdown did not abort the pending native HTTP request");
+  if (pdfDownloads !== 3 || pdfVersionChecks !== 3 || pdfAborts !== 1)
+    throw new Error(
+      `PDF downloads or cancellation failed: ${pdfDownloads}, ${pdfVersionChecks}, ${pdfAborts}`,
+    );
   console.log(JSON.stringify({ ...result, abortedRequests }));
 } finally {
   clearTimeout(timeout);

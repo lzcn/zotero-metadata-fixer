@@ -5,6 +5,8 @@ https://github.com/AllanChain/zotero-arxiv-workflow
 Inspected commit: 6adc06879be6e9d52c7e24e27ff21854c9866d7b
 Upstream license: AGPL-3.0
 Design reference: preserve the preprint's identity when applying published metadata.
+PDF update reference: publisher-only DOI resolution via Zotero's native attachment resolvers.
+Additional inspected commit: be1e58de840798c7de8a7dcf70186a56373249cc (src/modules/update-pdf.ts).
 
 Linter for Zotero (northword and contributors)
 https://github.com/northword/zotero-format-metadata

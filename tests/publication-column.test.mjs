@@ -113,27 +113,6 @@ test("switch, field edits, window replacement and non-item rows retain native be
   assert.equal(next._renderCell, original);
 });
 
-test("legacy custom column preferences migrate to the single native column", async () => {
-  const { view, win, preferences } = fixture();
-  const pref =
-    "extensions.zotero.metadata-linter.publication-column-visibility";
-  const legacy = "metadata-linter\\@lzcn-publication-short";
-  preferences.set(pref, JSON.stringify({ main: true }));
-  view._getColumnPrefs().publicationTitle.hidden = true;
-  view._getColumnPrefs()[legacy] = { hidden: false, width: 180, ordinal: 4 };
-  const controller = new PublicationColumnView();
-  controller.sync(win);
-  assert.deepEqual(view._getColumnPrefs().publicationTitle, {
-    hidden: false,
-    width: 180,
-    ordinal: 4,
-  });
-  assert.equal(view._getColumnPrefs()[legacy], undefined);
-  await Promise.resolve();
-  assert.deepEqual(JSON.parse(preferences.get(pref)), {});
-  controller.restore([win]);
-});
-
 test("shutdown removes an instance decoration and restores an inherited renderer", () => {
   const { view, win, render } = fixture();
   const original = view._renderCell;

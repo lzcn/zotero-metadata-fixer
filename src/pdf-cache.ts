@@ -1,0 +1,98 @@
+export const PDF_CACHE_PREF = "extensions.metadata-linter.pdfVersions";
+export const PDF_RECHECK_INTERVAL = 24 * 60 * 60 * 1000;
+
+export type PDFVersion = {
+  source: string;
+  url: string;
+  attachmentKey: string;
+  hash: string;
+  checked: number;
+  etag?: string;
+  modified?: string;
+  length?: string;
+};
+
+// Rebuildable local state; attachment records and synced metadata stay untouched.
+export class PDFVersionCache {
+  constructor(private zotero: any) {}
+
+  private entries(): Record<string, PDFVersion> {
+    const raw = this.zotero.Prefs.get(PDF_CACHE_PREF, true);
+    if (!raw) return {};
+    const cache = JSON.parse(raw);
+    if (cache.version !== 1 || !Array.isArray(cache.entries))
+      throw new Error("Unsupported PDF version cache");
+    for (const pair of cache.entries) {
+      if (
+        !Array.isArray(pair) ||
+        pair.length !== 2 ||
+        typeof pair[0] !== "string"
+      )
+        throw new Error("Invalid PDF version cache entry");
+      const value = pair[1];
+      if (
+        !value ||
+        !["source", "url", "attachmentKey", "hash"].every(
+          (key) => typeof value[key] === "string" && value[key],
+        ) ||
+        !Number.isFinite(value.checked) ||
+        value.checked < 0 ||
+        ["etag", "modified", "length"].some(
+          (key) => value[key] !== undefined && typeof value[key] !== "string",
+        )
+      )
+        throw new Error("Invalid PDF version cache entry");
+    }
+    return Object.fromEntries(cache.entries);
+  }
+
+  get(key: string): PDFVersion | undefined {
+    return this.entries()[key];
+  }
+
+  remember(key: string, value: PDFVersion): void {
+    const entries = this.entries();
+    delete entries[key];
+    entries[key] = value;
+    this.zotero.Prefs.set(
+      PDF_CACHE_PREF,
+      JSON.stringify({
+        version: 1,
+        entries: Object.entries(entries)
+          .sort((a, b) => a[1].checked - b[1].checked)
+          .slice(-256),
+      }),
+      true,
+    );
+  }
+}
+
+export function pdfValidators(
+  get: (name: string) => string | null,
+): Pick<PDFVersion, "etag" | "modified" | "length"> {
+  const etag = get("ETag") || undefined;
+  const modified = get("Last-Modified") || undefined;
+  const length = get("Content-Length") || undefined;
+  return {
+    etag: etag && /^(?:W\/)?"[^"\r\n]*"$/.test(etag) ? etag : undefined,
+    modified:
+      modified && Number.isFinite(Date.parse(modified)) ? modified : undefined,
+    length:
+      length && /^\d+$/.test(length) && Number(length) > 0 ? length : undefined,
+  };
+}
+
+export function unchangedPDF(
+  previous: PDFVersion,
+  current: ReturnType<typeof pdfValidators>,
+): boolean {
+  if (previous.etag && current.etag) return previous.etag === current.etag;
+  // A timestamp alone has limited resolution; require the size to agree too.
+  return Boolean(
+    !previous.etag &&
+      previous.modified &&
+      previous.length &&
+      current.modified === previous.modified &&
+      current.length === previous.length,
+  );
+}

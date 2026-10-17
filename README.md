@@ -31,10 +31,17 @@ Journals use only dedicated acronyms recorded in the local catalog, such as TMC,
 - Fill missing fields and correct clear metadata errors.
 - Repair mislabeled arXiv records as preprints and conference containers as conference papers, preserving genuine journals and published records with retained preprint links.
 - Standardize proceedings titles using the selected naming style.
+- Check the current publication page for an updated PDF, even when metadata is unchanged.
 
 The plugin searches by identifiers and publication links before falling back to the title. Crossref, DBLP and OpenReview run in parallel first; PubMed and Semantic Scholar are queried only when needed, followed by Google Scholar fallback. Each stage is checked for conflicts before continuing. Requests to the same source are serialized and paced. HTTP 429 triggers a session-wide cooldown using Retry-After or increasing backoff. Valid JSON responses are cached for five minutes across batches with bounded memory. The result window identifies rate-limited sources and marks unchanged items with incomplete lookup. JSON requests use an 8-second timeout, while article-page requests retain 20 seconds. Article pages with a title, author and container in their citation metadata can supply same-origin BibTeX even on uncatalogued publishers. Explicit BibTeX types can correct generic web or incomplete DOI classifications; conflicting titles, authors or DOIs are rejected. Item dates do not exclude earlier publications because preprint revisions can postdate the published version. It checks the title, authors and publication status before applying a match. Conflicting or unverified records are skipped; a failed source does not stop the other searches. Sources include Zotero translators, Crossref, PubMed, Semantic Scholar, DBLP, OpenReview and Google Scholar, with publisher pages used for verification and missing fields.
 
-Updates preserve the original item, attachments, annotations, notes, collections, tags and relations. Empty results never erase existing fields, and cosmetic differences in casing or spacing leave the original value intact. Preprint identifiers stay in Extra. If you edit an item during retrieval, stale results will not overwrite your changes.
+Metadata updates preserve the original item, attachments, annotations, notes, collections, tags and relations. Empty results never erase existing fields, and cosmetic differences in casing or spacing leave the original value intact. Preprint identifiers stay in Extra. If you edit an item during retrieval, stale results will not overwrite your changes.
+
+**Check for updated published PDFs** is enabled by default in Settings. When a DOI is available, only its publication page is checked; DOI-free records use the item URL. A matching article page supplies the PDF through citation metadata or Zotero translators. Once the new PDF is saved, the replaced main PDF is moved to Zotero Trash if it has no Zotero annotations or notes. Annotated PDFs and supplementary attachments remain available. A failed or cancelled replacement keeps the old PDF.
+
+PDF checks retain the source URL, local file hash and server validators across sessions. Matching ETags, or matching Last-Modified and file size, avoid downloading the PDF body; servers that reject HEAD can still return 304 to a conditional GET. If the server supplies no validators, the same source URL and unchanged local file reuse the last successful check for 24 hours. This interval does not extend on reuse. Missing or edited local files and changed source URLs trigger retrieval again. Downloaded PDFs are compared by content hash to skip identical files.
+
+Publisher file validators indicate whether a file changed; they do not consistently identify a paper’s revision number or prove that it is the newest revision. Access depends on the publisher and your current network or institutional access. An inaccessible PDF does not undo a metadata update.
 
 ## Settings
 
@@ -46,9 +53,11 @@ The catalog combines the CCF directory with additional conferences and separate 
 
 ## Limitations
 
-No automatic scanning, scheduled updates, PDF downloads, title capitalization or tag management. Install updates manually using the XPI.
+No automatic scanning, scheduled updates, title capitalization or tag management. PDF checks cover published records and require a verified article page; retained preprint PDFs are not used as published replacements. Install updates manually using the XPI.
 
 ## Development
+
+Matching uses identifier checks, normalized title/author agreement and curated venue aliases; no embedding or generative model is used. `src/providers.ts` discovers candidates, `src/metadata.ts` checks metadata identity, and `src/venues.ts` matches venues. The Publication display decorates Zotero's native column directly; retired custom-column preferences are not imported.
 
 Use Node.js 22.13+ (22.x) or 24+. Run `npm ci`, then `npm run check`.
 

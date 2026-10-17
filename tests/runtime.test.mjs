@@ -13,6 +13,7 @@ const { CONFERENCE_SETTINGS_PREF, DEFAULT_CONFERENCE_RULES } = await import(
 
 function runFixture(item) {
   const runtime = new Runtime();
+  runtime.updatePDF = async () => "skipped";
   runtime.host = () => ({
     ...hostFor(item),
     active: () => runtime.alive && runtime.generation === 1,
@@ -337,6 +338,8 @@ test("preferences only expose naming style while internal conference rules remai
   const runtime = new Runtime();
   const saved = [];
   const ids = [
+    "ml-update-pdfs",
+    "ml-update-pdfs-help",
     "ml-publication-style",
     "ml-replace-publication",
     "ml-replace-publication-help",
@@ -1490,5 +1493,51 @@ test("validated JSON is reused across batches without sharing mutable objects", 
     second.cancel();
   } finally {
     globalThis.Zotero.HTTP = old;
+  }
+});
+
+test("lint updates a PDF even when bibliographic metadata is unchanged", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, published);
+  item.itemTypeID = 2;
+  const { runtime, state, win } = runFixture(item);
+  runtime.retriever = {
+    retrieveCurrent: async () => ({ metadata: item.toJSON(), warnings: [] }),
+  };
+  let checked = 0;
+  runtime.updatePDF = async () => {
+    checked++;
+    return "added";
+  };
+  await runtime.run(win, "lint");
+  assert.equal(checked, 1);
+  assert.equal(state.progress.rows[0].status, "PDF updated");
+});
+
+test("a blocked PDF does not undo a successful metadata update", async () => {
+  const { runtime, state, win, item } = lintFixture();
+  runtime.updatePDF = async () => {
+    throw new Error("HTTP 403");
+  };
+  await runtime.run(win, "lint");
+  assert.equal(item.getField("DOI"), published.DOI);
+  assert.equal(state.progress.rows[0].status, "Updated");
+  assert.match(state.progress.rows[0].detail, /Published PDF unavailable/);
+});
+
+test("the PDF preference disables downloads while metadata updates still run", async () => {
+  const { runtime, win, item } = lintFixture();
+  const old = Zotero.Prefs;
+  Zotero.Prefs = {
+    get: (key) => (key.endsWith("updatePDFs") ? false : undefined),
+  };
+  runtime.updatePDF = async () => {
+    throw new Error("PDF check must be disabled");
+  };
+  try {
+    await runtime.run(win, "lint");
+    assert.equal(item.getField("DOI"), published.DOI);
+  } finally {
+    Zotero.Prefs = old;
   }
 });
