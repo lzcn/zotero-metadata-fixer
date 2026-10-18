@@ -22,7 +22,13 @@ export function summarizeProblem(detail: string, s: Strings): string {
   if (/No suitable Zotero translator/i.test(detail)) return s.noTranslator;
   if (/invalid (?:JSON|XML)|Non-JSON|非 JSON/i.test(detail))
     return s.invalidResponse;
-  for (const message of [s.ambiguous, s.unsupported, s.noPublished, s.noDOI])
+  for (const message of [
+    s.itemChanged,
+    s.ambiguous,
+    s.unsupported,
+    s.noPublished,
+    s.noDOI,
+  ])
     if (detail.includes(message)) return message;
   if (/Conflicting|mismatch|concurrent|changed during/i.test(detail))
     return s.ambiguous;

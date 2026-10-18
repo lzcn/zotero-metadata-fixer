@@ -1556,3 +1556,43 @@ test("the PDF preference disables downloads while metadata updates still run", a
     Zotero.Prefs = old;
   }
 });
+
+test("edits made during metadata retrieval are retained without applying stale fields or PDFs", async () => {
+  for (const source of ["publication", "DOI", "lint"]) {
+    const item = new FakeItem();
+    if (source !== "publication") {
+      Object.assign(item.data, published);
+      item.itemTypeID = 2;
+    }
+    const { runtime, win, state } =
+      source === "publication" ? lintFixture(item) : runFixture(item);
+    let pdfs = 0;
+    runtime.updatePDF = async () => {
+      pdfs++;
+      return "added";
+    };
+    const retrieve = async () => {
+      item.setField("abstractNote", "My edit while searching");
+      return { ...published, abstractNote: "Stale source text" };
+    };
+    runtime.retriever = {
+      candidate: retrieve,
+      retrieve,
+      retrieveCurrent: async () => ({
+        metadata: await retrieve(),
+        warnings: [],
+      }),
+    };
+    await runtime.run(win, source === "publication" ? "lint" : source);
+    assert.equal(
+      item.getField("abstractNote"),
+      "My edit while searching",
+      source,
+    );
+    assert.equal(item.saved, 0);
+    assert.equal(item.reloaded, 0);
+    assert.equal(pdfs, 0);
+    assert.equal(state.progress.rows[0].status, "Failed");
+    assert.match(state.progress.rows[0].detail, /changed during retrieval/);
+  }
+});

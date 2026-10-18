@@ -19,6 +19,12 @@ export const en = {
   ambiguous: "No reliable match",
   noDOI: "No DOI found (optional)",
   formatHelp: "Standard and Short omit conference editions and years.",
+  progressRunning:
+    "Completed {completed} / {total} · Updated {updated} · Failed {failed}",
+  progressFinished:
+    "Finished · Processed {completed} / {total} · Updated {updated} · Failed {failed}",
+  progressCancelled:
+    "Stopped · Completed {completed} / {total} · Pending {pending}",
   cancel: "Cancel",
   status: "Status",
   title: "Title",
@@ -31,6 +37,7 @@ export const en = {
   noTranslator: "Cannot read source metadata",
   sourceFailed: "Source unavailable",
   updateFailed: "Update unsuccessful",
+  itemChanged: "Item changed during retrieval. Run Metadata Fixer again.",
   waiting: "Waiting",
   working: "Updating…",
   cancelled: "Cancelled",
@@ -66,6 +73,11 @@ export const zh: Strings = {
   ambiguous: "无法可靠匹配",
   noDOI: "未找到 DOI（可为空）",
   formatHelp: "标准全名和缩写省略会议届数、年份。",
+  progressRunning:
+    "已处理 {completed} / {total} · 已更新 {updated} · 失败 {failed}",
+  progressFinished:
+    "已结束 · 已处理 {completed} / {total} · 已更新 {updated} · 失败 {failed}",
+  progressCancelled: "已停止 · 已处理 {completed} / {total} · 待处理 {pending}",
   cancel: "取消",
   status: "状态",
   title: "标题",
@@ -78,6 +90,7 @@ export const zh: Strings = {
   noTranslator: "无法读取来源元数据",
   sourceFailed: "来源暂不可用",
   updateFailed: "条目更新未完成",
+  itemChanged: "检索期间条目已变化，请重新运行元数据修复。",
   waiting: "等待中",
   working: "正在更新…",
   cancelled: "已取消",

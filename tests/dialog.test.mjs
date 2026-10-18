@@ -33,7 +33,11 @@ class Element {
 }
 async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
   const content = new Element(),
-    actions = new Element();
+    actions = new Element(),
+    summary = new Element(),
+    progress = new Element();
+  summary.getBoundingClientRect = () => ({ height: 18 });
+  progress.getBoundingClientRect = () => ({ height: 6 });
   let props,
     unmounted = false;
   const nativeTable = {
@@ -94,7 +98,7 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
     body: new Element(),
     createElement: () => new Element(),
     createElementNS: (namespace) => Object.assign(new Element(), { namespace }),
-    getElementById: (id) => ({ content, actions })[id],
+    getElementById: (id) => ({ content, actions, summary, progress })[id],
   };
   const modules = {
     react: { createElement: (component, options) => options },
@@ -129,6 +133,8 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
   return {
     content,
     actions,
+    summary,
+    progress,
     win,
     props,
     flushFrames,
@@ -158,6 +164,8 @@ test("native progress keeps problems, live results and a single action", async (
   };
   const ui = await dialog(state);
   assert.equal(ui.props.showHeader, true);
+  assert.match(ui.summary.textContent, /Completed 2 \/ 3.*Updated 1.*Failed 1/);
+  assert.equal(ui.progress.value, 2);
   assert.deepEqual(
     Array.from(ui.props.columns, (column) => column.label),
     [en.title, en.status, en.problem],
@@ -181,6 +189,11 @@ test("native progress keeps problems, live results and a single action", async (
   ui.win.renderProgress();
   ui.flushFrames();
   assert.equal(ui.content.children.length, 4);
+  assert.match(
+    ui.summary.textContent,
+    /Finished.*Processed 4 \/ 4.*Updated 2.*Failed 1/,
+  );
+  assert.equal(ui.progress.hidden, true);
   assert.equal(ui.content.children[2].children[1].textContent, en.updated);
   assert.equal(ui.actions.children[0].label, en.close);
   ui.win.events.get("unload")();
@@ -234,7 +247,7 @@ test("initial window fits rows and available screen without resizing on updates"
   const single = await dialog(state);
   const batch = await dialog({ ...state, total: 100 });
   assert.equal(single.win.innerWidth, 780);
-  assert.ok(single.win.innerHeight >= 180 && single.win.innerHeight < 260);
+  assert.ok(single.win.innerHeight >= 180 && single.win.innerHeight < 300);
   assert.ok(
     batch.win.innerHeight > single.win.innerHeight &&
       batch.win.innerHeight < 450,
@@ -275,4 +288,25 @@ test("progress coalesces redraws and platform shortcuts preserve IME and cancel 
   ui.win.renderProgress();
   ui.win.events.get("unload")();
   assert.equal(ui.pendingFrames(), 0);
+});
+
+test("reused batch history keeps cancelled rows out of the processed count", async () => {
+  const state = {
+    rows: [
+      { title: "Earlier cancellation", status: en.cancelled },
+      { title: "Current update", status: en.updated },
+      { title: "Failed source", status: en.failed },
+    ],
+    strings: en,
+    finished: true,
+    cancel() {},
+    onResult() {},
+  };
+  const ui = await dialog(state);
+  assert.match(
+    ui.summary.textContent,
+    /Finished.*Processed 2 \/ 3.*Updated 1.*Failed 1/,
+  );
+  assert.equal(ui.progress.value, 2);
+  assert.equal(ui.progress.hidden, true);
 });

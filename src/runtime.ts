@@ -8,7 +8,7 @@ import type {
 import { identifiers, isPreprint, preprintDOI } from "./identifiers";
 import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
-import { applyPlan } from "./update";
+import { applyPlan, fingerprint } from "./update";
 import { Operation } from "./operation";
 import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
 import { PDFVersionCache } from "./pdf-cache";
@@ -675,6 +675,7 @@ export class Runtime {
         if (!progress.window.closed)
           this.cleanup(() => progress.window.renderProgress?.());
         try {
+          const baseline = fingerprint(item);
           const preprint = isPreprint(item);
           const ids = identifiers(item);
           const itemDOI = ids.DOI;
@@ -788,6 +789,8 @@ export class Runtime {
               metadata = await operation.wait(retriever.retrieve(item, source));
           }
           if (!host.active()) break;
+          if (fingerprint(item) !== baseline)
+            throw new Error(this.s.itemChanged);
           const settings = this.conferenceSettings();
           const conference = normalizeConferenceUpdate(
             normalizeMetadata(metadata),

@@ -322,6 +322,25 @@ startup = async function(data) {
       if (item.getField('title') !== 'Disposable host test paper' || item.getField('proceedingsTitle') !== 'ICLR 2026') throw new Error('Published repair overwrote populated fields');
       for (const dialog of [...MLRuntime.dialogs]) dialog.close();
 
+      const beforeConcurrentRetriever = MLRuntime.retriever;
+      const concurrentItem = new Zotero.Item('conferencePaper');
+      concurrentItem.setField('title', 'Concurrent host metadata test');
+      concurrentItem.setField('proceedingsTitle', 'ICLR 2026');
+      await concurrentItem.saveTx();
+      await win.ZoteroPane.selectItem(concurrentItem.id);
+      MLRuntime.retriever = {retrieveCurrent: async current => {
+        const metadata = {...current.toJSON(), DOI: '10.1000/stale-host-metadata'};
+        current.setField('abstractNote', 'User edit during lookup');
+        await current.saveTx();
+        return {metadata, source: 'host fixture', warnings: []};
+      }};
+      await MLRuntime.run(win, 'lint');
+      if (concurrentItem.getField('abstractNote') !== 'User edit during lookup' || concurrentItem.getField('DOI') || progressState.rows[0].status !== 'Failed' || !progressState.rows[0].problem.includes('changed during retrieval')) throw new Error('Concurrent native edit was not protected across retrieval');
+      result.concurrentRetrievalEdit = true;
+      for (const dialog of [...MLRuntime.dialogs]) dialog.close();
+      MLRuntime.retriever = beforeConcurrentRetriever;
+      await win.ZoteroPane.selectItem(item.id);
+
       const cancelling = MLRuntime.run(win, 'lint');
       const progressDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0]?.kind === 'progress' && window.document?.getElementById('actions')?.children.length));
       progressDialog.close();
@@ -334,6 +353,8 @@ startup = async function(data) {
       await buttonCancelling;
       result.nativeCancellation = progressState.cancelled && !cancelDialog.closed;
       if (!result.nativeCancellation) throw new Error('Native Cancel command did not retain cancelled results');
+      await wait(() => cancelDialog.document.getElementById('summary').textContent.includes('Stopped'));
+      if (!cancelDialog.document.getElementById('progress').hidden || !cancelDialog.document.getElementById('summary').textContent.includes('Pending 1')) throw new Error('Cancelled progress summary lost pending work');
       cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
       await wait(() => cancelDialog.closed);
       const preprint = new Zotero.Item('preprint');
@@ -728,6 +749,7 @@ startup = async function(data) {
       result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),closed:batchDialog.closed};
       if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
       await wait(() => batchDoc.getElementById('actions').firstElementChild.getAttribute('label') === 'Close');
+      if (!batchDoc.getElementById('summary').textContent.includes('Updated 2') || !batchDoc.getElementById('summary').textContent.includes('Failed 1') || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary is incorrect');
       const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
       if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== 'Source rate-limited') throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
       const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };

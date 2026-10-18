@@ -7,6 +7,8 @@ const VirtualizedTable = require("components/virtualized-table");
 const { renderCell } = VirtualizedTable;
 const content = document.getElementById("content");
 const actions = document.getElementById("actions");
+const summary = document.getElementById("summary");
+const progress = document.getElementById("progress");
 let table;
 let entries = [];
 let sortField;
@@ -32,6 +34,8 @@ function sizeWindow() {
     headerHeight +
       visibleRows * table._rowHeight +
       actions.getBoundingClientRect().height +
+      summary.getBoundingClientRect().height +
+      progress.getBoundingClientRect().height +
       36,
     screen.availHeight - 80,
   );
@@ -72,6 +76,30 @@ function flushProgress() {
         return a === b ? 0 : a ? -1 : 1;
       return a.localeCompare(b, s.locale, { numeric: true }) * sortDirection;
     });
+  const total = entries.length;
+  let completed = 0,
+    updated = 0,
+    failed = 0;
+  for (const row of entries) {
+    if (![s.waiting, s.working, s.cancelled].includes(row.status)) completed++;
+    if (row.status === s.updated || row.status === s.pdfUpdated) updated++;
+    if (row.status === s.failed) failed++;
+  }
+  const pending = total - completed;
+  const message = data.cancelled
+    ? s.progressCancelled
+    : data.finished
+      ? s.progressFinished
+      : s.progressRunning;
+  summary.textContent = message
+    .replace("{completed}", String(completed))
+    .replace("{total}", String(total))
+    .replace("{updated}", String(updated))
+    .replace("{failed}", String(failed))
+    .replace("{pending}", String(pending));
+  progress.max = Math.max(1, total);
+  progress.value = completed;
+  progress.hidden = !!data.finished || !!data.cancelled;
   table?.invalidate();
   action.setAttribute(
     "label",
