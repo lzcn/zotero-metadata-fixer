@@ -19,6 +19,7 @@ export class PDFUpdater {
   constructor(
     private zotero: any,
     private document: (url: string) => Promise<Document>,
+    private cache = new PDFVersionCache(zotero),
   ) {}
 
   async update(item: Item, operation: Operation): Promise<PDFResult> {
@@ -38,9 +39,8 @@ export class PDFUpdater {
         throw new Error("Item changed during PDF update");
     };
     check();
-    const cache = new PDFVersionCache(z);
     const cacheKey = `${item.libraryID}/${item.key}`;
-    const previous = cache.get(cacheKey);
+    const previous = this.cache.get(cacheKey);
     const source = ids.DOI ? `doi:${canonicalDOI(ids.DOI)}` : `url:${ids.URL}`;
     const attachments = () => z.Items.get((item as any).getAttachments());
     const tracked =
@@ -187,7 +187,7 @@ export class PDFUpdater {
           validators: ReturnType<typeof pdfValidators>,
         ) => {
           check();
-          cache.remember(cacheKey, {
+          this.cache.remember(cacheKey, {
             source,
             url,
             attachmentKey: current.key,

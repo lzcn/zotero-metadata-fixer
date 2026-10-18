@@ -11,6 +11,7 @@ import { MetadataRetriever } from "./translate";
 import { applyPlan } from "./update";
 import { Operation } from "./operation";
 import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
+import { PDFVersionCache } from "./pdf-cache";
 import { SourcePolicy } from "./source-policy";
 import { parseJSONResponse, summarizeProblem } from "./responses";
 import { normalizeMetadata } from "./metadata";
@@ -576,9 +577,11 @@ export class Runtime {
       this.cleanup(() => this.progressWindow?.renderProgress?.());
   }
 
-  private updatePDF(item: Item, operation: Operation) {
-    return new PDFUpdater(Zotero, (url) =>
-      this.request(url, operation, "document"),
+  private updatePDF(item: Item, operation: Operation, cache?: PDFVersionCache) {
+    return new PDFUpdater(
+      Zotero,
+      (url) => this.request(url, operation, "document"),
+      cache,
     ).update(item, operation);
   }
 
@@ -658,6 +661,7 @@ export class Runtime {
       });
     }
     this.progressWindow.focus?.();
+    const pdfCache = new PDFVersionCache(Zotero);
     try {
       while (state.tasks.length && host.active()) {
         const { item, source, row } = state.tasks.shift() as {
@@ -666,6 +670,8 @@ export class Runtime {
           row: any;
         };
         row.status = this.s.working;
+        let pdfUnavailable = false;
+        let pdfDetail = "";
         if (!progress.window.closed)
           this.cleanup(() => progress.window.renderProgress?.());
         try {
@@ -806,21 +812,17 @@ export class Runtime {
             Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false
           ) {
             try {
-              const pdf = await this.updatePDF(item, operation);
+              const pdf = await this.updatePDF(item, operation, pdfCache);
               if (!host.active()) throw new Error(this.s.cancelled);
               if (pdf === "added") row.status = this.s.pdfUpdated;
-              if (pdf === "unavailable")
-                row.detail = [row.detail, this.s.pdfUnavailable]
-                  .filter(Boolean)
-                  .join("\n");
+              if (pdf === "unavailable") {
+                pdfUnavailable = true;
+                pdfDetail = this.s.pdfUnavailable;
+              }
             } catch (error) {
               if (!host.active()) throw error;
-              row.detail = [
-                row.detail,
-                `${this.s.pdfUnavailable}: ${String(error)}`,
-              ]
-                .filter(Boolean)
-                .join("\n");
+              pdfUnavailable = true;
+              pdfDetail = `${this.s.pdfUnavailable}: ${String(error)}`;
               Zotero.logError(error);
             }
           }
@@ -830,12 +832,16 @@ export class Runtime {
           if (host.active()) Zotero.logError(error);
         } finally {
           row.problem = summarizeProblem(row.detail, this.s);
-          if (
+          if (pdfDetail)
+            row.detail = [row.detail, pdfDetail].filter(Boolean).join("\n");
+          if (row.status === this.s.noChanges && pdfUnavailable) {
+            row.status = this.s.unchangedPartial;
+            if (!row.problem) row.problem = this.s.pdfUnavailable;
+          } else if (
             row.status === this.s.noChanges &&
-            (row.detail.includes(this.s.pdfUnavailable) ||
-              /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
-                row.detail,
-              ))
+            /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
+              row.detail,
+            )
           )
             row.status = this.s.unchangedPartial;
           if (!progress.window.closed)

@@ -1522,7 +1522,22 @@ test("a blocked PDF does not undo a successful metadata update", async () => {
   await runtime.run(win, "lint");
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.rows[0].status, "Updated");
+  assert.equal(state.progress.rows[0].problem, "");
   assert.match(state.progress.rows[0].detail, /Published PDF unavailable/);
+});
+
+test("an unavailable PDF marks an unchanged item as partially checked", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, published);
+  item.itemTypeID = 2;
+  const { runtime, state, win } = runFixture(item);
+  runtime.retriever = {
+    retrieveCurrent: async () => ({ metadata: item.toJSON(), warnings: [] }),
+  };
+  runtime.updatePDF = async () => "unavailable";
+  await runtime.run(win, "lint");
+  assert.equal(state.progress.rows[0].status, "No changes; lookup incomplete");
+  assert.equal(state.progress.rows[0].problem, "Published PDF unavailable");
 });
 
 test("the PDF preference disables downloads while metadata updates still run", async () => {

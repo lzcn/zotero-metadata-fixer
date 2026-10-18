@@ -20,7 +20,6 @@ export function summarizeProblem(detail: string, s: Strings): string {
   if (/\b403\b|access blocked|captcha|not a bot|访问受限/i.test(detail))
     return s.sourceBlocked;
   if (/No suitable Zotero translator/i.test(detail)) return s.noTranslator;
-  if (detail.includes(s.pdfUnavailable)) return s.pdfUnavailable;
   if (/invalid (?:JSON|XML)|Non-JSON|非 JSON/i.test(detail))
     return s.invalidResponse;
   for (const message of [s.ambiguous, s.unsupported, s.noPublished, s.noDOI])

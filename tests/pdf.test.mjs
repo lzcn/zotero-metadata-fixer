@@ -499,15 +499,19 @@ test("a changed PDF URL invalidates reuse even if it advertises the same ETag", 
   assert.equal(state.downloads, 2);
 });
 
-test("invalid cache data is reported before PDF or library writes", async () => {
-  const { item, state, operation, updater, preferences } = fixture();
-  preferences.set(PDF_CACHE_PREF, '{"version":99,"entries":[]}');
-  await assert.rejects(
-    updater.update(item, operation),
-    /Unsupported PDF version cache/,
-  );
-  assert.equal(state.downloads, 0);
-  assert.equal(state.imported.length, 0);
+test("invalid cache data is discarded so PDF checks can recover", async () => {
+  for (const raw of [
+    '{"version":99,"entries":[]}',
+    "not json",
+    '{"version":1,"entries":[["bad"]]}',
+  ]) {
+    const { item, state, operation, updater, preferences } = fixture();
+    preferences.set(PDF_CACHE_PREF, raw);
+    assert.equal(await updater.update(item, operation), "added");
+    assert.equal(state.downloads, 1);
+    assert.equal(state.imported.length, 1);
+    assert.equal(JSON.parse(preferences.get(PDF_CACHE_PREF)).version, 1);
+  }
 });
 
 test("a supplementary PDF is preserved even if Zotero treats it as the default attachment", async () => {
