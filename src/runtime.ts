@@ -13,7 +13,7 @@ import { Operation } from "./operation";
 import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
 import { PDFVersionCache } from "./pdf-cache";
 import { SourcePolicy } from "./source-policy";
-import { parseJSONResponse, summarizeProblem } from "./responses";
+import { classifyProblem, parseJSONResponse } from "./responses";
 import { normalizeMetadata } from "./metadata";
 import { buildRepairPlan } from "./repair";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
@@ -32,6 +32,9 @@ import {
   type ConferenceSettings,
   type PublicationStyle,
 } from "./conferences";
+
+export const SEMANTIC_SCHOLAR_KEY_PREF =
+  "extensions.metadata-linter.semanticScholarKey";
 
 declare const Zotero: any;
 declare const MLRootURI: string;
@@ -65,10 +68,10 @@ export class Runtime {
 
   private network(operation: Operation): Network {
     return {
-      json: async (url) => {
+      json: async (url, headers) => {
         const cached = this.sourcePolicy.cached(url);
         if (cached && operation.active()) return JSON.parse(cached);
-        const text = await this.request(url, operation, "text", 8000);
+        const text = await this.request(url, operation, "text", 8000, headers);
         const value = parseJSONResponse(text, {
           blocked: this.s.apiBlocked,
           invalid: this.s.apiInvalid,
@@ -102,6 +105,7 @@ export class Runtime {
     operation = this.operation,
     responseType = "text",
     timeout = 20000,
+    headers?: Record<string, string>,
   ): Promise<any> {
     if (
       !operation?.active() ||
@@ -112,7 +116,7 @@ export class Runtime {
       throw new Error(this.s.cancelled);
     // Keep immutable responses within one batch; documents remain private to translators.
     if (responseType !== "text")
-      return this.fetchResponse(url, operation, responseType, timeout);
+      return this.fetchResponse(url, operation, responseType, timeout, headers);
     let responses = this.responses.get(operation);
     if (!responses) {
       responses = new Map();
@@ -126,12 +130,16 @@ export class Runtime {
       responses.set(url, pending);
     }
     if (!pending) {
-      pending = this.fetchResponse(url, operation, responseType, timeout).catch(
-        (error) => {
-          if (responses.get(url) === pending) responses.delete(url);
-          throw error;
-        },
-      );
+      pending = this.fetchResponse(
+        url,
+        operation,
+        responseType,
+        timeout,
+        headers,
+      ).catch((error) => {
+        if (responses.get(url) === pending) responses.delete(url);
+        throw error;
+      });
       responses.set(url, pending);
       while (responses.size > 128)
         responses.delete(responses.keys().next().value!);
@@ -148,6 +156,7 @@ export class Runtime {
     operation: Operation,
     responseType: string,
     timeout: number,
+    headers?: Record<string, string>,
   ): Promise<any> {
     if (url.startsWith("https://export.arxiv.org/")) {
       const wait = 3000 - (Date.now() - this.lastArxivRequest);
@@ -172,6 +181,7 @@ export class Runtime {
               url.startsWith("https://scholar.google.com/")
                 ? "text/html"
                 : "application/json, application/xml;q=0.9, text/plain;q=0.8",
+            ...(headers || {}),
           },
           timeout,
           // Host retries can outlast discovery and discard other successful sources.
@@ -448,13 +458,26 @@ export class Runtime {
       false,
       true,
     );
+    doc.getElementById("ml-semantic-scholar-key").addEventListener(
+      "change",
+      (event: any) => {
+        Zotero.Prefs.set(
+          SEMANTIC_SCHOLAR_KEY_PREF,
+          String(event.target.value || "").trim(),
+          true,
+        );
+      },
+      false,
+      true,
+    );
     this.refreshPreferences(doc);
   }
 
   refreshPreferences(doc: any): void {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
-      "ml-settings-help": this.s.settingsHelp,
+      "ml-semantic-scholar-key-label": this.s.semanticScholarKey,
+      "ml-semantic-scholar-key-help": this.s.semanticScholarKeyHelp,
       "ml-update-pdfs": this.s.updatePDFs,
       "ml-update-pdfs-help": this.s.updatePDFsHelp,
       "ml-replace-publication": this.s.replacePublication,
@@ -463,7 +486,6 @@ export class Runtime {
       "ml-retrieved-names": this.s.retrievedNames,
       "ml-standard-names": this.s.standardNames,
       "ml-short-names": this.s.shortNames,
-      "ml-publication-help": this.s.formatHelp,
     })) {
       const element = doc.getElementById(id);
       if (["menuitem", "checkbox"].includes(element.localName))
@@ -478,6 +500,9 @@ export class Runtime {
       Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false;
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
+    doc.getElementById("ml-semantic-scholar-key").value = String(
+      Zotero.Prefs?.get(SEMANTIC_SCHOLAR_KEY_PREF, true) || "",
+    );
   }
 
   setPublicationStyle(publicationStyle: PublicationStyle | boolean): void {
@@ -514,6 +539,12 @@ export class Runtime {
     const value = parseConferenceSettings(raw);
     this.settingsCache = { raw, value };
     return value;
+  }
+
+  private semanticScholarKey(): string {
+    return String(
+      Zotero.Prefs?.get(SEMANTIC_SCHOLAR_KEY_PREF, true) || "",
+    ).trim();
   }
 
   private validatePublication(
@@ -609,7 +640,9 @@ export class Runtime {
     this.operation = operation;
     this.operationWindow = win;
     const net = this.network(operation);
-    const finder = this.finder ?? new PublicationFinder(net);
+    const finder =
+      this.finder ??
+      new PublicationFinder(net, () => this.semanticScholarKey());
     const retriever =
       this.retriever ??
       new MetadataRetriever(
@@ -649,6 +682,11 @@ export class Runtime {
     this.progressState = state;
     this.progressResult = progress.result;
     state.cancel = () => this.cancel();
+    state.selectItem = (itemID: number) => {
+      if (win.closed) return;
+      win.focus?.();
+      win.ZoteroPane.selectItem(itemID);
+    };
     this.enqueue(selected, source);
     // Closing the progress window is cancellation while work is running.
     if (!reuse) {
@@ -834,18 +872,17 @@ export class Runtime {
           row.detail += `\n${String(error)}`;
           if (host.active()) Zotero.logError(error);
         } finally {
-          row.problem = summarizeProblem(row.detail, this.s);
+          // A failed source does not make an applied update a failed item.
+          const problem = classifyProblem(row.detail, this.s);
+          row.problem = [this.s.updated, this.s.pdfUpdated].includes(row.status)
+            ? ""
+            : problem.message;
           if (pdfDetail)
             row.detail = [row.detail, pdfDetail].filter(Boolean).join("\n");
           if (row.status === this.s.noChanges && pdfUnavailable) {
             row.status = this.s.unchangedPartial;
             if (!row.problem) row.problem = this.s.pdfUnavailable;
-          } else if (
-            row.status === this.s.noChanges &&
-            /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
-              row.detail,
-            )
-          )
+          } else if (row.status === this.s.noChanges && problem.incomplete)
             row.status = this.s.unchangedPartial;
           if (!progress.window.closed)
             this.cleanup(() => progress.window.renderProgress?.());

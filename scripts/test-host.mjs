@@ -156,6 +156,7 @@ const marker = join(root, "result.json");
 await mkdir(join(profile, "extensions"), { recursive: true });
 await mkdir(data);
 const prefs = {
+  "intl.locale.requested": process.env.ML_HOST_LOCALE || "en-US",
   "extensions.zotero.dataDir": data,
   "extensions.zotero.useDataDir": true,
   "extensions.zotero.firstRun2": false,
@@ -215,6 +216,7 @@ startup = async function(data) {
       if (!MLRuntime) throw new Error('Runtime failed to start');
       const win = await wait(() => Zotero.getMainWindow()?.ZoteroPane?.itemsView && Zotero.getMainWindow());
       const doc = win.document;
+      const strings = MLRuntime.preferenceData().strings;
       const view = win.ZoteroPane.itemsView;
       MLRuntime.configurePublicationDisplay();
       if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn')) throw new Error('Unexpected duplicate column');
@@ -335,7 +337,7 @@ startup = async function(data) {
         return {metadata, source: 'host fixture', warnings: []};
       }};
       await MLRuntime.run(win, 'lint');
-      if (concurrentItem.getField('abstractNote') !== 'User edit during lookup' || concurrentItem.getField('DOI') || progressState.rows[0].status !== 'Failed' || !progressState.rows[0].problem.includes('changed during retrieval')) throw new Error('Concurrent native edit was not protected across retrieval');
+      if (concurrentItem.getField('abstractNote') !== 'User edit during lookup' || concurrentItem.getField('DOI') || progressState.rows[0].status !== strings.failed || !progressState.rows[0].problem.includes(strings.itemChanged)) throw new Error('Concurrent native edit was not protected across retrieval');
       result.concurrentRetrievalEdit = true;
       for (const dialog of [...MLRuntime.dialogs]) dialog.close();
       MLRuntime.retriever = beforeConcurrentRetriever;
@@ -346,15 +348,16 @@ startup = async function(data) {
       progressDialog.close();
       await cancelling;
       result.cancellation = {cancelled: progressState.cancelled, status: progressState.rows[0].status};
-      if (!result.cancellation.cancelled || result.cancellation.status !== 'Cancelled') throw new Error('Closing a running dialog did not cancel');
+      if (!result.cancellation.cancelled || result.cancellation.status !== strings.cancelled) throw new Error('Closing a running dialog did not cancel');
       const buttonCancelling = MLRuntime.run(win, 'lint');
       const cancelDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.getElementById('actions')?.children.length));
       cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
       await buttonCancelling;
       result.nativeCancellation = progressState.cancelled && !cancelDialog.closed;
       if (!result.nativeCancellation) throw new Error('Native Cancel command did not retain cancelled results');
-      await wait(() => cancelDialog.document.getElementById('summary').textContent.includes('Stopped'));
-      if (!cancelDialog.document.getElementById('progress').hidden || !cancelDialog.document.getElementById('summary').textContent.includes('Pending 1')) throw new Error('Cancelled progress summary lost pending work');
+      const cancelledSummary = strings.progressCancelled.replace('{completed}', '0').replace('{total}', '1').replace('{pending}', '1');
+      await wait(() => cancelDialog.document.getElementById('summary').textContent === cancelledSummary);
+      if (!cancelDialog.document.getElementById('progress').hidden) throw new Error('Cancelled progress summary lost pending work');
       cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
       await wait(() => cancelDialog.closed);
       const preprint = new Zotero.Item('preprint');
@@ -378,6 +381,14 @@ startup = async function(data) {
         return element?.querySelector('menuitem')?.label && element;
       });
       result.settings = [...select.querySelectorAll('menuitem')].map(option => option.label);
+      if (${JSON.stringify(process.env.ML_HOST_SCREENSHOT || "")}) {
+        const image = await settings.browsingContext.currentWindowGlobal.drawSnapshot(undefined, 1, "white");
+        const canvas = settings.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+        canvas.width = image.width; canvas.height = image.height;
+        canvas.getContext("2d").drawImage(image, 0, 0); image.close();
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        await IOUtils.write(${JSON.stringify(process.env.ML_HOST_SCREENSHOT || "")}, new Uint8Array(await blob.arrayBuffer()));
+      }
       const updatePDFs = settings.document.getElementById('ml-update-pdfs');
       if (!updatePDFs || updatePDFs.checked || updatePDFs.getAttribute('native') !== 'true') throw new Error('Missing native PDF preference');
       updatePDFs.checked = true;
@@ -423,7 +434,7 @@ startup = async function(data) {
       await MLRuntime.run(win, 'lint');
       result.cvpr = {publication:cvpr.getField('proceedingsTitle'),conference:cvpr.getField('conferenceName'),date:cvpr.getField('date')};
       if (result.cvpr.publication !== 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition' || result.cvpr.conference !== 'My existing CVPR event' || result.cvpr.date !== '2026' || cvpr.getField('title') !== 'My Hand Edited CVPR TITLE') throw new Error('CVPR full-name normalization failed');
-      if (!progressState.rows[0].detail.includes('Access blocked')) throw new Error('Native HTML API response was not classified as blocked');
+      if (!progressState.rows[0].detail.includes(strings.apiBlocked)) throw new Error('Native HTML API response was not classified as blocked');
       result.blockedResponse = true;
       const identity = {id:cvpr.id,key:cvpr.key};
       for (const venue of ["2026 IEEE 37 Conference for Computer Vision & Pattern Recognition", "Proc. of the XXXVII Annual Conference on Computer Vision and Pattern Recognition (CVPR'26)"]) {
@@ -500,7 +511,7 @@ startup = async function(data) {
         await MLRuntime.run(win, 'lint');
         const repairKey = genericPublisher ? 'genericBibliographyTypeRepair' : 'bibliographyTypeRepair';
         result[repairKey] = {type:mislabeled.itemType,venue:mislabeled.getField('proceedingsTitle'),requests:bibliographyCalls.length,status:MLRuntime.progressState.rows.at(-1).status};
-        if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result[repairKey].status !== 'Updated' || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result[repairKey]));
+        if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result[repairKey].status !== strings.updated || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result[repairKey]));
         MLRuntime.request = scholarRequest;
         for (const window of [...MLRuntime.dialogs]) window.close();
 
@@ -599,7 +610,7 @@ startup = async function(data) {
         MLRuntime.retriever = undefined;
         await MLRuntime.run(win, 'lint');
         result.revisionDateUpgrade = {type:revised.itemType,date:revised.getField('date'),DOI:revised.getField('DOI'),venue:revised.getField('proceedingsTitle'),status:MLRuntime.progressState.rows.at(-1).status};
-        if (revised.itemType !== 'conferencePaper' || revised.getField('date') !== '2024' || revised.getField('DOI') !== '10.1000/revision-host' || revised.id !== revisedIdentity.id || revised.key !== revisedIdentity.key || result.revisionDateUpgrade.status !== 'Updated') throw new Error('Revision date blocked an earlier publication: ' + JSON.stringify(result.revisionDateUpgrade));
+        if (revised.itemType !== 'conferencePaper' || revised.getField('date') !== '2024' || revised.getField('DOI') !== '10.1000/revision-host' || revised.id !== revisedIdentity.id || revised.key !== revisedIdentity.key || result.revisionDateUpgrade.status !== strings.updated) throw new Error('Revision date blocked an earlier publication: ' + JSON.stringify(result.revisionDateUpgrade));
         for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
         Zotero.Translate.Search = originalSearch;
@@ -626,7 +637,7 @@ startup = async function(data) {
         };
         await MLRuntime.run(win, 'lint');
         result.rorWorkshop = {venue:ror.getField('proceedingsTitle'),display:await renderPublication(ror),status:MLRuntime.progressState.rows.at(-1).status};
-        if (result.rorWorkshop.venue !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.display !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.status !== 'Updated' || ror.id !== rorIdentity.id || ror.key !== rorIdentity.key || ror.getField('title') !== rorTitle || ror.getCreators()[0].lastName !== 'Kulkarni') throw new Error('OpenReview workshop repair failed: ' + JSON.stringify(result.rorWorkshop));
+        if (result.rorWorkshop.venue !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.display !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.status !== strings.updated || ror.id !== rorIdentity.id || ror.key !== rorIdentity.key || ror.getField('title') !== rorTitle || ror.getCreators()[0].lastName !== 'Kulkarni') throw new Error('OpenReview workshop repair failed: ' + JSON.stringify(result.rorWorkshop));
         for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
         MLRuntime.request = rorRequest;
@@ -662,10 +673,10 @@ startup = async function(data) {
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:pdfItem.toJSON(),warnings:[]})};
         await win.ZoteroPane.selectItem(pdfItem.id);
         await MLRuntime.run(win, 'lint');
-        if (MLRuntime.progressState.rows.at(-1).status !== 'PDF updated' || pdfItem.getAttachments().length !== 3) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || pdfItem.getAttachments().length !== 3) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         for (const window of [...MLRuntime.dialogs]) window.close();
         await MLRuntime.run(win, 'lint');
-        if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'No changes') throw new Error('Identical PDF was duplicated');
+        if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.noChanges) throw new Error('Identical PDF was duplicated');
         if (await oldPDF.attachmentHash !== originalPDFHash || oldPDF.getAnnotations()[0]?.annotationText !== 'Keep this annotation') throw new Error('Existing PDF or annotation changed');
         for (const window of [...MLRuntime.dialogs]) window.close();
         const firstPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
@@ -683,7 +694,7 @@ startup = async function(data) {
         };
         try {
           await MLRuntime.run(win, 'lint');
-          if (currentPublished.deleted || pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'Cancelled') throw new Error('Cancellation during replacement did not roll back');
+          if (currentPublished.deleted || pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('Cancellation during replacement did not roll back');
         } finally { currentPublished.save = originalSave; }
         for (const window of [...MLRuntime.dialogs]) window.close();
         slowPDF = true;
@@ -696,7 +707,7 @@ startup = async function(data) {
           await new Promise(resolve => setTimeout(resolve, 150));
           MLRuntime.cancel();
           await pendingPDF;
-          if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== 'Cancelled') throw new Error('PDF cancellation wrote an attachment');
+          if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('PDF cancellation wrote an attachment');
         } finally { Zotero.HTTP.download = nativeDownload; }
         for (const window of [...MLRuntime.dialogs]) window.close();
         result.pdfUpdate = {added:true,unchangedBodySkipped:true,annotatedPDFPreserved:true,unannotatedPDFTrashed:true,supplementPreserved:true,cancelled:true,replacementRollback:true};
@@ -741,17 +752,18 @@ startup = async function(data) {
       await MLRuntime.run(win, 'lint');
       const batchDoc = batchDialog.document;
       const cancelButton = batchDoc.getElementById('actions').firstElementChild;
-      result.queue = {total:progressState.total,windows:[...MLRuntime.dialogs].filter(window => !window.closed).length,waiting:progressState.rows.filter(row => row.status === 'Waiting').length,native:cancelButton.namespaceURI === 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',appearance:batchDialog.getComputedStyle(cancelButton).MozAppearance};
-      if (result.queue.total !== 3 || result.queue.windows !== 1 || !result.queue.waiting || !result.queue.native || cancelButton.getAttribute('label') !== 'Cancel' || cancelButton.getBoundingClientRect().width < 40) throw new Error('Shared queue or native Cancel button failed');
-      await wait(() => progressState.rows[0].status === 'Updated' && !batchDialog.closed);
+      result.queue = {total:progressState.total,windows:[...MLRuntime.dialogs].filter(window => !window.closed).length,waiting:progressState.rows.filter(row => row.status === strings.waiting).length,native:cancelButton.namespaceURI === 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',appearance:batchDialog.getComputedStyle(cancelButton).MozAppearance};
+      if (result.queue.total !== 3 || result.queue.windows !== 1 || !result.queue.waiting || !result.queue.native || cancelButton.getAttribute('label') !== strings.cancel || cancelButton.getBoundingClientRect().width < 40) throw new Error('Shared queue or native Cancel button failed');
+      await wait(() => progressState.rows[0].status === strings.updated && !batchDialog.closed);
       if (batchDoc.querySelectorAll('.virtualized-table .row').length !== 3) throw new Error('Queue did not retain completed and waiting rows');
       await batchRunning;
       result.batch = {total:progressState.total,statuses:progressState.rows.map(row => row.status),closed:batchDialog.closed};
-      if (result.batch.total !== 3 || result.batch.statuses.join(',') !== 'Updated,Failed,Updated' || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
-      await wait(() => batchDoc.getElementById('actions').firstElementChild.getAttribute('label') === 'Close');
-      if (!batchDoc.getElementById('summary').textContent.includes('Updated 2') || !batchDoc.getElementById('summary').textContent.includes('Failed 1') || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary is incorrect');
+      if (result.batch.total !== 3 || result.batch.statuses.join(',') !== [strings.updated,strings.failed,strings.updated].join(',') || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
+      await wait(() => batchDoc.getElementById('actions').firstElementChild.getAttribute('label') === strings.close);
+      const finishedSummary = strings.progressFinished.replace('{completed}', '3').replace('{total}', '3').replace('{updated}', '2').replace('{failed}', '1');
+      if (batchDoc.getElementById('summary').textContent !== finishedSummary || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary is incorrect');
       const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
-      if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== 'Source rate-limited') throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
+      if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== strings.rateLimited) throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
       const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };
       sort(headings[0]);
       await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.ascending'));
@@ -761,6 +773,10 @@ startup = async function(data) {
       sort(headings[2]);
       await wait(() => batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 1');
       if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 1') throw new Error('Problem sorting did not put the failed row first');
+      const selectedRow = progressState.rows.find(row => row.title === 'Batch Host Paper 1');
+      batchDoc.querySelector('.virtualized-table .row').click();
+      await wait(() => win.ZoteroPane.getSelectedItems().some(selected => selected.id === selectedRow.itemID));
+      result.rowSelection = true;
       const actionBounds = batchDoc.getElementById('actions').firstElementChild.getBoundingClientRect();
       const bodyBounds = batchDoc.body.getBoundingClientRect();
       if (actionBounds.right > bodyBounds.right - 12 || actionBounds.bottom > bodyBounds.bottom - 10 || actionBounds.width < 80) throw new Error('Native action has insufficient spacing');
@@ -800,7 +816,7 @@ startup = async function(data) {
       MLRuntime.retriever = {candidate:async () => ({itemType:'journalArticle',title:'DMLNet: Differential Saliency With Multidomain Learning Network for Moving Infrared Small-Target Detection',DOI:'10.1109/LGRS.2026.3708839',publicationTitle:dmlnet.getField('publicationTitle'),creators:[{firstName:'Yi',lastName:'Rong',creatorType:'author'},...dmlnet.getCreators()]})};
       await MLRuntime.run(win, 'lint');
       result.dmlnet = {DOI:dmlnet.getField('DOI'),titlePreserved:dmlnet.getField('title') === dmlTitle,status:progressState.rows[0].status};
-      if (result.dmlnet.DOI !== '10.1109/LGRS.2026.3708839' || !result.dmlnet.titlePreserved || result.dmlnet.status !== 'Updated') throw new Error('DMLNet compound-word DOI repair failed');
+      if (result.dmlnet.DOI !== '10.1109/LGRS.2026.3708839' || !result.dmlnet.titlePreserved || result.dmlnet.status !== strings.updated) throw new Error('DMLNet compound-word DOI repair failed');
       select.value = 'standard';
       select.dispatchEvent(new settings.Event('command'));
       result.supplementaryConferences = [];

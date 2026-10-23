@@ -1,8 +1,15 @@
 import type { Strings } from "./strings";
 
-export function summarizeProblem(detail: string, s: Strings): string {
-  if (!detail.trim()) return "";
-  if (/timed?\s*out|timeout|超时/i.test(detail)) return s.requestTimeout;
+export type ProblemSummary = { message: string; incomplete: boolean };
+
+export function classifyProblem(detail: string, s: Strings): ProblemSummary {
+  if (!detail.trim()) return { message: "", incomplete: false };
+  const incomplete =
+    /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
+      detail,
+    );
+  if (/timed?\s*out|timeout|超时/i.test(detail))
+    return { message: s.requestTimeout, incomplete };
   if (/\b429\b|too many requests|rate.?limit|限流/i.test(detail)) {
     const sources = detail
       .split(/\r?\n/)
@@ -13,15 +20,19 @@ export function summarizeProblem(detail: string, s: Strings): string {
       .filter(
         (source): source is string => Boolean(source) && source !== "Error",
       );
-    return sources.length
-      ? `${s.rateLimited}: ${[...new Set(sources)].join(", ")}`
-      : s.rateLimited;
+    return {
+      message: sources.length
+        ? `${s.rateLimited}: ${[...new Set(sources)].join(", ")}`
+        : s.rateLimited,
+      incomplete,
+    };
   }
   if (/\b403\b|access blocked|captcha|not a bot|访问受限/i.test(detail))
-    return s.sourceBlocked;
-  if (/No suitable Zotero translator/i.test(detail)) return s.noTranslator;
+    return { message: s.sourceBlocked, incomplete };
+  if (/No suitable Zotero translator/i.test(detail))
+    return { message: s.noTranslator, incomplete };
   if (/invalid (?:JSON|XML)|Non-JSON|非 JSON/i.test(detail))
-    return s.invalidResponse;
+    return { message: s.invalidResponse, incomplete };
   for (const message of [
     s.itemChanged,
     s.ambiguous,
@@ -29,16 +40,20 @@ export function summarizeProblem(detail: string, s: Strings): string {
     s.noPublished,
     s.noDOI,
   ])
-    if (detail.includes(message)) return message;
+    if (detail.includes(message)) return { message, incomplete };
   if (/Conflicting|mismatch|concurrent|changed during/i.test(detail))
-    return s.ambiguous;
+    return { message: s.ambiguous, incomplete };
   if (
     /\bHTTP\b|\b5\d\d\b|offline|network|some sources failed|部分来源/i.test(
       detail,
     )
   )
-    return s.sourceFailed;
-  return s.updateFailed;
+    return { message: s.sourceFailed, incomplete };
+  return { message: s.updateFailed, incomplete };
+}
+
+export function summarizeProblem(detail: string, s: Strings): string {
+  return classifyProblem(detail, s).message;
 }
 
 export class JSONResponseError extends Error {

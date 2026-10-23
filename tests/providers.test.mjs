@@ -151,6 +151,7 @@ function emptyIndexes(finder) {
   for (const source of [
     "semanticScholar",
     "crossref",
+    "openAlex",
     "dblp",
     "pubmed",
     "openreview",
@@ -208,13 +209,14 @@ test("publication search keeps successful matches and reports failed sources sep
       year: 2026,
     },
   ];
+  finder.openAlex = async () => [];
   finder.dblp = async () => [];
   finder.pubmed = async () => [];
   finder.openreview = async () => [];
   const lookup = await finder.find(item);
   assert.equal(lookup.candidates[0].doi, published.DOI);
   assert.match(lookup.warnings[0], /429/);
-  assert.equal(lookup.answered, 6);
+  assert.equal(lookup.answered, 7);
 });
 
 test("linked preprint DOI wins without querying title-based sources", async () => {
@@ -508,6 +510,30 @@ test("Semantic Scholar falls back from missing arXiv record or a preprint-only D
     assert.equal(calls.length, 2);
   }
 });
+test("Semantic Scholar sends an optional API key", async () => {
+  for (const key of ["", "test-key"]) {
+    const requests = [];
+    const finder = new PublicationFinder(
+      {
+        json: async (url, headers) => {
+          requests.push({ url, headers });
+          return { data: [] };
+        },
+        text: async () => "",
+        xml() {},
+      },
+      () => key,
+    );
+    const item = new FakeItem();
+    item.data.archiveID = "";
+    item.data.url = "";
+    await finder.semanticScholar(item);
+    assert.equal(requests.length, 1);
+    assert.match(requests[0].url, /search\/match/);
+    assert.equal(requests[0].headers?.["x-api-key"], key || undefined);
+  }
+});
+
 test("Crossref searches more results and excludes preprints in the API query", async () => {
   let query;
   const finder = new PublicationFinder({
@@ -556,10 +582,15 @@ test("cancelling translator detection prevents the actual translation from start
 
 test("a DBLP bot-check stops mirror retries and later requests in the same batch", async () => {
   const { parseJSONResponse } = await import("../.tests-build/responses.js");
-  let requests = 0;
+  let apiRequests = 0;
+  let sparqlRequests = 0;
   const finder = new PublicationFinder({
-    json: async () => {
-      requests++;
+    json: async (url) => {
+      if (url.startsWith("https://sparql.dblp.org/")) {
+        sparqlRequests++;
+        throw new Error("SPARQL offline");
+      }
+      apiRequests++;
       return parseJSONResponse(
         "<html><title>Making sure you are not a bot!</title></html>",
       );
@@ -567,7 +598,8 @@ test("a DBLP bot-check stops mirror retries and later requests in the same batch
   });
   await assert.rejects(finder.dblp(new FakeItem()), /Access blocked/);
   await assert.rejects(finder.dblp(new FakeItem()), /Access blocked/);
-  assert.equal(requests, 1);
+  assert.equal(apiRequests, 1);
+  assert.equal(sparqlRequests, 1);
 });
 
 test("a DBLP blocked response does not discard verified results from other sources", async () => {
@@ -581,6 +613,7 @@ test("a DBLP blocked response does not discard verified results from other sourc
   finder.related = async () => [];
   finder.googleScholar = async () => [];
   finder.semanticScholar = async () => [];
+  finder.openAlex = async () => [];
   finder.crossref = async () => [
     {
       source: "Crossref",
@@ -613,16 +646,163 @@ test("an unrelated JSON object from DBLP is not treated as an empty search resul
 });
 
 test("DBLP rate limiting suppresses further requests in the batch", async () => {
-  let requests = 0;
+  let apiRequests = 0;
+  let sparqlRequests = 0;
   const finder = new PublicationFinder({
-    json: async () => {
-      requests++;
+    json: async (url) => {
+      if (url.startsWith("https://sparql.dblp.org/")) {
+        sparqlRequests++;
+        throw Object.assign(new Error("HTTP 429"), { status: 429 });
+      }
+      apiRequests++;
       throw Object.assign(new Error("HTTP 429"), { status: 429 });
     },
   });
   await assert.rejects(finder.dblp(new FakeItem()), /429/);
   await assert.rejects(finder.dblp(new FakeItem()), /429/);
-  assert.equal(requests, 1);
+  assert.equal(apiRequests, 1);
+  assert.equal(sparqlRequests, 1);
+});
+
+test("DBLP falls back to its official SPARQL endpoint when search is blocked", async () => {
+  const { parseJSONResponse } = await import("../.tests-build/responses.js");
+  let apiRequests = 0;
+  let sparqlQuery;
+  const finder = new PublicationFinder({
+    json: async (url, headers) => {
+      if (url.startsWith("https://dblp.org/search/publ/api")) {
+        apiRequests++;
+        return parseJSONResponse(
+          "<html><title>Making sure you are not a bot!</title></html>",
+        );
+      }
+      assert.ok(url.startsWith("https://sparql.dblp.org/sparql"));
+      assert.equal(headers.Accept, "application/sparql-results+json");
+      sparqlQuery = new URL(url).searchParams.get("query");
+      return {
+        results: {
+          bindings: [
+            {
+              paper: { value: "https://dblp.org/rec/conf/iclr/Lu26" },
+              title: { value: published.title + "." },
+              venue: { value: "ICLR" },
+              year: { value: "2026" },
+              page: { value: "https://openreview.net/forum?id=paper" },
+            },
+            {
+              paper: { value: "https://dblp.org/rec/journals/corr/Lu26" },
+              title: { value: published.title + "." },
+              venue: { value: "CoRR" },
+              year: { value: "2026" },
+              doi: { value: "https://doi.org/10.48550/arXiv.2501.01234" },
+            },
+          ],
+        },
+      };
+    },
+  });
+  const item = new FakeItem();
+  item.data.title = published.title;
+  const expected = [
+    {
+      source: "DBLP",
+      title: published.title + ".",
+      doi: undefined,
+      url: "https://openreview.net/forum?id=paper",
+      venue: "ICLR",
+      year: 2026,
+      authors: ["Zhi Lu"],
+    },
+  ];
+  assert.deepEqual(await finder.dblp(item), expected);
+  assert.match(sparqlQuery, /creatorName "Zhi Lu"/);
+  assert.match(
+    sparqlQuery,
+    /LCASE\("Learning useful representations for language"\)/,
+  );
+  assert.deepEqual(await finder.dblp(item), expected);
+  assert.equal(apiRequests, 1);
+});
+
+test("DBLP SPARQL fallback requires a full first author name", async () => {
+  const { parseJSONResponse } = await import("../.tests-build/responses.js");
+  let sparqlRequests = 0;
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      if (url.startsWith("https://sparql.dblp.org/")) {
+        sparqlRequests++;
+        return { results: { bindings: [] } };
+      }
+      return parseJSONResponse(
+        "<html><title>Making sure you are not a bot!</title></html>",
+      );
+    },
+  });
+  const item = new FakeItem();
+  item.data.creators = [
+    { firstName: "", lastName: "Lu", creatorType: "author" },
+  ];
+  await assert.rejects(finder.dblp(item), /Access blocked/);
+  assert.equal(sparqlRequests, 0);
+});
+
+test("OpenAlex searches published titles and excludes preprints and venue-less records", async () => {
+  let query;
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      query = new URL(url);
+      return {
+        results: [
+          {
+            display_name: published.title,
+            doi: "https://doi.org/" + published.DOI,
+            type: "article",
+            publication_year: 2026,
+            primary_location: {
+              source: { display_name: published.publicationTitle },
+            },
+            authorships: [
+              { author: { display_name: "Zhi Lu" } },
+              { author: { display_name: "Someone Else" } },
+            ],
+          },
+          {
+            display_name: "Preprint",
+            doi: "https://doi.org/10.48550/arXiv.2501.01234",
+            type: "preprint",
+            publication_year: 2025,
+            primary_location: { source: { display_name: "arXiv" } },
+            authorships: [{ author: { display_name: "Zhi Lu" } }],
+          },
+          {
+            display_name: "Venue-less record",
+            doi: "https://doi.org/10.1000/venue-less",
+            type: "article",
+            publication_year: 2024,
+            authorships: [],
+          },
+        ],
+      };
+    },
+  });
+  const item = new FakeItem();
+  item.data.title = published.title;
+  const found = await finder.openAlex(item);
+  assert.equal(
+    query.searchParams.get("filter"),
+    `title.search:${published.title}`,
+  );
+  assert.equal(query.searchParams.get("per-page"), "20");
+  assert.deepEqual(found, [
+    {
+      source: "OpenAlex",
+      title: published.title,
+      doi: published.DOI,
+      authors: ["Zhi Lu", "Someone Else"],
+      year: 2026,
+      venue: published.publicationTitle,
+    },
+  ]);
 });
 
 test("Google Scholar supplies a DOI after structured indexes have no match", async () => {
@@ -669,6 +849,7 @@ test("DOI discovery runs before using a DOI-free Scholar match", async () => {
     return [{ ...noDOI, source: "Crossref", doi: published.DOI }];
   };
   finder.semanticScholar =
+    finder.openAlex =
     finder.dblp =
     finder.pubmed =
     finder.openreview =

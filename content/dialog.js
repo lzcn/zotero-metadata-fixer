@@ -151,6 +151,17 @@ root.render(
       row.replaceChildren();
       row.className = "row";
       row.classList.toggle("selected", selection.isSelected(index));
+      const selectable = entry.itemID != null && Boolean(data.selectItem);
+      row.classList.toggle("selectable", selectable);
+      row.onclick = selectable
+        ? () => {
+            try {
+              data.selectItem(entry.itemID);
+            } catch (error) {
+              Zotero.logError?.(error);
+            }
+          }
+        : null;
       for (const column of columns) {
         const cell = renderCell(index, entry[column.dataKey] || "", column);
         if (column.dataKey === "title") {
@@ -177,6 +188,16 @@ root.render(
       sortField = table._getColumns()[index].dataKey;
       sortDirection = direction;
       window.renderProgress();
+    },
+    onActivate() {
+      const entry = entries[table?.selection?.focused];
+      if (entry?.itemID == null || !data.selectItem) return false;
+      try {
+        data.selectItem(entry.itemID);
+      } catch (error) {
+        Zotero.logError?.(error);
+      }
+      return true;
     },
     ref(instance) {
       table = instance;

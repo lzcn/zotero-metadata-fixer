@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   JSONResponseError,
+  classifyProblem,
   parseJSONResponse,
   summarizeProblem,
 } from "../.tests-build/responses.js";
@@ -56,5 +57,18 @@ test("problem summaries distinguish source limits, timeouts and matching failure
     assert.equal(summarizeProblem(s.noPublished, s), s.noPublished);
     assert.equal(summarizeProblem("Crossref: HTTP 503", s), s.sourceFailed);
     assert.equal(summarizeProblem("Error: database failed", s), s.updateFailed);
+    assert.deepEqual(classifyProblem("Error: changed during update", s), {
+      message: s.ambiguous,
+      incomplete: false,
+    });
+    assert.equal(classifyProblem("", s).incomplete, false);
   }
+  assert.deepEqual(classifyProblem("DBLP: Access blocked", en), {
+    message: en.sourceBlocked,
+    incomplete: true,
+  });
+  assert.deepEqual(classifyProblem("DBLP: 访问受限", zh), {
+    message: zh.sourceBlocked,
+    incomplete: false,
+  });
 });

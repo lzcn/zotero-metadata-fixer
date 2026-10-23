@@ -5,7 +5,6 @@
   onshowing="Zotero.MetadataLinter?.refreshPreferences(document)"
 >
   <vbox class="main-section">
-    <description id="ml-settings-help"></description>
     <checkbox native="true" id="ml-update-pdfs" />
     <description id="ml-update-pdfs-help"></description>
     <checkbox native="true" id="ml-replace-publication" />
@@ -20,6 +19,19 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description id="ml-publication-help"></description>
+    <hbox align="center">
+      <label
+        id="ml-semantic-scholar-key-label"
+        control="ml-semantic-scholar-key"
+      ></label>
+      <html:input
+        id="ml-semantic-scholar-key"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+        style="width: 24em"
+      />
+    </hbox>
+    <description id="ml-semantic-scholar-key-help"></description>
   </vbox>
 </vbox>

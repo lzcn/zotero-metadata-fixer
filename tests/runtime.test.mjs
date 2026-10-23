@@ -6,7 +6,9 @@ import { FakeItem, hostFor, published } from "./helpers.mjs";
 
 globalThis.Zotero = { locale: "en-US", logError() {} };
 globalThis.MLRootURI = "file:///test/";
-const { Runtime } = await import("../.tests-build/runtime.js");
+const { Runtime, SEMANTIC_SCHOLAR_KEY_PREF } = await import(
+  "../.tests-build/runtime.js"
+);
 const { CONFERENCE_SETTINGS_PREF, DEFAULT_CONFERENCE_RULES } = await import(
   "../.tests-build/conferences.js"
 );
@@ -37,7 +39,17 @@ function runFixture(item) {
     state.previews++;
     throw new Error("Unexpected confirmation dialog: " + data.kind);
   };
-  const win = { ZoteroPane: { getSelectedItems: () => [item] } };
+  const win = {
+    ZoteroPane: {
+      getSelectedItems: () => [item],
+      selectItem: (itemID) => {
+        win.selectedItemID = itemID;
+      },
+    },
+    focus() {
+      win.focused = true;
+    },
+  };
   return { runtime, state, win };
 }
 
@@ -105,7 +117,7 @@ test("Lint falls back to current preprint metadata when no publication is found"
   assert.deepEqual(calls, ["find", "current metadata"]);
   assert.equal(item.itemType, "preprint");
   assert.equal(item.getField("abstractNote"), "Current version abstract");
-  assert.match(state.progress.rows[0].detail, /No published version found/);
+  assert.match(state.progress.rows[0].detail, /No publication/);
 });
 
 test("Lint directly retrieves metadata for a published item without publication discovery", async () => {
@@ -193,7 +205,7 @@ test("no matching DOI remains a normal no-change result when a publication has n
   await runtime.run(win, "lint");
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "No changes");
-  assert.match(state.progress.rows[0].detail, /optional/);
+  assert.match(state.progress.rows[0].detail, /No DOI/);
 });
 
 test("Lint preserves discovery warnings when current metadata succeeds", async () => {
@@ -206,7 +218,62 @@ test("Lint preserves discovery warnings when current metadata succeeds", async (
   await runtime.run(win, "lint");
   assert.equal(item.saved, 1);
   assert.match(state.progress.rows[0].detail, /429/);
-  assert.match(state.progress.rows[0].detail, /some sources failed/);
+  assert.match(state.progress.rows[0].detail, /No match/);
+});
+
+test("source access warnings do not mark a successful update as a problem", async () => {
+  const { runtime, win, state, item } = lintFixture();
+  runtime.finder.find = async () => ({
+    candidates: [
+      {
+        source: "Crossref",
+        title: published.title,
+        doi: published.DOI,
+        venue: published.publicationTitle,
+        authors: ["Zhi Lu"],
+        year: 2026,
+      },
+    ],
+    warnings: ["DBLP: Error: Access blocked"],
+    answered: 5,
+  });
+  await runtime.run(win, "lint");
+  assert.equal(item.getField("DOI"), published.DOI);
+  assert.equal(state.progress.rows[0].status, "Updated");
+  assert.equal(state.progress.rows[0].problem, "");
+  assert.match(state.progress.rows[0].detail, /Access blocked/);
+});
+
+test("source access warnings mark an unchanged lookup as incomplete", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, {
+    itemType: "conferencePaper",
+    proceedingsTitle: "NeurIPS",
+    conferenceName: "Conference on Neural Information Processing Systems",
+    url: "",
+    archiveID: "",
+  });
+  item.itemTypeID = 3;
+  const { runtime, win, state } = lintFixture(item);
+  runtime.finder.find = async () => ({
+    candidates: [],
+    warnings: ["DBLP: Error: Access blocked"],
+    answered: 5,
+  });
+  runtime.retriever.retrieveCurrent = async () => {
+    throw new Error("Item has no valid metadata identifier");
+  };
+  await runtime.run(win, "lint");
+  assert.equal(state.progress.rows[0].status, "Incomplete");
+  assert.equal(state.progress.rows[0].problem, "Access blocked");
+});
+
+test("result rows can select their item in the owner window", async () => {
+  const { runtime, win, state } = lintFixture();
+  await runtime.run(win, "lint");
+  state.progress.selectItem(42);
+  assert.equal(win.selectedItemID, 42);
+  assert.equal(win.focused, true);
 });
 
 test("ambiguous published matches are skipped automatically without fallback or writing", async () => {
@@ -238,7 +305,7 @@ test("ambiguous published matches are skipped automatically without fallback or 
   assert.deepEqual(calls, ["find"]);
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "Skipped");
-  assert.match(state.progress.rows[0].detail, /No reliable match/);
+  assert.match(state.progress.rows[0].detail, /No match/);
 });
 
 test("cancelling publication discovery prevents current-metadata fallback and all writes", async () => {
@@ -349,10 +416,20 @@ test("preferences only expose naming style while internal conference rules remai
     "ml-standard-names",
     "ml-short-names",
     "ml-publication-help",
+    "ml-semantic-scholar-key",
+    "ml-semantic-scholar-key-label",
+    "ml-semantic-scholar-key-help",
   ];
   const elements = Object.fromEntries(
     ids.map((id) => [id, { textContent: "", addEventListener: () => {} }]),
   );
+  const listeners = {};
+  elements["ml-semantic-scholar-key"] = {
+    value: "",
+    addEventListener: (type, listener) => {
+      listeners[type] = listener;
+    },
+  };
   const settings = {
     rules: DEFAULT_CONFERENCE_RULES,
     formatPublication: false,
@@ -362,7 +439,8 @@ test("preferences only expose naming style while internal conference rules remai
     rule.id === "eccv" ? { ...rule, name: "Maintained ECCV name" } : rule,
   );
   globalThis.Zotero.Prefs = {
-    get: () => JSON.stringify(settings),
+    get: (key) =>
+      key === SEMANTIC_SCHOLAR_KEY_PREF ? "" : JSON.stringify(settings),
     set: (...args) => saved.push(args),
   };
   try {
@@ -376,6 +454,8 @@ test("preferences only expose naming style while internal conference rules remai
       },
     });
     runtime.setPublicationStyle("short");
+    listeners.change({ target: { value: " secret-key " } });
+    assert.deepEqual(saved[1], [SEMANTIC_SCHOLAR_KEY_PREF, "secret-key", true]);
     const stored = JSON.parse(saved[0][1]);
     assert.equal(saved[0][0], CONFERENCE_SETTINGS_PREF);
     assert.equal(stored.publicationStyle, "short");
@@ -388,6 +468,8 @@ test("preferences only expose naming style while internal conference rules remai
       new URL("../content/preferences.xhtml", import.meta.url),
       "utf8",
     );
+    assert.match(markup, /ml-semantic-scholar-key/);
+    assert.match(markup, /type="password"/);
     assert.doesNotMatch(markup, /ml-conference-rules|button/);
   } finally {
     delete globalThis.Zotero.Prefs;
@@ -549,6 +631,13 @@ test("bootstrap does not initialize after shutdown while Zotero startup is pendi
       interfaces: {},
     },
   };
+  context.ChromeUtils = {
+    importESModule: () => ({
+      AsyncShutdown: {
+        quitApplicationGranted: { addBlocker() {}, removeBlocker() {} },
+      },
+    }),
+  };
   runInNewContext(code, context);
   const running = context.startup({ rootURI: "file:///test/" });
   context.shutdown();
@@ -597,6 +686,13 @@ test("bootstrap repeats startup safely and releases chrome registration on shutd
         },
       },
     },
+  };
+  context.ChromeUtils = {
+    importESModule: () => ({
+      AsyncShutdown: {
+        quitApplicationGranted: { addBlocker() {}, removeBlocker() {} },
+      },
+    }),
   };
   runInNewContext(code, context);
   await context.startup({ rootURI: "file:///test/" });
@@ -823,11 +919,30 @@ test("bootstrap deduplicates pending startup and quit cancels readiness immediat
       },
     },
   };
+  context.ChromeUtils = {
+    importESModule: () => ({
+      AsyncShutdown: {
+        quitApplicationGranted: { addBlocker() {}, removeBlocker() {} },
+      },
+    }),
+  };
   runInNewContext(code, context);
+  const blockers = new Set();
+  context.ChromeUtils.importESModule = () => ({
+    AsyncShutdown: {
+      quitApplicationGranted: {
+        addBlocker: (_name, callback) => blockers.add(callback),
+        removeBlocker: (callback) => blockers.delete(callback),
+      },
+    },
+  });
   const first = context.startup({ rootURI: "file:///test/" });
   assert.equal(context.startup({ rootURI: "file:///test/" }), first);
+  assert.equal(blockers.size, 1);
+  for (const finish of blockers) finish();
   observer.observe();
   await first;
+  assert.equal(blockers.size, 0);
   assert.equal(removed, 1);
   assert.equal(context.MLRuntime, null);
   assert.equal(context.MLStartup, null);
@@ -1070,6 +1185,7 @@ test("unaccepted or mismatched official records cannot bypass publication valida
     finder.googleScholar = async () => [];
     finder.semanticScholar =
       finder.crossref =
+      finder.openAlex =
       finder.dblp =
       finder.pubmed =
       finder.openreview =
@@ -1463,6 +1579,33 @@ test("structured JSON requests have a short timeout while article requests retai
   }
 });
 
+test("per-source headers reach the host request", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  const headers = [];
+  const originalHTTP = globalThis.Zotero.HTTP;
+  globalThis.Zotero.HTTP = {
+    request: async (_, __, options) => {
+      headers.push(options.headers);
+      return { responseText: '{"notes":[]}', response: {} };
+    },
+    wrapDocument: (doc) => doc,
+  };
+  try {
+    await runtime
+      .network(operation)
+      .json("https://example.test/api", { "x-api-key": "secret" });
+    assert.equal(headers[0]["x-api-key"], "secret");
+    assert.match(headers[0].Accept, /application\/json/);
+  } finally {
+    globalThis.Zotero.HTTP = originalHTTP;
+    operation.cancel();
+  }
+});
+
 test("validated JSON is reused across batches without sharing mutable objects", async () => {
   const { runtime } = runFixture(new FakeItem());
   const { Operation } = await import("../.tests-build/operation.js");
@@ -1523,7 +1666,7 @@ test("a blocked PDF does not undo a successful metadata update", async () => {
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.rows[0].status, "Updated");
   assert.equal(state.progress.rows[0].problem, "");
-  assert.match(state.progress.rows[0].detail, /Published PDF unavailable/);
+  assert.match(state.progress.rows[0].detail, /PDF unavailable/);
 });
 
 test("an unavailable PDF marks an unchanged item as partially checked", async () => {
@@ -1536,8 +1679,8 @@ test("an unavailable PDF marks an unchanged item as partially checked", async ()
   };
   runtime.updatePDF = async () => "unavailable";
   await runtime.run(win, "lint");
-  assert.equal(state.progress.rows[0].status, "No changes; lookup incomplete");
-  assert.equal(state.progress.rows[0].problem, "Published PDF unavailable");
+  assert.equal(state.progress.rows[0].status, "Incomplete");
+  assert.equal(state.progress.rows[0].problem, "PDF unavailable");
 });
 
 test("the PDF preference disables downloads while metadata updates still run", async () => {
@@ -1593,6 +1736,6 @@ test("edits made during metadata retrieval are retained without applying stale f
     assert.equal(item.reloaded, 0);
     assert.equal(pdfs, 0);
     assert.equal(state.progress.rows[0].status, "Failed");
-    assert.match(state.progress.rows[0].detail, /changed during retrieval/);
+    assert.match(state.progress.rows[0].detail, /Item changed/);
   }
 });

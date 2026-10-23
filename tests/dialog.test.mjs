@@ -164,7 +164,7 @@ test("native progress keeps problems, live results and a single action", async (
   };
   const ui = await dialog(state);
   assert.equal(ui.props.showHeader, true);
-  assert.match(ui.summary.textContent, /Completed 2 \/ 3.*Updated 1.*Failed 1/);
+  assert.match(ui.summary.textContent, /2 \/ 3.*1 updated.*1 failed/);
   assert.equal(ui.progress.value, 2);
   assert.deepEqual(
     Array.from(ui.props.columns, (column) => column.label),
@@ -189,15 +189,30 @@ test("native progress keeps problems, live results and a single action", async (
   ui.win.renderProgress();
   ui.flushFrames();
   assert.equal(ui.content.children.length, 4);
-  assert.match(
-    ui.summary.textContent,
-    /Finished.*Processed 4 \/ 4.*Updated 2.*Failed 1/,
-  );
+  assert.match(ui.summary.textContent, /Done.*4 \/ 4.*2 updated.*1 failed/);
   assert.equal(ui.progress.hidden, true);
   assert.equal(ui.content.children[2].children[1].textContent, en.updated);
   assert.equal(ui.actions.children[0].label, en.close);
   ui.win.events.get("unload")();
   assert.equal(ui.unmounted(), true);
+});
+
+test("clicking a result row selects its item in Zotero", async () => {
+  const selected = [];
+  const state = {
+    rows: [
+      { itemID: 42, title: "First", status: en.updated },
+      { title: "Second", status: en.failed },
+    ],
+    strings: en,
+    selectItem: (itemID) => selected.push(itemID),
+    cancel() {},
+    onResult() {},
+  };
+  const ui = await dialog(state);
+  ui.content.children[0].onclick();
+  assert.deepEqual(selected, [42]);
+  assert.equal(ui.content.children[1].onclick, null);
 });
 
 test("native sorting affects display without reordering processing", async () => {
@@ -303,10 +318,7 @@ test("reused batch history keeps cancelled rows out of the processed count", asy
     onResult() {},
   };
   const ui = await dialog(state);
-  assert.match(
-    ui.summary.textContent,
-    /Finished.*Processed 2 \/ 3.*Updated 1.*Failed 1/,
-  );
+  assert.match(ui.summary.textContent, /Done.*2 \/ 3.*1 updated.*1 failed/);
   assert.equal(ui.progress.value, 2);
   assert.equal(ui.progress.hidden, true);
 });

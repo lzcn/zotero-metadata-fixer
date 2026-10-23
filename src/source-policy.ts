@@ -44,7 +44,9 @@ export class SourcePolicy {
     const key = sourceKey(url);
     const intervals: Record<string, number> = {
       "api.crossref.org": 250,
+      "api.openalex.org": 200,
       "dblp.org": 500,
+      "sparql.dblp.org": 1000,
       "api.semanticscholar.org": 1100,
       "api2.openreview.net": 500,
       "eutils.ncbi.nlm.nih.gov": 400,

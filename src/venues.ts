@@ -32,6 +32,18 @@ export function isProceedingsTitle(value: unknown): boolean {
   );
 }
 
+function containerValue(
+  metadata: Metadata,
+  itemType = metadata.itemType,
+): string | undefined {
+  return CONTAINERS[itemType]?.sources
+    .map((field) => metadata[field])
+    .find(
+      (value): value is string =>
+        typeof value === "string" && Boolean(value.trim()),
+    );
+}
+
 export function containerTitle(
   metadata: Metadata,
   itemType = metadata.itemType,
@@ -42,12 +54,7 @@ export function containerTitle(
     isProceedingsTitle(metadata.conferenceName)
   )
     return String(metadata.conferenceName);
-  return CONTAINERS[itemType]?.sources
-    .map((field) => metadata[field])
-    .find(
-      (value): value is string =>
-        typeof value === "string" && Boolean(value.trim()),
-    );
+  return containerValue(metadata, itemType);
 }
 
 const VENUE_CLEANUPS: [RegExp, string][] = [
@@ -181,9 +188,7 @@ export function matchConference(
   metadata: Metadata,
   rules: ConferenceRule[],
 ): ConferenceRule | undefined {
-  const container = CONTAINERS[metadata.itemType]?.sources
-    .map((field) => metadata[field])
-    .find((value) => typeof value === "string" && Boolean(value.trim()));
+  const container = containerValue(metadata);
   const venues = [container, metadata.conferenceName]
     .filter(
       (value): value is string =>

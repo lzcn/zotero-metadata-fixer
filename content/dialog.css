@@ -29,6 +29,9 @@ body.progress-dialog {
   flex: 1;
   min-height: 0;
 }
+.row.selectable {
+  cursor: pointer;
+}
 #actions {
   display: flex;
   flex: 0 0 auto;

@@ -4,6 +4,7 @@ var MLGeneration = 0;
 var MLStartup;
 var MLCancelReadiness;
 var MLQuitObserver;
+var MLQuitClient;
 
 function cleanup(run) {
   try {
@@ -17,6 +18,14 @@ function startup({ rootURI }) {
   if (MLRuntime) return Promise.resolve();
   if (MLStartup) return MLStartup;
   const token = ++MLGeneration;
+  const { AsyncShutdown } = ChromeUtils.importESModule(
+    "resource://gre/modules/AsyncShutdown.sys.mjs",
+  );
+  MLQuitClient = AsyncShutdown.quitApplicationGranted;
+  MLQuitClient.addBlocker(
+    "Metadata Fixer: cancel retrieval and release UI",
+    shutdown,
+  );
   MLQuitObserver = { observe: () => shutdown() };
   Services.obs?.addObserver(MLQuitObserver, "quit-application-granted");
   MLStartup = start(rootURI, token).finally(() => {
@@ -67,6 +76,9 @@ function shutdown() {
   MLChrome = null;
   MLQuitObserver = null;
   // Stop work immediately, even while Zotero readiness or a translator is pending.
+  const quitClient = MLQuitClient;
+  MLQuitClient = null;
+  if (quitClient) cleanup(() => quitClient.removeBlocker(shutdown));
   if (observer)
     cleanup(() =>
       Services.obs?.removeObserver(observer, "quit-application-granted"),

@@ -122,6 +122,7 @@ if (fresh && !args.has("--check")) {
 } else {
   // Invalidate cached success before any step that can fail.
   rmSync(stateFile, { force: true });
+  if (!fresh) rmSync(output, { force: true });
   console.log("Checking types...");
   if (process.env.npm_execpath) {
     run(process.execPath, [process.env.npm_execpath, "run", "typecheck"]);
