@@ -417,6 +417,7 @@ export class Runtime {
       label: this.s.name,
       image: MLRootURI + "icons/icon-20.png",
       src: MLRootURI + "content/preferences.xhtml",
+      stylesheets: [MLRootURI + "content/preferences.css"],
     })
       .then((id: string) => {
         if (!this.alive) Zotero.PreferencePanes.unregister(id);
@@ -433,31 +434,17 @@ export class Runtime {
   }
 
   initializePreferences(doc: any): void {
-    doc.getElementById("ml-publication-style").addEventListener(
-      "command",
-      (event: any) => {
-        this.setPublicationStyle(event.target.value);
-      },
-      false,
-      true,
-    );
-    doc
-      .getElementById("ml-replace-publication")
-      .addEventListener(
-        "command",
-        (event: any) =>
-          this.setReplacePublicationColumn(Boolean(event.target.checked)),
-        false,
-        true,
-      );
-    doc.getElementById("ml-update-pdfs").addEventListener(
-      "command",
-      (event: any) => {
+    const commands: Record<string, (event: any) => void> = {
+      "ml-publication-style": (event) =>
+        this.setPublicationStyle(event.target.value),
+      "ml-replace-publication": (event) =>
+        this.setReplacePublicationColumn(Boolean(event.target.checked)),
+      "ml-update-pdfs": (event) => {
         Zotero.Prefs.set(UPDATE_PDFS_PREF, Boolean(event.target.checked), true);
       },
-      false,
-      true,
-    );
+    };
+    for (const [id, listener] of Object.entries(commands))
+      doc.getElementById(id).addEventListener("command", listener, false, true);
     doc.getElementById("ml-semantic-scholar-key").addEventListener(
       "change",
       (event: any) => {

@@ -401,7 +401,7 @@ test("Lint applies the Publication switch to a matched ECCV publication and pres
   }
 });
 
-test("preferences only expose naming style while internal conference rules remain intact", async () => {
+test("preferences keep public settings separate from internal conference rules", async () => {
   const runtime = new Runtime();
   const saved = [];
   const ids = [

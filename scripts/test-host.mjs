@@ -170,6 +170,10 @@ const prefs = {
   "extensions.zoteroOpenOfficeIntegration.skipInstallation": true,
   "extensions.metadata-linter.updatePDFs": false,
 };
+if (process.env.ML_HOST_COLOR_SCHEME) {
+  prefs["ui.systemUsesDarkTheme"] =
+    process.env.ML_HOST_COLOR_SCHEME === "dark" ? 1 : 0;
+}
 await writeFile(
   join(profile, "user.js"),
   Object.entries(prefs)
@@ -216,6 +220,57 @@ startup = async function(data) {
       if (!MLRuntime) throw new Error('Runtime failed to start');
       const win = await wait(() => Zotero.getMainWindow()?.ZoteroPane?.itemsView && Zotero.getMainWindow());
       const doc = win.document;
+      const auditUI=(view,scope=view.document)=>{
+        for(const control of scope.querySelectorAll('button, toolbarbutton, menulist, checkbox')) {
+          const box=control.getBoundingClientRect();
+          if(!box.width || !box.height || view.getComputedStyle(control).visibility==='hidden')continue;
+          const native=control.namespaceURI==='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+          const text=(control.getAttribute('label') || control.textContent || '').trim();
+          if(!text && !control.getAttribute('aria-label') && !control.getAttribute('tooltiptext') && !control.getAttribute('title') && !control.getAttribute('image') && control.localName!=='menulist')throw new Error('Unnamed control: '+control.id);
+          const label=native && control.shadowRoot?.querySelector('.button-text, .toolbarbutton-text, .menulist-label, .checkbox-label');
+          if(label && text) {
+            const bounds=label.getBoundingClientRect();
+            if(bounds.height && (bounds.top<box.top-2 || bounds.bottom>box.bottom+2))throw new Error('Clipped native control text: '+control.id+': '+text);
+            if(control.localName==='button' && bounds.width && (bounds.left<box.left-2 || bounds.right>box.right+2 || label.scrollWidth>label.clientWidth+2))throw new Error('Clipped native button label: '+control.id+': '+text);
+          }
+          if(!native && text) {
+            const line=parseFloat(view.getComputedStyle(control).lineHeight);
+            if(Number.isFinite(line) && control.clientHeight+2<line)throw new Error('Control is shorter than its text: '+control.id+': '+text);
+          }
+        }
+      };
+      const checkFixedStyle = (view, surface) => {
+        const root = view.document.documentElement;
+        const originalAttribute = root.hasAttribute('data-plugin-bear');
+        const originalFont = root.style.getPropertyValue('--ui-font');
+        const originalAccent = root.style.getPropertyValue('--ui-accent');
+        try {
+          root.style.setProperty('--ui-font', '"Avenir Next"');
+          root.style.setProperty('--ui-accent', '#123456');
+          for (const bear of [true, false]) {
+            Zotero.Prefs.set('extensions.zotero.plugin-ui.bear', bear, true);
+            root.toggleAttribute('data-plugin-bear', bear);
+            const style = view.getComputedStyle(surface);
+            const accent = view.matchMedia('(prefers-color-scheme: dark)').matches ? '#d58e97' : '#aa5962';
+            if (style.getPropertyValue('--ui-accent').trim() !== accent || style.fontFamily.includes('Avenir Next')) throw new Error('Task appearance changed with the shared preference or host styles');
+          }
+        } finally {
+          root.toggleAttribute('data-plugin-bear', originalAttribute);
+          if (originalFont) root.style.setProperty('--ui-font', originalFont); else root.style.removeProperty('--ui-font');
+          if (originalAccent) root.style.setProperty('--ui-accent', originalAccent); else root.style.removeProperty('--ui-accent');
+        }
+      };
+      const capture = async (name, window) => {
+        for(const root of window.document.querySelectorAll('.plugin-preferences, .progress-dialog'))auditUI(window,root);
+        const folder = ${JSON.stringify(process.env.ML_HOST_SCREENSHOTS || "")};
+        if (!folder) return;
+        await IOUtils.makeDirectory(folder, {ignoreExisting:true});
+        const image = await window.browsingContext.currentWindowGlobal.drawSnapshot(undefined,1,"white");
+        const canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml","canvas");
+        canvas.width=image.width;canvas.height=image.height;canvas.getContext('2d').drawImage(image,0,0);image.close();
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve));
+        await IOUtils.write(PathUtils.join(folder,name+'.png'),new Uint8Array(await blob.arrayBuffer()));
+      };
       const strings = MLRuntime.preferenceData().strings;
       const view = win.ZoteroPane.itemsView;
       MLRuntime.configurePublicationDisplay();
@@ -389,6 +444,11 @@ startup = async function(data) {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
         await IOUtils.write(${JSON.stringify(process.env.ML_HOST_SCREENSHOT || "")}, new Uint8Array(await blob.arrayBuffer()));
       }
+      await capture('settings',settings);
+      const keyField=settings.document.getElementById('ml-semantic-scholar-key');
+      if (settings.getComputedStyle(keyField).fontFamily.includes('Avenir Next')) throw new Error('Settings inherited the Bear font');
+      if([...settings.document.styleSheets].some(sheet=>sheet.href?.includes('metadata-linter/content/ui.css')))throw new Error('Settings loaded the operational theme stylesheet');
+      if (settings.document.getElementById('ml-ui-style')) throw new Error('Settings expose an appearance picker');
       const updatePDFs = settings.document.getElementById('ml-update-pdfs');
       if (!updatePDFs || updatePDFs.checked || updatePDFs.getAttribute('native') !== 'true') throw new Error('Missing native PDF preference');
       updatePDFs.checked = true;
@@ -784,6 +844,9 @@ startup = async function(data) {
       const headerBounds = batchDoc.querySelector('.virtualized-table-header').getBoundingClientRect();
       result.progressWindow = {width:batchDialog.innerWidth,height:batchDialog.innerHeight,header:headerBounds.height,row:batchDoc.querySelector('.row').getBoundingClientRect().height};
       if (batchDoc.querySelector('th,thead,table') || batchDialog.innerWidth > 800 || batchDialog.innerHeight > 300 || batchDialog.innerHeight < 150 || headerBounds.height < 18 || gridBounds.bottom > actionBounds.top || gridBounds.width < 600) throw new Error('Native table or initial window dimensions failed: ' + JSON.stringify(result.progressWindow));
+      if (batchDialog.getComputedStyle(batchDoc.querySelector('.row')).borderRadius!=='0px' || headerBounds.height<28) throw new Error('Progress rows or headings are cramped');
+      await capture('results',batchDialog);
+      checkFixedStyle(batchDialog, batchDoc.body);
       const originalRAF = batchDialog.requestAnimationFrame.bind(batchDialog);
       let repaintRequests = 0;
       batchDialog.requestAnimationFrame = callback => { repaintRequests++; return originalRAF(callback); };

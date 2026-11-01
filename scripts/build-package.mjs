@@ -70,6 +70,8 @@ const bytes = zipSync(files, {
 const unpacked = unzipSync(bytes);
 assert.deepEqual(Object.keys(unpacked).sort(), Object.keys(files).sort());
 assert.ok(unpacked["content/dialog.xhtml"]);
+assert.ok(unpacked["content/ui.css"]);
+assert.ok(unpacked["content/preferences.css"]);
 assert.ok(unpacked["content/runtime.js"]);
 assert.ok(unpacked["data/conferences.json"]);
 await mkdir(root + "dist", { recursive: true });

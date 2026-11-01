@@ -23,6 +23,8 @@ The plugin finds published versions, fills missing DOIs and fields, repairs reco
 
 Lookup uses Zotero translators and scholarly metadata services. Conflicting or unverified matches are skipped. Run updates manually; install plugin updates from XPI.
 
+The results window uses a fixed Bear-inspired palette with a compact table and system fonts. Colors follow the system’s light or dark appearance; Settings use Zotero’s native controls.
+
 ## Development
 
 Use Node.js 22.13+ (22.x) or 24+.

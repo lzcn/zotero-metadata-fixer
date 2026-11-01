@@ -1,0 +1,16 @@
+/* Settings retain native typography and controls; only allow rows to wrap. */
+.plugin-preferences {
+  min-width: 0;
+}
+.plugin-preferences hbox {
+  flex-wrap: wrap;
+}
+.plugin-preferences description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.plugin-preferences input {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}

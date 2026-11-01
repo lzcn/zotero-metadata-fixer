@@ -36,7 +36,7 @@ function sizeWindow() {
       actions.getBoundingClientRect().height +
       summary.getBoundingClientRect().height +
       progress.getBoundingClientRect().height +
-      36,
+      48,
     screen.availHeight - 80,
   );
   window.resizeBy(width - window.innerWidth, height - window.innerHeight);
@@ -120,7 +120,7 @@ root.render(
     id: "metadata-fixer-progress",
     label: s.name,
     showHeader: true,
-    containerWidth: Math.min(780, window.screen.availWidth - 48) - 24,
+    containerWidth: Math.min(780, window.screen.availWidth - 48) - 32,
     columns: [
       {
         dataKey: "title",
