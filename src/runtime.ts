@@ -464,7 +464,6 @@ export class Runtime {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
       "ml-semantic-scholar-key-label": this.s.semanticScholarKey,
-      "ml-semantic-scholar-key-help": this.s.semanticScholarKeyHelp,
       "ml-update-pdfs": this.s.updatePDFs,
       "ml-update-pdfs-help": this.s.updatePDFsHelp,
       "ml-replace-publication": this.s.replacePublication,
@@ -490,6 +489,8 @@ export class Runtime {
     doc.getElementById("ml-semantic-scholar-key").value = String(
       Zotero.Prefs?.get(SEMANTIC_SCHOLAR_KEY_PREF, true) || "",
     );
+    doc.getElementById("ml-semantic-scholar-key").placeholder =
+      this.s.semanticScholarKeyPlaceholder;
   }
 
   setPublicationStyle(publicationStyle: PublicationStyle | boolean): void {
