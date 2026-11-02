@@ -744,22 +744,27 @@ startup = async function(data) {
       const supplement = await Zotero.Attachments.importFromFile({file:oldPDFPath,parentItemID:pdfItem.id,contentType:'application/pdf',title:'Supplementary material'});
       const pdfRequest = MLRuntime.request.bind(MLRuntime);
       let slowPDF = false;
+      let pdfRequests = 0;
       try {
         Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
-        MLRuntime.request = (url, ...args) => pdfRequest(url.startsWith('https://doi.org/') || url.startsWith('https://ieeexplore.ieee.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/pdf-article"))}.replace('/pdf-article', slowPDF ? '/pdf-slow-article' : '/pdf-article') : url, ...args);
+        MLRuntime.request = (url, ...args) => { pdfRequests++; return pdfRequest(url.startsWith('https://doi.org/') || url.startsWith('https://ieeexplore.ieee.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/pdf-article"))}.replace('/pdf-article', slowPDF ? '/pdf-slow-article' : '/pdf-article') : url, ...args); };
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:pdfItem.toJSON(),warnings:[]})};
         await win.ZoteroPane.selectItem(pdfItem.id);
         await MLRuntime.run(win, 'lint');
-        if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || pdfItem.getAttachments().length !== 3) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || pdfItem.getAttachments().length !== 2 || oldPDF.deleted || await oldPDF.attachmentHash !== originalPDFHash || oldPDF.getAnnotations()[0]?.annotationText !== 'Keep this annotation') throw new Error('Annotated PDF was not skipped');
+        if (pdfRequests !== 0) throw new Error('Annotated PDF triggered a network request');
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        await annotation.eraseTx();
+        await MLRuntime.run(win, 'lint');
+        if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || pdfItem.getAttachments().length !== 2) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         for (const window of [...MLRuntime.dialogs]) window.close();
         await MLRuntime.run(win, 'lint');
-        if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.noChanges) throw new Error('Identical PDF was duplicated');
-        if (await oldPDF.attachmentHash !== originalPDFHash || oldPDF.getAnnotations()[0]?.annotationText !== 'Keep this annotation') throw new Error('Existing PDF or annotation changed');
+        if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.noChanges) throw new Error('Identical PDF was duplicated');
         for (const window of [...MLRuntime.dialogs]) window.close();
         const firstPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
         await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
         await MLRuntime.run(win, 'lint');
-        if (!firstPublished.deleted || pdfItem.getAttachments().length !== 3 || oldPDF.deleted || supplement.deleted) throw new Error('Unannotated old PDF was not trashed or protected attachments changed');
+        if (!firstPublished.deleted || pdfItem.getAttachments().length !== 2 || !oldPDF.deleted || supplement.deleted) throw new Error('Unannotated old PDF was not trashed or protected attachments changed');
         const currentPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
         for (const window of [...MLRuntime.dialogs]) window.close();
         await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
@@ -771,7 +776,7 @@ startup = async function(data) {
         };
         try {
           await MLRuntime.run(win, 'lint');
-          if (currentPublished.deleted || pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('Cancellation during replacement did not roll back');
+          if (currentPublished.deleted || pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('Cancellation during replacement did not roll back');
         } finally { currentPublished.save = originalSave; }
         for (const window of [...MLRuntime.dialogs]) window.close();
         slowPDF = true;
@@ -784,10 +789,35 @@ startup = async function(data) {
           await new Promise(resolve => setTimeout(resolve, 150));
           MLRuntime.cancel();
           await pendingPDF;
-          if (pdfItem.getAttachments().length !== 3 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('PDF cancellation wrote an attachment');
+          if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('PDF cancellation wrote an attachment');
         } finally { Zotero.HTTP.download = nativeDownload; }
         for (const window of [...MLRuntime.dialogs]) window.close();
-        result.pdfUpdate = {added:true,unchangedBodySkipped:true,annotatedPDFPreserved:true,unannotatedPDFTrashed:true,supplementPreserved:true,cancelled:true,replacementRollback:true};
+        slowPDF = false;
+        for (const publishedType of ['conferencePaper','journalArticle']) for (const annotated of [true,false]) {
+          const paper = new Zotero.Item('preprint');
+          paper.setField('title', ${JSON.stringify(pdfTitle)});
+          paper.setField('url', 'https://arxiv.org/abs/2501.01234');
+          paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+          await paper.saveTx();
+          const identity = {id:paper.id,key:paper.key};
+          const manuscript = await Zotero.Attachments.importFromFile({file:oldPDFPath,parentItemID:paper.id,contentType:'application/pdf'});
+          if (annotated) {
+            const note = new Zotero.Item('annotation');
+            note.libraryID = paper.libraryID;
+            note.parentID = manuscript.id;
+            for (const name of ['annotationType','annotationText','annotationComment','annotationColor','annotationPageLabel','annotationSortIndex','annotationPosition']) note[name] = annotation[name];
+            await note.saveTx();
+          }
+          const requestsBefore = pdfRequests;
+          MLRuntime.finder = {find:async () => ({candidates:[{source:'arXiv',title:paper.getField('title'),doi:${JSON.stringify(pdfDOI)},linked:true}],warnings:[],answered:1})};
+          MLRuntime.retriever = {candidate:async () => ({itemType:publishedType,title:paper.getField('title'),DOI:${JSON.stringify(pdfDOI)},url:'https://ieeexplore.ieee.org/document/11523638/',publicationTitle:publishedType==='journalArticle'?'IEEE Transactions on Multimedia':undefined,proceedingsTitle:publishedType==='conferencePaper'?'ICLR 2026':undefined,creators:paper.getCreators()})};
+          await win.ZoteroPane.selectItem(paper.id);
+          await MLRuntime.run(win, 'lint');
+          if (paper.itemType !== publishedType || paper.id !== identity.id || paper.key !== identity.key || manuscript.deleted === annotated || paper.getAttachments().length !== 1 || ((await paper.getBestAttachment()).id === manuscript.id) !== annotated || MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.updated : strings.pdfUpdated) || (annotated && pdfRequests !== requestsBefore)) throw new Error('Formal publication did not replace the manuscript: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          for (const window of [...MLRuntime.dialogs]) window.close();
+        }
+        result.formalPDFReplacesPreprint = true;
+        result.pdfUpdate = {added:true,unchangedBodySkipped:true,annotatedPDFSkipped:true,unannotatedPDFTrashed:true,supplementPreserved:true,cancelled:true,replacementRollback:true};
       } finally {
         MLRuntime.request = pdfRequest;
         Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
@@ -820,14 +850,14 @@ startup = async function(data) {
           }
           await win.ZoteroPane.selectItem(paper.id);
           await MLRuntime.run(win, 'lint');
-          if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || paper.getAttachments().length !== (annotated ? 2 : 1) || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          if (MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.noChanges : strings.pdfUpdated) || paper.getAttachments().length !== 1 || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
           if (annotated && (await old.attachmentHash !== oldHash || old.getAnnotations()[0]?.annotationText !== 'Keep this annotation')) throw new Error('arXiv annotations changed');
           for (const window of [...MLRuntime.dialogs]) window.close();
           await MLRuntime.run(win, 'lint');
-          if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || paper.getAttachments().length !== (annotated ? 2 : 1)) throw new Error('Native arXiv cached PDF was downloaded again');
+          if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || paper.getAttachments().length !== 1) throw new Error('Native arXiv cached PDF was downloaded again');
           for (const window of [...MLRuntime.dialogs]) window.close();
         }
-        result.arxivPDF = {actualFirstPage:true,metadataVersionIgnored:true,annotatedPreserved:true,unannotatedRetired:true,cachedVersionReused:true};
+        result.arxivPDF = {actualFirstPage:true,metadataVersionIgnored:true,annotatedSkipped:true,unannotatedRetired:true,cachedVersionReused:true};
       } finally {
         MLRuntime.request = arxivRequest;
         Zotero.HTTP.download = arxivDownload;
@@ -907,6 +937,7 @@ startup = async function(data) {
       result.progressWindow = {width:batchDialog.innerWidth,height:batchDialog.innerHeight,header:headerBounds.height,row:batchDoc.querySelector('.row').getBoundingClientRect().height};
       if (batchDoc.querySelector('th,thead,table') || batchDialog.innerWidth > 800 || batchDialog.innerHeight > 300 || batchDialog.innerHeight < 150 || headerBounds.height < 18 || gridBounds.bottom > actionBounds.top || gridBounds.width < 600) throw new Error('Native table or initial window dimensions failed: ' + JSON.stringify(result.progressWindow));
       if (batchDialog.getComputedStyle(batchDoc.querySelector('.row')).borderRadius!=='0px' || headerBounds.height<28) throw new Error('Progress rows or headings are cramped');
+      if (batchDialog.getComputedStyle(batchDoc.querySelector('.virtualized-table-header'), '::after').content !== 'none') throw new Error('Progress header has a duplicate divider');
       await capture('results',batchDialog);
       checkFixedStyle(batchDialog, batchDoc.body);
       const originalRAF = batchDialog.requestAnimationFrame.bind(batchDialog);
@@ -1064,7 +1095,7 @@ try {
   if (!result.ok) throw new Error(JSON.stringify(result));
   if (cachedJSONRequests !== 1)
     throw new Error("JSON metadata was not reused across batches");
-  if (arxivDownloads !== 2)
+  if (arxivDownloads !== 1)
     throw new Error(`Unexpected arXiv PDF downloads: ${arxivDownloads}`);
   if (metadataRequests !== 1 || abortedRequests !== 1)
     throw new Error("Native requests were not deduplicated");
@@ -1072,7 +1103,7 @@ try {
     throw new Error("Native HTTP retried failed discovery sources");
   if (!abortedRequests)
     throw new Error("Shutdown did not abort the pending native HTTP request");
-  if (pdfDownloads !== 3 || pdfVersionChecks !== 3 || pdfAborts !== 1)
+  if (pdfDownloads !== 5 || pdfVersionChecks !== 3 || pdfAborts !== 1)
     throw new Error(
       `PDF downloads or cancellation failed: ${pdfDownloads}, ${pdfVersionChecks}, ${pdfAborts}`,
     );

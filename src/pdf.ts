@@ -33,9 +33,20 @@ export class PDFUpdater {
     if (preprint ? !ids.arXiv || !this.arxiv : !ids.DOI && !ids.URL)
       return "skipped";
     if (!z.Libraries.get(item.libraryID).filesEditable) return "skipped";
+    const attachments = () => z.Items.get((item as any).getAttachments());
+    const originalAttachments = attachments();
+    const hasAnnotations = () =>
+      [...new Set<any>([...originalAttachments, ...attachments()])].some(
+        (attachment) =>
+          attachment.attachmentContentType === "application/pdf" &&
+          attachment.getAnnotations?.(true).length,
+      );
+    if (hasAnnotations()) return "skipped";
     const baseline = fingerprint(item);
     const check = () => {
       if (!operation.active()) throw new Error("Operation cancelled");
+      if (hasAnnotations())
+        throw new Error("PDF annotations changed during update");
       if (
         item.deleted ||
         !item.isEditable() ||
@@ -54,7 +65,6 @@ export class PDFUpdater {
     const source =
       arxiv?.source ||
       (ids.DOI ? `doi:${canonicalDOI(ids.DOI)}` : `url:${ids.URL}`);
-    const attachments = () => z.Items.get((item as any).getAttachments());
     const tracked =
       previous &&
       attachments().find((entry: any) => entry.key === previous.attachmentKey);

@@ -66,13 +66,10 @@ export async function resolveArxivPDF(
     if ((await pdf.attachmentHash) !== hash)
       throw new Error("PDF changed during version check");
     check();
-    if (version) {
-      attachments.set(pdf.key, hash);
-      localVersion = Math.max(localVersion, version);
-    }
+    attachments.set(pdf.key, hash);
+    localVersion = Math.max(localVersion, version);
   }
-  // Unknown files may be a newer manuscript or an entirely different document.
-  if (pdfs.length && !localVersion) return "skipped";
+  // Without a local version, download the verified latest PDF and deduplicate by hash.
   const metadata = await operation.wait(latest(id));
   check();
   const remoteID =

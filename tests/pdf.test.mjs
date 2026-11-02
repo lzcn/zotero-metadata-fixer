@@ -20,7 +20,7 @@ function fixture() {
     mime: "application/pdf",
     hash: "new",
     existing: "old",
-    annotations: ["highlight"],
+    annotations: [],
     headers: {},
     heads: 0,
     trashed: [],
@@ -208,7 +208,7 @@ function fixture() {
   };
 }
 
-test("changed published PDF is added and existing attachments and annotations are retained", async () => {
+test("changed published PDF replaces the old main file without changing parent metadata", async () => {
   const { item, state, operation, updater } = fixture();
   const before = item.toJSON();
   assert.equal(await updater.update(item, operation), "added");
@@ -362,7 +362,8 @@ test("annotations added while downloading protect the old PDF", async () => {
   state.downloading = async () => {
     state.annotations.push("new highlight");
   };
-  await updater.update(item, operation);
+  await assert.rejects(updater.update(item, operation), /annotations changed/);
+  assert.equal(state.imported.length, 0);
   assert.equal(old.deleted, false);
 });
 
@@ -421,7 +422,7 @@ test("changed remote ETag downloads a revision and trashes the last unannotated 
   await updater.update(item, operation);
   assert.equal(state.downloads, 2);
   assert.equal(first.deleted, true);
-  assert.equal(allAttachments[0].deleted, false);
+  assert.equal(allAttachments[0].deleted, true);
 });
 
 test("stable Last-Modified and size avoid another PDF transfer", async () => {
@@ -570,16 +571,16 @@ function arxivFixture() {
   return data;
 }
 
-test("arXiv uses the PDF version rather than updated item metadata and retains annotations", async () => {
+test("annotated arXiv PDFs skip version lookup and downloads", async () => {
   const { item, state, updater, operation, old } = arxivFixture();
+  state.annotations = ["highlight"];
   const before = item.toJSON();
-  assert.equal(await updater.update(item, operation), "added");
-  assert.equal(state.downloadURL, "https://arxiv.org/pdf/2501.01234v3");
+  assert.equal(await updater.update(item, operation), "skipped");
+  assert.equal(state.lookups, 0);
+  assert.equal(state.reads, 0);
+  assert.equal(state.downloads, 0);
   assert.equal(old.deleted, false);
   assert.deepEqual(item.toJSON(), before);
-  assert.equal(await updater.update(item, operation), "unchanged");
-  assert.equal(state.downloads, 1);
-  assert.equal(state.reads, 2); // Annotated v1 is read again; the new hash-verified v3 is cached.
 });
 
 test("arXiv retires only an identified, unannotated old main PDF", async () => {
@@ -592,13 +593,13 @@ test("arXiv retires only an identified, unannotated old main PDF", async () => {
   assert.equal(state.downloads, 1);
 });
 
-test("unknown, unrelated or missing local PDF versions are not guessed from their URL", async () => {
+test("unknown local arXiv versions download the verified latest PDF instead of guessing from metadata", async () => {
   for (const text of ["", "arXiv:2501.99999v9", "arXiv:2501.01234"]) {
     const { item, state, updater, operation } = arxivFixture();
     state.versionText = text;
-    assert.equal(await updater.update(item, operation), "skipped");
-    assert.equal(state.lookups, 0);
-    assert.equal(state.downloads, 0);
+    assert.equal(await updater.update(item, operation), "added");
+    assert.equal(state.lookups, 1);
+    assert.equal(state.downloads, 1);
   }
 });
 
@@ -677,4 +678,56 @@ test("blocked PDF downloads share the source cooldown across items and preserve 
   assert.equal(old.deleted, false);
   assert.equal(state.imported.length, 0);
   assert.equal(state.removed.length, 2);
+});
+
+test("annotated published PDFs are skipped before resolving or downloading anything", async () => {
+  const { item, state, zotero, old, allAttachments } = fixture();
+  for (const separate of [false, true]) {
+    state.annotations = separate ? [] : ["highlight"];
+    if (separate)
+      allAttachments.push({
+        ...old,
+        id: 9,
+        key: "ANNOTATED",
+        getAnnotations: () => ["highlight"],
+      });
+    zotero.Attachments.getFileResolvers = () => {
+      throw new Error("No PDF resolution allowed");
+    };
+    const updater = new PDFUpdater(zotero, async () => {
+      throw new Error("No article request allowed");
+    });
+    assert.equal(await updater.update(item, new Operation()), "skipped");
+    assert.equal(old.deleted, false);
+    assert.equal(state.downloads, 0);
+  }
+});
+
+test("an arXiv-to-publication transition replaces its manuscript only after a valid formal PDF", async () => {
+  for (const type of ["conferencePaper", "journalArticle"]) {
+    for (const annotated of [false, true]) {
+      const { item, state, updater, operation, old } = fixture();
+      item.data.itemType = type;
+      item.data.extra += "\nPreprint URL: https://arxiv.org/abs/2501.01234";
+      old.getField = (field) =>
+        field === "url" ? "https://arxiv.org/pdf/2501.01234v1" : "Full Text";
+      state.annotations = annotated ? ["highlight"] : [];
+      assert.equal(
+        await updater.update(item, operation),
+        annotated ? "skipped" : "added",
+      );
+      assert.equal(old.deleted, !annotated);
+      assert.equal(state.downloads, annotated ? 0 : 1);
+    }
+  }
+});
+
+test("annotations arriving during the import transaction roll back the new file and old-file deletion", async () => {
+  const { item, state, updater, operation, old } = fixture();
+  state.trashing = () => {
+    state.annotations.push("new annotation");
+  };
+  await assert.rejects(updater.update(item, operation), /annotations changed/);
+  assert.equal(old.deleted, false);
+  assert.equal(state.imported.length, 0);
 });

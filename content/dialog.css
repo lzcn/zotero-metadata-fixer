@@ -68,9 +68,12 @@ body.progress-dialog {
   height: 32px;
   background: var(--ui-surface);
   color: var(--ui-muted);
-  border-bottom: 1px solid var(--ui-border);
+  border-bottom: 0;
   font-size: 12px;
   font-weight: 500;
+}
+.progress-dialog .virtualized-table-header::after {
+  content: none;
 }
 .progress-dialog .virtualized-table .row {
   border-radius: 0;
