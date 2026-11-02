@@ -17,10 +17,16 @@
   flex: 0 0 10em;
   margin-inline: 0;
 }
-.plugin-preferences .preference-row > menulist,
+.plugin-preferences .preference-row > menulist {
+  flex: 0 0 auto;
+  width: 9em;
+  max-width: 100%;
+  margin-inline: 0;
+}
 .plugin-preferences .preference-row > input {
-  flex: 1 1 12em;
-  max-width: 28em;
+  flex: 0 1 20em;
+  width: 20em;
+  max-width: 100%;
   min-width: 0;
   margin-inline: 0;
 }
@@ -39,8 +45,8 @@
 }
 
 .plugin-preferences .preference-option {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
-.plugin-preferences .preference-help {
-  margin-inline-start: 24px;
+.plugin-preferences .preference-option > .preference-help {
+  margin-inline: 24px 0;
 }

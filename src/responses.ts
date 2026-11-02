@@ -5,7 +5,7 @@ export type ProblemSummary = { message: string; incomplete: boolean };
 export function classifyProblem(detail: string, s: Strings): ProblemSummary {
   if (!detail.trim()) return { message: "", incomplete: false };
   const incomplete =
-    /\b429\b|rate.?limit|timed?\s*out|timeout|access blocked|\bHTTP\b|Offline/i.test(
+    /\b(?:403|429|5\d\d)\b|rate.?limit|timed?\s*out|timeout|access blocked|captcha|not a bot|\bHTTP\b|Offline|访问受限/i.test(
       detail,
     );
   if (/timed?\s*out|timeout|超时/i.test(detail))

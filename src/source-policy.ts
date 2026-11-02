@@ -2,6 +2,7 @@ import { Operation } from "./operation";
 
 function sourceKey(url: string): string {
   const host = new URL(url).hostname;
+  if (host === "export.arxiv.org") return "arxiv.org";
   return /^dblp\.(org|dagstuhl\.de|uni-trier\.de)$/.test(host)
     ? "dblp.org"
     : host;
@@ -9,9 +10,13 @@ function sourceKey(url: string): string {
 
 // Session-local cooldowns survive batches; successful JSON is reused briefly, never persisted.
 export class SourcePolicy {
-  private cooldowns = new Map<string, { until: number; failures: number }>();
+  private cooldowns = new Map<
+    string,
+    { until: number; failures: number; status: number }
+  >();
   private queues = new Map<string, Promise<void>>();
   private lastStart = new Map<string, number>();
+  private nextStart = new Map<string, number>();
   private cache = new Map<string, { text: string; until: number }>();
   private cacheSize = 0;
 
@@ -43,7 +48,12 @@ export class SourcePolicy {
   async acquire(url: string, operation: Operation): Promise<() => void> {
     const key = sourceKey(url);
     const intervals: Record<string, number> = {
-      "api.crossref.org": 250,
+      // Public Crossref queries allow one request/second; single DOI lookups differ.
+      "api.crossref.org": /^\/(?:v1\/)?works\/10\./.test(new URL(url).pathname)
+        ? 250
+        : 1100,
+      "arxiv.org": 3000,
+      "scholar.google.com": 2000,
       "api.openalex.org": 200,
       "dblp.org": 500,
       "sparql.dblp.org": 1000,
@@ -68,15 +78,25 @@ export class SourcePolicy {
       await operation.wait(previous);
       const cooldown = this.cooldowns.get(key);
       if (cooldown && cooldown.until > Date.now())
-        throw Object.assign(new Error(`Source rate-limited: ${key}`), {
-          status: 429,
-          cooldown: true,
-        });
+        throw Object.assign(
+          new Error(
+            `Source ${cooldown.status === 429 ? "rate-limited" : "access blocked"}: ${key}`,
+          ),
+          {
+            status: cooldown.status,
+            cooldown: true,
+          },
+        );
+      const interval = intervals[key] || 0;
       const wait =
-        (this.lastStart.get(key) || 0) + (intervals[key] || 0) - Date.now();
+        Math.max(
+          this.nextStart.get(key) || 0,
+          (this.lastStart.get(key) || 0) + interval,
+        ) - Date.now();
       if (wait > 0) await operation.delay(wait);
       if (!operation.active()) throw new Error("Operation cancelled");
       this.lastStart.set(key, Date.now());
+      this.nextStart.set(key, Date.now() + interval);
       return releaseSlot;
     } catch (error) {
       releaseSlot();
@@ -85,11 +105,10 @@ export class SourcePolicy {
   }
 
   failed(url: string, error: any): void {
-    if (
-      Number(error?.status || error?.xmlhttp?.status) !== 429 ||
-      error?.cooldown
-    )
-      return;
+    const status = error?.blocked
+      ? 403
+      : Number(error?.status || error?.xmlhttp?.status);
+    if (![403, 429].includes(status) || error?.cooldown) return;
     const key = sourceKey(url);
     const failures = (this.cooldowns.get(key)?.failures || 0) + 1;
     let header: string | undefined;
@@ -107,11 +126,14 @@ export class SourcePolicy {
           : NaN;
     this.cooldowns.set(key, {
       failures,
+      status,
       until:
         Number.isFinite(until) && until > Date.now()
           ? until
           : Date.now() +
-            Math.min(900000, 60000 * 2 ** Math.min(failures - 1, 4)),
+            (status === 403
+              ? 15 * 60 * 1000
+              : Math.min(900000, 60000 * 2 ** Math.min(failures - 1, 4))),
     });
   }
 
@@ -121,5 +143,6 @@ export class SourcePolicy {
     this.cache.clear();
     this.cacheSize = 0;
     this.lastStart.clear();
+    this.nextStart.clear();
   }
 }

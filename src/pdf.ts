@@ -1,9 +1,11 @@
-import type { Item } from "./model";
+import type { Item, Metadata } from "./model";
+import { resolveArxivPDF } from "./arxiv-pdf";
 import { canonicalDOI, identifiers, isPreprint } from "./identifiers";
 import { articleEvidence } from "./metadata";
 import { matchesAuthor, titleScore } from "./matching";
 import { fingerprint } from "./update";
 import type { Operation } from "./operation";
+import type { SourcePolicy } from "./source-policy";
 import {
   PDFVersionCache,
   PDF_RECHECK_INTERVAL,
@@ -20,12 +22,16 @@ export class PDFUpdater {
     private zotero: any,
     private document: (url: string) => Promise<Document>,
     private cache = new PDFVersionCache(zotero),
+    private arxiv?: (id: string) => Promise<Metadata | undefined>,
+    private policy?: SourcePolicy,
   ) {}
 
   async update(item: Item, operation: Operation): Promise<PDFResult> {
     const z = this.zotero;
     const ids = identifiers(item);
-    if (isPreprint(item) || (!ids.DOI && !ids.URL)) return "skipped";
+    const preprint = isPreprint(item);
+    if (preprint ? !ids.arXiv || !this.arxiv : !ids.DOI && !ids.URL)
+      return "skipped";
     if (!z.Libraries.get(item.libraryID).filesEditable) return "skipped";
     const baseline = fingerprint(item);
     const check = () => {
@@ -41,7 +47,13 @@ export class PDFUpdater {
     check();
     const cacheKey = `${item.libraryID}/${item.key}`;
     const previous = this.cache.get(cacheKey);
-    const source = ids.DOI ? `doi:${canonicalDOI(ids.DOI)}` : `url:${ids.URL}`;
+    const arxiv = preprint
+      ? await resolveArxivPDF(z, item, operation, this.arxiv!, check, previous)
+      : undefined;
+    if (typeof arxiv === "string") return arxiv;
+    const source =
+      arxiv?.source ||
+      (ids.DOI ? `doi:${canonicalDOI(ids.DOI)}` : `url:${ids.URL}`);
     const attachments = () => z.Items.get((item as any).getAttachments());
     const tracked =
       previous &&
@@ -51,6 +63,7 @@ export class PDFUpdater {
     for (const old of new Set<any>([primary, tracked])) {
       if (
         !old ||
+        (arxiv && !arxiv.attachments.has(old.key)) ||
         old.attachmentContentType !== "application/pdf" ||
         old.deleted ||
         /\b(?:supplement(?:ary|al|s)?|supporting information|appendi(?:x|ces))\b|补充|附录/i.test(
@@ -58,10 +71,12 @@ export class PDFUpdater {
         )
       )
         continue;
+      const hash = await old.attachmentHash;
+      if (arxiv && arxiv.attachments.get(old.key) !== hash) continue;
       oldPDFs.push({
         item: old,
         baseline: fingerprint(old),
-        hash: await old.attachmentHash,
+        hash,
       });
     }
     check();
@@ -108,63 +123,69 @@ export class PDFUpdater {
     const errors: string[] = [];
     // Like arXiv Workflow, resolve published DOIs through the publisher only.
     // A retained manuscript URL must not supply an older PDF if that fails.
-    const pages = z.Attachments.getFileResolvers(
-      item,
-      ids.DOI ? ["doi"] : ["url"],
-    )
-      .map((resolver: { pageURL: string }) => resolver.pageURL)
-      .filter(
-        (url: string) =>
-          !isPreprint({
-            itemType: "document",
-            isRegularItem: () => true,
-            getField: (field) => (field === "url" ? url : ""),
-          }),
-      );
+    const pages = arxiv
+      ? [arxiv.page]
+      : z.Attachments.getFileResolvers(item, ids.DOI ? ["doi"] : ["url"])
+          .map((resolver: { pageURL: string }) => resolver.pageURL)
+          .filter(
+            (url: string) =>
+              !isPreprint({
+                itemType: "document",
+                isRegularItem: () => true,
+                getField: (field) => (field === "url" ? url : ""),
+              }),
+          );
     for (const page of new Set<string>(pages)) {
       let temporary: any;
       try {
-        const doc = await operation.wait(this.document(page));
-        check();
-        const evidence = articleEvidence(doc, doc.location?.href || page);
-        const sameDOI = Boolean(
-          evidence.doi &&
-            ids.DOI &&
-            canonicalDOI(evidence.doi) === canonicalDOI(ids.DOI),
-        );
-        const authors = Array.from(
-          doc.querySelectorAll('meta[name="citation_author"]'),
-          (meta) => meta.getAttribute("content") || "",
-        );
-        if (
-          (evidence.doi &&
-            ids.DOI &&
-            canonicalDOI(evidence.doi) !== canonicalDOI(ids.DOI)) ||
-          (evidence.title &&
-            titleScore(item.getField("title"), evidence.title) < 0.9) ||
-          (!sameDOI &&
-            (!evidence.title ||
-              !matchesAuthor(item.getCreators()[0]?.lastName || "", authors)))
-        )
-          throw new Error("No matching article identity for PDF");
-        const links = [
-          ...new Set(
-            Array.from(
-              doc.querySelectorAll('meta[name="citation_pdf_url"]'),
-              (meta) => meta.getAttribute("content")?.trim(),
-            ).filter(Boolean),
-          ),
-        ];
-        const resolved: { url?: string } | false =
-          links.length === 1
-            ? { url: links[0] }
-            : await operation.wait<{ url?: string } | false>(
-                z.Utilities.Internal.getFileFromDocument(doc),
-              );
-        check();
-        if (!resolved || !resolved.url) continue;
-        const url = new URL(resolved.url, doc.location?.href || page).href;
-        if (!/^https?:\/\//i.test(url)) throw new Error("Invalid PDF URL");
+        let url: string;
+        let referer = page;
+        if (arxiv) {
+          url = arxiv.url;
+        } else {
+          const doc = await operation.wait(this.document(page));
+          check();
+          const evidence = articleEvidence(doc, doc.location?.href || page);
+          const sameDOI = Boolean(
+            evidence.doi &&
+              ids.DOI &&
+              canonicalDOI(evidence.doi) === canonicalDOI(ids.DOI),
+          );
+          const authors = Array.from(
+            doc.querySelectorAll('meta[name="citation_author"]'),
+            (meta) => meta.getAttribute("content") || "",
+          );
+          if (
+            (evidence.doi &&
+              ids.DOI &&
+              canonicalDOI(evidence.doi) !== canonicalDOI(ids.DOI)) ||
+            (evidence.title &&
+              titleScore(item.getField("title"), evidence.title) < 0.9) ||
+            (!sameDOI &&
+              (!evidence.title ||
+                !matchesAuthor(item.getCreators()[0]?.lastName || "", authors)))
+          )
+            throw new Error("No matching article identity for PDF");
+          const links = [
+            ...new Set(
+              Array.from(
+                doc.querySelectorAll('meta[name="citation_pdf_url"]'),
+                (meta) => meta.getAttribute("content")?.trim(),
+              ).filter(Boolean),
+            ),
+          ];
+          const resolved: { url?: string } | false =
+            links.length === 1
+              ? { url: links[0] }
+              : await operation.wait<{ url?: string } | false>(
+                  z.Utilities.Internal.getFileFromDocument(doc),
+                );
+          check();
+          if (!resolved || !resolved.url) continue;
+          referer = doc.location?.href || page;
+          url = new URL(resolved.url, referer).href;
+          if (!/^https?:\/\//i.test(url)) throw new Error("Invalid PDF URL");
+        }
         const cached =
           previous &&
           previous.source === source &&
@@ -176,7 +197,7 @@ export class PDFUpdater {
             : undefined;
         check();
         const headers: Record<string, string> = {
-          Referer: doc.location?.href || page,
+          Referer: referer,
         };
         if (cached?.etag) headers["If-None-Match"] = cached.etag;
         else if (cached?.modified)
@@ -227,6 +248,7 @@ export class PDFUpdater {
             return "unchanged";
           let releaseHead = () => {};
           let head: any;
+          const releaseSource = await this.policy?.acquire(url, operation);
           try {
             head = await z.HTTP.request("HEAD", url, {
               headers,
@@ -239,11 +261,13 @@ export class PDFUpdater {
               },
             });
           } catch (error) {
+            this.policy?.failed(url, error);
             check();
             // Publishers may reject HEAD; the conditional GET remains available.
             z.debug(`PDF version probe failed: ${String(error)}`);
           } finally {
             releaseHead();
+            releaseSource?.();
           }
           check();
           if (head) {
@@ -263,6 +287,7 @@ export class PDFUpdater {
         file.append("document.pdf");
         let release = () => {};
         let response: any;
+        const releaseSource = await this.policy?.acquire(url, operation);
         try {
           // Await the actual download so cleanup cannot race a late temporary write.
           response = await z.HTTP.download(url, file.path, {
@@ -277,8 +302,12 @@ export class PDFUpdater {
               release = operation.onCancel(cancel);
             },
           });
+        } catch (error) {
+          this.policy?.failed(url, error);
+          throw error;
         } finally {
           release();
+          releaseSource?.();
         }
         check();
         if (response.status === 304) {

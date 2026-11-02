@@ -14,6 +14,7 @@ let pdfDownloads = 0;
 let pdfAborts = 0;
 let pdfRevision = 1;
 let pdfVersionChecks = 0;
+let arxivDownloads = 0;
 const pdfTitle =
   "Unified Metric Learning for Personalized Fashion Recommendations with Fast User Adaptation";
 const pdfDOI = "10.1109/TMM.2026.3694502";
@@ -107,6 +108,19 @@ const server = createServer((request, response) => {
     cachedJSONRequests++;
     response.writeHead(200, { "Content-Type": "application/json" });
     response.end('{"record":"cached"}');
+    return;
+  }
+  if (request.url === "/arxiv-feed") {
+    response.writeHead(200, { "Content-Type": "application/atom+xml" });
+    response.end(
+      '<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2501.01234v3</id><title>Arxiv Version Host Paper</title><author><name>Zhi Lu</name></author><published>2025-01-02T00:00:00Z</published></entry></feed>',
+    );
+    return;
+  }
+  if (request.url === "/arxiv-pdf") {
+    arxivDownloads++;
+    response.writeHead(200, { "Content-Type": "application/pdf" });
+    response.end(pdfFixture("arXiv:2501.01234v3"));
     return;
   }
   if (request.url === "/metadata") {
@@ -411,7 +425,8 @@ startup = async function(data) {
       result.nativeCancellation = progressState.cancelled && !cancelDialog.closed;
       if (!result.nativeCancellation) throw new Error('Native Cancel command did not retain cancelled results');
       const cancelledSummary = strings.progressCancelled.replace('{completed}', '0').replace('{total}', '1').replace('{pending}', '1');
-      await wait(() => cancelDialog.document.getElementById('summary').textContent === cancelledSummary);
+      const compactCancelled = strings.progressCancelledCompact.replace('{completed}', '0').replace('{total}', '1');
+      await wait(() => cancelDialog.document.getElementById('summary').textContent === compactCancelled && cancelDialog.document.getElementById('summary').title === cancelledSummary);
       if (!cancelDialog.document.getElementById('progress').hidden) throw new Error('Cancelled progress summary lost pending work');
       cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
       await wait(() => cancelDialog.closed);
@@ -496,6 +511,8 @@ startup = async function(data) {
       if (result.cvpr.publication !== 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition' || result.cvpr.conference !== 'My existing CVPR event' || result.cvpr.date !== '2026' || cvpr.getField('title') !== 'My Hand Edited CVPR TITLE') throw new Error('CVPR full-name normalization failed');
       if (!progressState.rows[0].detail.includes(strings.apiBlocked)) throw new Error('Native HTML API response was not classified as blocked');
       result.blockedResponse = true;
+      // The following unrelated providers share this fixture's loopback hostname.
+      MLRuntime.sourcePolicy.clear();
       const identity = {id:cvpr.id,key:cvpr.key};
       for (const venue of ["2026 IEEE 37 Conference for Computer Vision & Pattern Recognition", "Proc. of the XXXVII Annual Conference on Computer Vision and Pattern Recognition (CVPR'26)"]) {
         cvpr.setField('proceedingsTitle', venue);
@@ -775,6 +792,47 @@ startup = async function(data) {
         MLRuntime.request = pdfRequest;
         Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
       }
+      const arxivRequest = MLRuntime.request;
+      const arxivDownload = Zotero.HTTP.download;
+      try {
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
+        MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
+        MLRuntime.retriever = {retrieveCurrent:async item => ({metadata:item.toJSON(),warnings:[]})};
+        MLRuntime.request = (url, ...args) => arxivRequest.call(MLRuntime, url.startsWith('https://export.arxiv.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/arxiv-feed"))} : url, ...args);
+        Zotero.HTTP.download = function(url, ...args) { return arxivDownload.call(this, url === 'https://arxiv.org/pdf/2501.01234v3' ? ${JSON.stringify(slowURL.replace("/pending", "/arxiv-pdf"))} : url, ...args); };
+        for (const annotated of [true, false]) {
+          const paper = new Zotero.Item('preprint');
+          paper.setField('title', 'Arxiv Version Host Paper');
+          paper.setField('url', 'https://arxiv.org/abs/2501.01234v3');
+          paper.setField('archiveID', 'arXiv:2501.01234v3');
+          paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+          await paper.saveTx();
+          const paperIdentity = {id:paper.id,key:paper.key};
+          await IOUtils.writeUTF8(oldPDFPath, ${JSON.stringify(pdfFixture("arXiv:2501.01234v1"))});
+          const old = await Zotero.Attachments.importFromFile({file:oldPDFPath,parentItemID:paper.id,contentType:'application/pdf'});
+          const oldHash = await old.attachmentHash;
+          if (annotated) {
+            const note = new Zotero.Item('annotation');
+            note.libraryID = paper.libraryID;
+            note.parentID = old.id;
+            for (const name of ['annotationType','annotationText','annotationComment','annotationColor','annotationPageLabel','annotationSortIndex','annotationPosition']) note[name] = annotation[name];
+            await note.saveTx();
+          }
+          await win.ZoteroPane.selectItem(paper.id);
+          await MLRuntime.run(win, 'lint');
+          if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || paper.getAttachments().length !== (annotated ? 2 : 1) || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          if (annotated && (await old.attachmentHash !== oldHash || old.getAnnotations()[0]?.annotationText !== 'Keep this annotation')) throw new Error('arXiv annotations changed');
+          for (const window of [...MLRuntime.dialogs]) window.close();
+          await MLRuntime.run(win, 'lint');
+          if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || paper.getAttachments().length !== (annotated ? 2 : 1)) throw new Error('Native arXiv cached PDF was downloaded again');
+          for (const window of [...MLRuntime.dialogs]) window.close();
+        }
+        result.arxivPDF = {actualFirstPage:true,metadataVersionIgnored:true,annotatedPreserved:true,unannotatedRetired:true,cachedVersionReused:true};
+      } finally {
+        MLRuntime.request = arxivRequest;
+        Zotero.HTTP.download = arxivDownload;
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
+      }
       const cachedItem = new Zotero.Item('journalArticle');
       cachedItem.setField('title', 'Native Cache Host Paper');
       cachedItem.setField('DOI', '10.1000/cache-host');
@@ -821,18 +879,22 @@ startup = async function(data) {
       if (result.batch.total !== 3 || result.batch.statuses.join(',') !== [strings.updated,strings.failed,strings.updated].join(',') || result.batch.closed || batch[0].getField('abstractNote') !== 'Filled in batch' || batch[1].getField('abstractNote') || batch[2].getField('abstractNote') !== 'Filled in batch') throw new Error('Native queue completion or failure isolation failed');
       await wait(() => batchDoc.getElementById('actions').firstElementChild.getAttribute('label') === strings.close);
       const finishedSummary = strings.progressFinished.replace('{completed}', '3').replace('{total}', '3').replace('{updated}', '2').replace('{failed}', '1');
-      if (batchDoc.getElementById('summary').textContent !== finishedSummary || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary is incorrect');
+      const compactSummary = strings.progressFinishedCompact.replace('{completed}', '3').replace('{total}', '3');
+      if (batchDoc.getElementById('summary').textContent !== compactSummary || batchDoc.getElementById('summary').title !== finishedSummary || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary or tooltip is incorrect');
       const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
-      if (headings.length !== 3 || batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2].textContent !== strings.rateLimited) throw new Error('Native progress omitted the concise problem: ' + JSON.stringify({headings:headings.length,rows:[...batchDoc.querySelectorAll('.virtualized-table .row')].map(row=>row.textContent)}));
+      const failedStatus = batchDoc.querySelectorAll('.virtualized-table .row')[1].children[1];
+      if (headings.length !== 2 || failedStatus.textContent !== strings.failed || !failedStatus.title.includes(strings.rateLimited) || !failedStatus.title.includes('HTTP 429')) throw new Error('Native progress did not keep diagnostic details in the status tooltip');
+      failedStatus.dispatchEvent(new batchDialog.MouseEvent('mouseover', {bubbles:true}));
+      if (!failedStatus.title.includes('HTTP 429')) throw new Error('Hover replaced the diagnostic tooltip');
       const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };
       sort(headings[0]);
       await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.ascending'));
       sort(headings[0]);
       await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.descending') && batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 2');
       if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 2' || progressState.rows[0].itemID !== batch[0].id) throw new Error('Title sorting changed the task order');
-      sort(headings[2]);
+      sort(headings[1]);
       await wait(() => batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 1');
-      if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 1') throw new Error('Problem sorting did not put the failed row first');
+      if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 1') throw new Error('Status sorting did not put the failed row first');
       const selectedRow = progressState.rows.find(row => row.title === 'Batch Host Paper 1');
       batchDoc.querySelector('.virtualized-table .row').click();
       await wait(() => win.ZoteroPane.getSelectedItems().some(selected => selected.id === selectedRow.itemID));
@@ -1002,6 +1064,8 @@ try {
   if (!result.ok) throw new Error(JSON.stringify(result));
   if (cachedJSONRequests !== 1)
     throw new Error("JSON metadata was not reused across batches");
+  if (arxivDownloads !== 2)
+    throw new Error(`Unexpected arXiv PDF downloads: ${arxivDownloads}`);
   if (metadataRequests !== 1 || abortedRequests !== 1)
     throw new Error("Native requests were not deduplicated");
   if (Object.values(failedRequests).some((count) => count !== 1))

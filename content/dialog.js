@@ -71,9 +71,6 @@ function flushProgress() {
     entries.sort((left, right) => {
       const a = left[sortField] || "";
       const b = right[sortField] || "";
-      // Missing problems stay at the bottom in both directions.
-      if (sortField === "problem" && (!a || !b))
-        return a === b ? 0 : a ? -1 : 1;
       return a.localeCompare(b, s.locale, { numeric: true }) * sortDirection;
     });
   const total = entries.length;
@@ -91,12 +88,21 @@ function flushProgress() {
     : data.finished
       ? s.progressFinished
       : s.progressRunning;
-  summary.textContent = message
-    .replace("{completed}", String(completed))
-    .replace("{total}", String(total))
-    .replace("{updated}", String(updated))
-    .replace("{failed}", String(failed))
-    .replace("{pending}", String(pending));
+  const format = (text) =>
+    text
+      .replace("{completed}", String(completed))
+      .replace("{total}", String(total))
+      .replace("{updated}", String(updated))
+      .replace("{failed}", String(failed))
+      .replace("{pending}", String(pending));
+  summary.title = format(message);
+  summary.textContent = format(
+    data.cancelled
+      ? s.progressCancelledCompact
+      : data.finished
+        ? s.progressFinishedCompact
+        : s.progressRunningCompact,
+  );
   progress.max = Math.max(1, total);
   progress.value = completed;
   progress.hidden = !!data.finished || !!data.cancelled;
@@ -136,13 +142,6 @@ root.render(
         minWidth: 90,
         staticWidth: true,
       },
-      {
-        dataKey: "problem",
-        label: s.problem,
-        width: 190,
-        minWidth: 130,
-        staticWidth: true,
-      },
     ],
     getRowCount: () => entries.length,
     renderItem(index, selection, oldDiv, columns) {
@@ -171,10 +170,14 @@ root.render(
           cell.replaceChildren(text);
         }
         cell.title =
-          column.dataKey === "problem"
-            ? entry.detail || ""
+          column.dataKey === "status"
+            ? [
+                ...new Set(
+                  [entry.status, entry.problem, entry.detail].filter(Boolean),
+                ),
+              ].join("\n")
             : entry[column.dataKey] || "";
-        if (column.dataKey === "problem") {
+        if (column.dataKey === "status") {
           // Keep the diagnostic tooltip instead of the table's truncated-text tooltip.
           cell.addEventListener("mouseover", (event) =>
             event.stopPropagation(),

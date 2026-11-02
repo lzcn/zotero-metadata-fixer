@@ -1739,3 +1739,31 @@ test("edits made during metadata retrieval are retained without applying stale f
     assert.match(state.progress.rows[0].detail, /Item changed/);
   }
 });
+
+test("HTTP-200 challenges cool down a source before another batch reaches the network", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  const old = globalThis.Zotero.HTTP;
+  let calls = 0;
+  globalThis.Zotero.HTTP = {
+    request: async () => {
+      calls++;
+      return { responseText: "<html>Making sure you are not a bot</html>" };
+    },
+  };
+  try {
+    await assert.rejects(
+      runtime.network(new Operation()).json("https://example.test/api"),
+      /Access blocked/,
+    );
+    await assert.rejects(
+      runtime.network(new Operation()).text("https://example.test/other"),
+      /access blocked/,
+    );
+    assert.equal(calls, 1);
+  } finally {
+    globalThis.Zotero.HTTP = old;
+  }
+});

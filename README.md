@@ -10,7 +10,7 @@ Find published versions and repair metadata in the original Zotero item.
 
 Requires Zotero 10. Download the XPI from [Releases](https://github.com/lzcn/zotero-metadata-fixer/releases/latest) and install it through **Tools → Plugins → Install Plugin From File**.
 
-Select items, right-click and choose **Metadata Fixer**. The results window shows progress and problems; click a row to select its item. Cancel or close the window to stop pending work.
+Select items, right-click and choose **Metadata Fixer**. The results window shows progress and status; hover over either for details, or click a row to select its item. Cancel or close the window to stop pending work.
 
 The plugin finds published versions, fills missing DOIs and fields, repairs record types, standardizes proceedings titles and optionally updates PDFs. Updates preserve attachments, annotations, notes, collections, tags and relations. Editing an item during retrieval stops its update; empty results preserve existing fields.
 
@@ -18,10 +18,27 @@ The plugin finds published versions, fills missing DOIs and fields, repairs reco
 
 - Choose original, standard or short proceedings titles.
 - Show publication abbreviations in Zotero's native column. Disable Zotero Style's Publication Column to avoid conflicts.
-- Enable PDF updates to replace unannotated main PDFs while keeping annotated ones. Publisher access is required.
+- Enable PDF updates for newer arXiv versions and publisher PDFs. Annotated files are kept; publisher access is required.
 - Optionally add a [Semantic Scholar API key](https://www.semanticscholar.org/product/api#api-key-form), stored locally and sent only to `api.semanticscholar.org`.
 
 Lookup uses Zotero translators and scholarly metadata services. Conflicting or unverified matches are skipped. Run updates manually; install plugin updates from XPI.
+
+## Update flow
+
+Identifiers and official publication links come first. Title searches expand from Crossref/OpenAlex to DBLP/OpenReview and then secondary sources only when needed. Reliable matches stop further searches; conflicting candidates stop automatic updates. Semantic Scholar remains optional. Requests share caching, pacing and cooldowns across batches; blocked sources are paused.
+
+```mermaid
+flowchart LR
+  A[Selected item] --> B[Identify publication]
+  B --> C[Validate and repair original item]
+  C --> D{PDF updates enabled?}
+  D -->|arXiv| E[Compare actual PDF version with arXiv]
+  D -->|Published| F[Check publisher PDF validators and hash]
+  E --> G[Import changed PDF; protect annotated files]
+  F --> G
+```
+
+arXiv versions come from the attached PDF's first page or a hash-verified download cache, not the item's metadata. Unidentifiable local versions are skipped. Published PDF checks retain conditional requests and file deduplication. The original item ID, annotated PDFs and supplementary files are preserved.
 
 The results window uses a fixed Bear-inspired palette with a compact table and system fonts. Colors follow the system’s light or dark appearance; Settings use Zotero’s native controls.
 
@@ -36,6 +53,10 @@ npm run build
 ```
 
 Output: `dist/zotero-metadata-fixer.xpi`. `npm run test:host` uses disposable Zotero directories. `npm run release` prepares local files under `release/v<version>/` without uploading.
+
+## Acknowledgments
+
+Thanks to [Federico Torrielli and contributors](https://github.com/federicotorrielli/zotero-metadata-hunter) (Metadata Hunter), [AllanChain and contributors](https://github.com/AllanChain/zotero-arxiv-workflow) (arXiv Workflow), [northword and contributors](https://github.com/northword/zotero-format-metadata) (Linter for Zotero), and the [Zotero translators contributors](https://github.com/zotero/translators).
 
 ## License
 

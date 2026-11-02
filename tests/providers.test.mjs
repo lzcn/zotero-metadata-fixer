@@ -280,6 +280,8 @@ test("arXiv retrieves latest metadata and ignores affiliation text in author nam
   assert.equal(found.candidate.doi, published.DOI);
   linkFallback = true;
   assert.equal((await finder.arxiv("2501.01234")).candidate.doi, published.DOI);
+  values.id = "http://arxiv.org/abs/2501.99999v3";
+  await assert.rejects(finder.arxiv("2501.01234"), /Conflicting arXiv/);
 });
 
 test("OpenReview supports DOI-free BibTeX and excludes submissions, DBLP mirrors and anonymous records", async () => {
@@ -614,9 +616,10 @@ test("a DBLP blocked response does not discard verified results from other sourc
   finder.googleScholar = async () => [];
   finder.semanticScholar = async () => [];
   finder.openAlex = async () => [];
-  finder.crossref = async () => [
+  finder.crossref = async () => [];
+  finder.openreview = async () => [
     {
-      source: "Crossref",
+      source: "OpenReview",
       title: published.title,
       authors: ["Zhi Lu"],
       doi: published.DOI,
@@ -625,7 +628,6 @@ test("a DBLP blocked response does not discard verified results from other sourc
     },
   ];
   finder.pubmed = async () => [];
-  finder.openreview = async () => [];
   const item = new FakeItem();
   item.data.title = published.title;
   const lookup = await finder.find(item);
@@ -1574,11 +1576,15 @@ test("reliable structured results skip Scholar pacing and slow Scholar requests"
   const finder = new PublicationFinder({});
   emptyIndexes(finder);
   finder.related = async () => [];
-  finder.semanticScholar = finder.pubmed = async () => {
-    throw new Error(
-      "Secondary source must not run on a reliable primary match",
-    );
-  };
+  finder.dblp =
+    finder.openreview =
+    finder.semanticScholar =
+    finder.pubmed =
+      async () => {
+        throw new Error(
+          "Secondary source must not run on a reliable primary match",
+        );
+      };
   finder.crossref = async () => [
     {
       source: "Crossref",
@@ -1598,6 +1604,7 @@ test("reliable structured results skip Scholar pacing and slow Scholar requests"
   const result = await finder.find(item);
   assert.equal(result.candidates[0].doi, published.DOI);
   assert.equal(scholarCalls, 0);
+  assert.deepEqual(result.warnings, []);
 });
 
 test("parallel indexes wait for conflicting late results and cannot be overridden by Scholar", async () => {
@@ -1614,7 +1621,7 @@ test("parallel indexes wait for conflicting late results and cannot be overridde
   finder.crossref = async () => [candidate];
   let finish;
   let started = false;
-  finder.dblp = () => {
+  finder.openAlex = () => {
     started = true;
     return new Promise((resolve) => {
       finish = resolve;
@@ -1635,7 +1642,7 @@ test("parallel indexes wait for conflicting late results and cannot be overridde
   for (let i = 0; i < 10 && !started; i++) await Promise.resolve();
   assert.equal(started, true);
   assert.equal(completed, false);
-  finish([{ ...candidate, source: "DBLP", doi: "10.1000/conflicting" }]);
+  finish([{ ...candidate, source: "OpenAlex", doi: "10.1000/conflicting" }]);
   const result = await pending;
   const { selectPublication } = await import("../.tests-build/selection.js");
   assert.equal(selectPublication(item, [candidate]).doi, published.DOI);

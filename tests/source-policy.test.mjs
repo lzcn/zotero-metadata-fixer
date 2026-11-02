@@ -77,3 +77,67 @@ test("successful JSON cache expires, stays bounded and clears on shutdown", () =
     Date.now = clock;
   }
 });
+
+test("Crossref search and DOI requests respect their different public limits", async () => {
+  const policy = new SourcePolicy();
+  const clock = Date.now;
+  let now = 100000;
+  Date.now = () => now;
+  const operation = new Operation();
+  const waits = [];
+  operation.delay = async (ms) => {
+    waits.push(ms);
+    now += ms;
+  };
+  try {
+    for (const path of [
+      "works?query.title=one",
+      "works?query.title=two",
+      "works/10.1000/one",
+      "works/10.1000/two",
+      "works?query.title=three",
+    ])
+      (await policy.acquire("https://api.crossref.org/" + path, operation))();
+    assert.deepEqual(waits, [1100, 1100, 250, 1100]);
+  } finally {
+    Date.now = clock;
+  }
+});
+
+test("arXiv API and abstract requests share one paced queue", async () => {
+  const policy = new SourcePolicy();
+  const clock = Date.now;
+  let now = 100000;
+  Date.now = () => now;
+  const operation = new Operation();
+  operation.delay = async (ms) => {
+    assert.equal(ms, 3000);
+    now += ms;
+  };
+  try {
+    (
+      await policy.acquire(
+        "https://export.arxiv.org/api/query?id_list=2501.01234",
+        operation,
+      )
+    )();
+    (await policy.acquire("https://arxiv.org/abs/2501.01234", operation))();
+    assert.equal(now, 103000);
+  } finally {
+    Date.now = clock;
+  }
+});
+
+test("403 and HTTP-200 challenges stop a source across batches without mirror hopping", async () => {
+  for (const error of [{ status: 403 }, { blocked: true }]) {
+    const policy = new SourcePolicy();
+    policy.failed("https://dblp.org/search", error);
+    await assert.rejects(
+      policy.acquire("https://dblp.uni-trier.de/search", new Operation()),
+      (error) => error.status === 403 && error.cooldown,
+    );
+    (await policy.acquire("https://api.crossref.org/works", new Operation()))();
+    policy.clear();
+    (await policy.acquire("https://dblp.org/search", new Operation()))();
+  }
+});

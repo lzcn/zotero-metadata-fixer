@@ -10,6 +10,7 @@ import {
   cleanDOI,
   preprintDOI,
   officialPublicationURL,
+  arxivID,
 } from "./identifiers";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
@@ -197,7 +198,13 @@ export class PublicationFinder {
           "journal_ref",
         )[0]
         ?.textContent?.trim() || "";
-    const version = atom("id").split("/abs/")[1] || id;
+    const version = arxivID(atom("id"));
+    if (
+      !version ||
+      version.replace(/v\d+$/, "").toLowerCase() !==
+        id.replace(/v\d+$/, "").toLowerCase()
+    )
+      throw new Error("Conflicting arXiv identifier");
     const url = `https://arxiv.org/abs/${version}`;
     const comment =
       entry
@@ -696,6 +703,8 @@ LIMIT 10`;
       [
         ["Crossref", () => this.crossref(item, publicationHint)],
         ["OpenAlex", () => this.openAlex(item)],
+      ],
+      [
         ["DBLP", () => this.dblp(item)],
         ["OpenReview", () => this.openreview(item)],
       ],

@@ -521,3 +521,160 @@ test("a supplementary PDF is preserved even if Zotero treats it as the default a
   await updater.update(item, operation);
   assert.equal(old.deleted, false);
 });
+
+function arxivFixture() {
+  const data = fixture();
+  const { item, state, zotero } = data;
+  item.itemTypeID = 1;
+  item.data = {
+    ...item.data,
+    itemType: "preprint",
+    DOI: "10.48550/arXiv.2501.01234",
+    url: "https://arxiv.org/abs/2501.01234v3",
+    archiveID: "arXiv:2501.01234v3",
+    publicationTitle: "",
+  };
+  state.versionText = "arXiv:2501.01234v1 [cs.LG]";
+  state.latest = "2501.01234v3";
+  state.reads = 0;
+  state.lookups = 0;
+  zotero.PDFWorker = {
+    getFullText: async (_, pages) => {
+      assert.equal(pages, 1);
+      state.reads++;
+      await state.reading?.();
+      return { text: state.versionText };
+    },
+  };
+  const download = zotero.HTTP.download;
+  zotero.HTTP.download = (url, ...args) => {
+    state.downloadURL = url;
+    return download(url, ...args);
+  };
+  data.updater = new PDFUpdater(
+    zotero,
+    async () => {
+      throw new Error("arXiv does not need a publisher page");
+    },
+    undefined,
+    async () => {
+      state.lookups++;
+      await state.lookup?.();
+      return {
+        itemType: "preprint",
+        title: item.getField("title"),
+        archiveID: "arXiv:" + state.latest,
+      };
+    },
+  );
+  return data;
+}
+
+test("arXiv uses the PDF version rather than updated item metadata and retains annotations", async () => {
+  const { item, state, updater, operation, old } = arxivFixture();
+  const before = item.toJSON();
+  assert.equal(await updater.update(item, operation), "added");
+  assert.equal(state.downloadURL, "https://arxiv.org/pdf/2501.01234v3");
+  assert.equal(old.deleted, false);
+  assert.deepEqual(item.toJSON(), before);
+  assert.equal(await updater.update(item, operation), "unchanged");
+  assert.equal(state.downloads, 1);
+  assert.equal(state.reads, 2); // Annotated v1 is read again; the new hash-verified v3 is cached.
+});
+
+test("arXiv retires only an identified, unannotated old main PDF", async () => {
+  const { item, state, updater, operation, old } = arxivFixture();
+  state.annotations = [];
+  assert.equal(await updater.update(item, operation), "added");
+  assert.equal(old.deleted, true);
+  assert.equal(await updater.update(item, operation), "unchanged");
+  assert.equal(state.reads, 1);
+  assert.equal(state.downloads, 1);
+});
+
+test("unknown, unrelated or missing local PDF versions are not guessed from their URL", async () => {
+  for (const text of ["", "arXiv:2501.99999v9", "arXiv:2501.01234"]) {
+    const { item, state, updater, operation } = arxivFixture();
+    state.versionText = text;
+    assert.equal(await updater.update(item, operation), "skipped");
+    assert.equal(state.lookups, 0);
+    assert.equal(state.downloads, 0);
+  }
+});
+
+test("arXiv does not downgrade newer local files or download an equal version", async () => {
+  for (const version of [3, 4]) {
+    const { item, state, updater, operation } = arxivFixture();
+    state.versionText = "arXiv:2501.01234v" + version;
+    assert.equal(await updater.update(item, operation), "unchanged");
+    assert.equal(state.downloads, 0);
+  }
+});
+
+test("arXiv obtains a first PDF and rejects a different remote identifier", async () => {
+  for (const id of ["2501.01234v3", "2501.99999v3"]) {
+    const { item, state, updater, operation, allAttachments } = arxivFixture();
+    allAttachments.length = 0;
+    state.latest = id;
+    if (id === "2501.01234v3")
+      assert.equal(await updater.update(item, operation), "added");
+    else
+      await assert.rejects(updater.update(item, operation), /matching arXiv/);
+    assert.equal(state.downloads, id === "2501.01234v3" ? 1 : 0);
+  }
+});
+
+test("arXiv supports legacy identifiers and will not retire files changed during lookup", async () => {
+  const { item, state, updater, operation, old } = arxivFixture();
+  item.data.url = "https://arxiv.org/abs/hep-th/9901001";
+  state.versionText = "arXiv:hep-th/9901001v1";
+  state.latest = "hep-th/9901001v2";
+  state.annotations = [];
+  state.lookup = () => {
+    state.existing = "concurrently-replaced";
+  };
+  assert.equal(await updater.update(item, operation), "added");
+  assert.equal(state.downloadURL, "https://arxiv.org/pdf/hep-th/9901001v2");
+  assert.equal(old.deleted, false);
+});
+
+test("cancelling arXiv extraction or download cannot import or retire a PDF", async () => {
+  for (const stage of ["reading", "downloading"]) {
+    const { item, state, updater, operation, old } = arxivFixture();
+    state.annotations = [];
+    state[stage] = () => {
+      operation.cancel();
+    };
+    await assert.rejects(updater.update(item, operation), /cancelled/);
+    assert.equal(state.imported.length, 0);
+    assert.equal(old.deleted, false);
+  }
+});
+
+test("blocked PDF downloads share the source cooldown across items and preserve the old file", async () => {
+  const { SourcePolicy } = await import("../.tests-build/source-policy.js");
+  const policy = new SourcePolicy();
+  const { item, zotero, doc, state, old } = fixture();
+  let calls = 0;
+  zotero.HTTP.download = async () => {
+    calls++;
+    throw Object.assign(new Error("HTTP 403"), { status: 403 });
+  };
+  for (let i = 0; i < 2; i++) {
+    const updater = new PDFUpdater(
+      zotero,
+      async () => doc,
+      undefined,
+      undefined,
+      policy,
+    );
+    await assert.rejects(
+      updater.update(item, new Operation()),
+      /HTTP 403|access blocked/,
+    );
+  }
+  assert.equal(calls, 1);
+  assert.equal(old.deleted, false);
+  assert.equal(state.imported.length, 0);
+  assert.equal(state.removed.length, 2);
+});

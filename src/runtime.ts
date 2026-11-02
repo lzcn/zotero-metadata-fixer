@@ -13,7 +13,7 @@ import { Operation } from "./operation";
 import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
 import { PDFVersionCache } from "./pdf-cache";
 import { SourcePolicy } from "./source-policy";
-import { classifyProblem, parseJSONResponse } from "./responses";
+import { checkAccess, classifyProblem, parseJSONResponse } from "./responses";
 import { normalizeMetadata } from "./metadata";
 import { buildRepairPlan } from "./repair";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
@@ -61,8 +61,6 @@ export class Runtime {
   private progressState?: any;
   private progressResult?: Promise<any>;
   private s = String(Zotero.locale).startsWith("zh") ? zh : en;
-  private lastArxivRequest = 0;
-  private lastScholarRequest = 0;
   private finder?: PublicationFinder;
   private retriever?: MetadataRetriever;
 
@@ -158,16 +156,6 @@ export class Runtime {
     timeout: number,
     headers?: Record<string, string>,
   ): Promise<any> {
-    if (url.startsWith("https://export.arxiv.org/")) {
-      const wait = 3000 - (Date.now() - this.lastArxivRequest);
-      if (wait > 0) await operation.delay(wait);
-      this.lastArxivRequest = Date.now();
-    }
-    if (url.startsWith("https://scholar.google.com/")) {
-      const wait = 2000 - (Date.now() - this.lastScholarRequest);
-      if (wait > 0) await operation.delay(wait);
-      this.lastScholarRequest = Date.now();
-    }
     if (!operation.active()) throw new Error(this.s.cancelled);
     const releaseSource = await this.sourcePolicy.acquire(url, operation);
     let release = () => {};
@@ -194,6 +182,12 @@ export class Runtime {
         }),
       );
       if (!operation.active()) throw new Error(this.s.cancelled);
+      checkAccess(
+        responseType === "text"
+          ? response.responseText
+          : response.response?.documentElement?.outerHTML || "",
+        this.s.apiBlocked,
+      );
       return responseType === "document"
         ? Zotero.HTTP.wrapDocument(response.response, response.responseURL)
         : response.responseText;
@@ -601,6 +595,10 @@ export class Runtime {
       Zotero,
       (url) => this.request(url, operation, "document"),
       cache,
+      async (id) =>
+        (await new PublicationFinder(this.network(operation)).arxiv(id))
+          .metadata,
+      this.sourcePolicy,
     ).update(item, operation);
   }
 

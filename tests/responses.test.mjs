@@ -69,6 +69,16 @@ test("problem summaries distinguish source limits, timeouts and matching failure
   });
   assert.deepEqual(classifyProblem("DBLP: 访问受限", zh), {
     message: zh.sourceBlocked,
-    incomplete: false,
+    incomplete: true,
   });
+  for (const s of [en, zh]) {
+    assert.deepEqual(classifyProblem("DBLP: 403", s), {
+      message: s.sourceBlocked,
+      incomplete: true,
+    });
+    assert.deepEqual(classifyProblem("Crossref: 503", s), {
+      message: s.sourceFailed,
+      incomplete: true,
+    });
+  }
 });

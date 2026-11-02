@@ -143,7 +143,7 @@ async function dialog(data, screen = { availWidth: 1440, availHeight: 900 }) {
   };
 }
 
-test("native progress keeps problems, live results and a single action", async () => {
+test("native progress shows concise results with diagnostic details on hover", async () => {
   let cancelled = 0;
   const state = {
     total: 12,
@@ -164,17 +164,28 @@ test("native progress keeps problems, live results and a single action", async (
   };
   const ui = await dialog(state);
   assert.equal(ui.props.showHeader, true);
-  assert.match(ui.summary.textContent, /2 \/ 3.*1 updated.*1 failed/);
+  assert.equal(ui.summary.textContent, "2 / 3");
+  assert.match(ui.summary.title, /2 \/ 3.*1 updated.*1 failed/);
   assert.equal(ui.progress.value, 2);
   assert.deepEqual(
     Array.from(ui.props.columns, (column) => column.label),
-    [en.title, en.status, en.problem],
+    [en.title, en.status],
   );
   assert.deepEqual(
     ui.content.children[1].children.map((cell) => cell.textContent),
-    ["Second", en.failed, en.rateLimited],
+    ["Second", en.failed],
   );
-  assert.equal(ui.content.children[1].children[2].title, "Long HTTP error");
+  assert.equal(
+    ui.content.children[1].children[1].title,
+    "Failed\nRate-limited\nLong HTTP error",
+  );
+  let stopped = false;
+  ui.content.children[1].children[1].events.get("mouseover")({
+    stopPropagation() {
+      stopped = true;
+    },
+  });
+  assert.equal(stopped, true);
   assert.equal(ui.actions.children.length, 1);
   assert.equal(ui.actions.children[0].label, en.cancel);
   assert.equal(
@@ -189,7 +200,8 @@ test("native progress keeps problems, live results and a single action", async (
   ui.win.renderProgress();
   ui.flushFrames();
   assert.equal(ui.content.children.length, 4);
-  assert.match(ui.summary.textContent, /Done.*4 \/ 4.*2 updated.*1 failed/);
+  assert.equal(ui.summary.textContent, "Done · 4 / 4");
+  assert.match(ui.summary.title, /Done.*4 \/ 4.*2 updated.*1 failed/);
   assert.equal(ui.progress.hidden, true);
   assert.equal(ui.content.children[2].children[1].textContent, en.updated);
   assert.equal(ui.actions.children[0].label, en.close);
@@ -243,12 +255,6 @@ test("native sorting affects display without reordering processing", async () =>
   ui.win.renderProgress();
   ui.flushFrames();
   assert.deepEqual(titles(), ["Zulu", "Alpha", "Beta"]);
-  ui.props.onColumnSort(2, 1);
-  ui.flushFrames();
-  assert.equal(titles().at(-1), "Zulu");
-  ui.props.onColumnSort(2, -1);
-  ui.flushFrames();
-  assert.equal(titles().at(-1), "Zulu");
   assert.deepEqual(state.rows, original);
 });
 
@@ -318,7 +324,8 @@ test("reused batch history keeps cancelled rows out of the processed count", asy
     onResult() {},
   };
   const ui = await dialog(state);
-  assert.match(ui.summary.textContent, /Done.*2 \/ 3.*1 updated.*1 failed/);
+  assert.equal(ui.summary.textContent, "Done · 2 / 3");
+  assert.match(ui.summary.title, /Done.*2 \/ 3.*1 updated.*1 failed/);
   assert.equal(ui.progress.value, 2);
   assert.equal(ui.progress.hidden, true);
 });
