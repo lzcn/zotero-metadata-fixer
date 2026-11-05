@@ -22,27 +22,36 @@ export function selectPublication(
   item: Item,
   candidates: Candidate[],
 ): Candidate | undefined {
-  const ranked = rankCandidates(item, candidates).filter((candidate) => {
+  // Discovery ranks and dedupes before selecting; ranking raw input again would
+  // repeat title scoring for every source stage.
+  const ranked = candidates.every(
+    (candidate) => typeof candidate.score === "number",
+  )
+    ? candidates
+    : rankCandidates(item, candidates);
+  const surname = normalize(item.getCreators()[0]?.lastName || "");
+  const title = normalize(item.getField("title"));
+  const eligible = ranked.filter((candidate) => {
     if (candidate.linked) return true;
-    const surname = normalize(item.getCreators()[0]?.lastName || "");
     return (
       (candidate.score || 0) >= 0.9 &&
       (!surname ||
-        (!candidate.authors?.length &&
-          normalize(candidate.title) === normalize(item.getField("title"))) ||
+        (!candidate.authors?.length && normalize(candidate.title) === title) ||
         (Boolean(candidate.authors?.length) &&
           matchesAuthor(surname, candidate.authors)))
     );
   });
-  const first = ranked[0];
+  const first = eligible[0];
   if (!first) return;
-  const peers = ranked.filter(
+  const peers = eligible.filter(
     (candidate) => (candidate.score || 0) >= (first.score || 0) - 0.05,
   );
   const eventIDs = new Set(
     peers.map((candidate) => candidate.conferenceVenue?.id).filter(Boolean),
   );
   if (eventIDs.size > 1) return;
+  const firstTitle = normalize(first.title);
+  let firstVenue: string | undefined;
   const samePublication = peers.every((candidate) => {
     if (candidate === first) return true;
     if (first.doi && candidate.doi) {
@@ -52,10 +61,11 @@ export function selectPublication(
       return normalize(first.doi) === normalize(candidate.doi);
     }
     if (first.url && candidate.url && first.url === candidate.url) return true;
+    firstVenue ??= venueKey(first);
     return (
-      normalize(first.title) === normalize(candidate.title) &&
-      Boolean(venueKey(first)) &&
-      venueKey(first) === venueKey(candidate)
+      firstTitle === normalize(candidate.title) &&
+      Boolean(firstVenue) &&
+      firstVenue === venueKey(candidate)
     );
   });
   if (!samePublication) return;

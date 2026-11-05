@@ -39,6 +39,7 @@ export type ConferenceRule = {
 const catalogById = new Map(
   catalog.map((conference) => [conference.id, conference]),
 );
+const sourcePDFIDs = new Set(ccfCatalog.map((conference) => conference.id));
 export const CONFERENCE_SETTINGS_PREF =
   "extensions.zotero.metadata-linter.conferences";
 export const DEFAULT_CONFERENCE_RULES = validateConferenceRules(catalog);
@@ -48,9 +49,7 @@ export function conferenceInfo(id: string) {
   return conference
     ? {
         ...conference,
-        sourcePDF: ccfCatalog.some((row) => row.id === id)
-          ? catalogInfo.pdfURL
-          : undefined,
+        sourcePDF: sourcePDFIDs.has(id) ? catalogInfo.pdfURL : undefined,
       }
     : undefined;
 }

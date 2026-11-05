@@ -1,12 +1,25 @@
 import { Operation } from "./operation";
 
-function sourceKey(url: string): string {
-  const host = new URL(url).hostname;
+function sourceKey(url: URL): string {
+  const host = url.hostname;
   if (host === "export.arxiv.org") return "arxiv.org";
   return /^dblp\.(org|dagstuhl\.de|uni-trier\.de)$/.test(host)
     ? "dblp.org"
     : host;
 }
+
+const INTERVALS: Record<string, number> = {
+  // Public Crossref queries allow one request/second; single DOI lookups differ.
+  "api.crossref.org": 1100,
+  "arxiv.org": 3000,
+  "scholar.google.com": 2000,
+  "api.openalex.org": 200,
+  "dblp.org": 500,
+  "sparql.dblp.org": 1000,
+  "api.semanticscholar.org": 1100,
+  "api2.openreview.net": 500,
+  "eutils.ncbi.nlm.nih.gov": 400,
+};
 
 // Session-local cooldowns survive batches; successful JSON is reused briefly, never persisted.
 export class SourcePolicy {
@@ -46,21 +59,8 @@ export class SourcePolicy {
   }
 
   async acquire(url: string, operation: Operation): Promise<() => void> {
-    const key = sourceKey(url);
-    const intervals: Record<string, number> = {
-      // Public Crossref queries allow one request/second; single DOI lookups differ.
-      "api.crossref.org": /^\/(?:v1\/)?works\/10\./.test(new URL(url).pathname)
-        ? 250
-        : 1100,
-      "arxiv.org": 3000,
-      "scholar.google.com": 2000,
-      "api.openalex.org": 200,
-      "dblp.org": 500,
-      "sparql.dblp.org": 1000,
-      "api.semanticscholar.org": 1100,
-      "api2.openreview.net": 500,
-      "eutils.ncbi.nlm.nih.gov": 400,
-    };
+    const parsed = new URL(url);
+    const key = sourceKey(parsed);
     let release!: () => void;
     const slot = new Promise<void>((resolve) => {
       release = resolve;
@@ -87,7 +87,11 @@ export class SourcePolicy {
             cooldown: true,
           },
         );
-      const interval = intervals[key] || 0;
+      const interval =
+        key === "api.crossref.org" &&
+        /^\/(?:v1\/)?works\/10\./.test(parsed.pathname)
+          ? 250
+          : INTERVALS[key] || 0;
       const wait =
         Math.max(
           this.nextStart.get(key) || 0,
@@ -109,7 +113,7 @@ export class SourcePolicy {
       ? 403
       : Number(error?.status || error?.xmlhttp?.status);
     if (![403, 429].includes(status) || error?.cooldown) return;
-    const key = sourceKey(url);
+    const key = sourceKey(new URL(url));
     const failures = (this.cooldowns.get(key)?.failures || 0) + 1;
     let header: string | undefined;
     try {

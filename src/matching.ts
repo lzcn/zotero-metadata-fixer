@@ -10,9 +10,7 @@ export function normalize(value: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 }
-export function titleScore(a: string, b: string): number {
-  const normalizedA = normalize(a);
-  const normalizedB = normalize(b);
+function tokenScore(normalizedA: string, normalizedB: string): number {
   // Publishers can join compound words (Multi-Domain -> Multidomain).
   // Accept this only when the entire title has the same letters and numbers.
   const compactA = normalizedA.replace(/\s+/g, "");
@@ -24,6 +22,10 @@ export function titleScore(a: string, b: string): number {
     (2 * [...left].filter((word) => right.has(word)).length) /
     (left.size + right.size)
   );
+}
+
+export function titleScore(a: string, b: string): number {
+  return tokenScore(normalize(a), normalize(b));
 }
 export function publishedVenue(venue: string): boolean {
   return (
@@ -47,24 +49,22 @@ export function rankCandidates(
   item: Pick<Item, "getField" | "getCreators">,
   candidates: Candidate[],
 ): Candidate[] {
-  const title = item.getField("title");
+  const normalizedTitle = normalize(item.getField("title"));
   const surname = normalize(item.getCreators()[0]?.lastName || "");
   const ranked = candidates
-    .filter((candidate) => {
-      if (candidate.doi && preprintDOI(candidate.doi)) return false;
-      if (candidate.venue && !publishedVenue(candidate.venue)) return false;
-      if (candidate.linked) return true;
-      if (!candidate.title || titleScore(title, candidate.title) < 0.75)
-        return false;
+    .flatMap((candidate) => {
+      if (candidate.doi && preprintDOI(candidate.doi)) return [];
+      if (candidate.venue && !publishedVenue(candidate.venue)) return [];
+      if (candidate.linked) return [{ ...candidate, score: 1.1 }];
+      if (!candidate.title) return [];
+      // Score once: the same value both filters weak matches and ranks results.
+      const score = tokenScore(normalizedTitle, normalize(candidate.title));
+      if (score < 0.75) return [];
       // Item dates can describe revisions or be incorrect; they do not establish identity.
       // Publication years only break ranking ties after title and author validation.
-      if (!matchesAuthor(surname, candidate.authors)) return false;
-      return true;
+      if (!matchesAuthor(surname, candidate.authors)) return [];
+      return [{ ...candidate, score }];
     })
-    .map((candidate) => ({
-      ...candidate,
-      score: candidate.linked ? 1.1 : titleScore(title, candidate.title),
-    }))
     .sort((a, b) => b.score - a.score || (b.year || 0) - (a.year || 0));
   const seen = new Set<string>();
   return ranked.filter((candidate) => {

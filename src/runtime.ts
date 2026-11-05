@@ -567,14 +567,15 @@ export class Runtime {
 
   private enqueue(items: Item[], source: RetrievalSource | "lint"): void {
     const state = this.progressState;
+    // Check each selection once; scanning every queued row per item is
+    // quadratic for large selections.
+    const queued = new Set(
+      state.rows.map((row: any) => `${row.generation}/${row.itemID}`),
+    );
     for (const item of items) {
-      if (
-        state.rows.some(
-          (row: any) =>
-            row.itemID === item.id && row.generation === this.generation,
-        )
-      )
-        continue;
+      const key = `${this.generation}/${item.id}`;
+      if (queued.has(key)) continue;
+      queued.add(key);
       const row = {
         itemID: item.id,
         generation: this.generation,
@@ -687,8 +688,9 @@ export class Runtime {
     this.progressWindow.focus?.();
     const pdfCache = new PDFVersionCache(Zotero);
     try {
-      while (state.tasks.length && host.active()) {
-        const { item, source, row } = state.tasks.shift() as {
+      let next = 0;
+      while (next < state.tasks.length && host.active()) {
+        const { item, source, row } = state.tasks[next++] as {
           item: Item;
           source: RetrievalSource | "lint";
           row: any;

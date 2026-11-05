@@ -695,3 +695,30 @@ test("conference container identity repairs journal types while genuine journals
     journal,
   );
 });
+
+test("edited conference rules replace cached venue matches from the previous catalog", () => {
+  const rule = {
+    id: "custom",
+    name: "Custom Conference",
+    aliases: ["CUSTOM 2026"],
+    itemType: "conferencePaper",
+    removeEditors: true,
+    enabled: true,
+  };
+  const metadata = {
+    itemType: "bookSection",
+    title: "Paper",
+    bookTitle: "CUSTOM 2026",
+  };
+  const before = validateConferenceRules([rule]);
+  assert.equal(normalizeConference(metadata, before).rule?.id, "custom");
+  const after = validateConferenceRules([
+    { ...rule, aliases: ["RENAMED 2026"] },
+  ]);
+  assert.equal(normalizeConference(metadata, after).rule, undefined);
+  assert.equal(
+    normalizeConference({ ...metadata, bookTitle: "RENAMED 2026" }, after).rule
+      ?.id,
+    "custom",
+  );
+});

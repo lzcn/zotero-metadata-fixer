@@ -105,13 +105,11 @@ export function isConferenceContainer(
 ): boolean {
   if (typeof metadata.publicationTitle !== "string") return false;
   const venue = normalizeVenue(metadata.publicationTitle);
-  return rule.aliases.some((alias) => {
-    const name = normalizeVenue(alias);
-    return (
-      venue === name ||
-      (name.split(" ").length > 1 && topicPhrase(venue) === topicPhrase(name))
-    );
-  });
+  const topic = topicPhrase(venue);
+  return signature(rule).aliases.some(
+    (alias) =>
+      venue === alias.phrase || (alias.words > 1 && topic === alias.topic),
+  );
 }
 
 const SECONDARY_TRACK =
@@ -184,7 +182,42 @@ const MATCHERS = [
   },
 ];
 
+// A venue name keeps its match until its rule set is replaced. Item lists repaint
+// often, so avoid scanning the whole catalog for every cell.
+const MATCH_CACHE_SIZE = 256;
+const matchCaches = new WeakMap<
+  ConferenceRule[],
+  Map<string, ConferenceRule | null>
+>();
+
+function matchKey(metadata: Metadata): string {
+  return [
+    metadata.itemType,
+    metadata.proceedingsTitle,
+    metadata.bookTitle,
+    metadata.publicationTitle,
+    metadata.conferenceName,
+  ]
+    .map((value) => String(value ?? ""))
+    .join("\n");
+}
+
 export function matchConference(
+  metadata: Metadata,
+  rules: ConferenceRule[],
+): ConferenceRule | undefined {
+  let cache = matchCaches.get(rules);
+  if (!cache) matchCaches.set(rules, (cache = new Map()));
+  const key = matchKey(metadata);
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached ?? undefined;
+  const rule = findConference(metadata, rules);
+  if (cache.size >= MATCH_CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  cache.set(key, rule ?? null);
+  return rule;
+}
+
+function findConference(
   metadata: Metadata,
   rules: ConferenceRule[],
 ): ConferenceRule | undefined {
