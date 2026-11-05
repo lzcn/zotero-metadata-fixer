@@ -184,8 +184,13 @@ export class PDFUpdater {
               ).filter(Boolean),
             ),
           ];
+          // ScienceDirect's citation URL can be an HTML redirect page, not the PDF.
+          // Its Zotero translator resolves the publisher's current download route.
+          const scienceDirect = /(^|\.)sciencedirect\.com$/i.test(
+            new URL(doc.location?.href || page).hostname,
+          );
           const resolved: { url?: string } | false =
-            links.length === 1
+            !scienceDirect && links.length === 1
               ? { url: links[0] }
               : await operation.wait<{ url?: string } | false>(
                   z.Utilities.Internal.getFileFromDocument(doc),

@@ -822,6 +822,36 @@ startup = async function(data) {
         MLRuntime.request = pdfRequest;
         Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
       }
+      const scienceDirectRequest = MLRuntime.request;
+      const nativeFileResolver = Zotero.Utilities.Internal.getFileFromDocument;
+      try {
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
+        const paper = new Zotero.Item('journalArticle');
+        paper.setField('title', ${JSON.stringify(pdfTitle)});
+        paper.setField('DOI', ${JSON.stringify(pdfDOI)});
+        await paper.saveTx();
+        const pageURL = 'https://www.sciencedirect.com/science/article/pii/S1569843222003296';
+        MLRuntime.request = async (url, ...args) => {
+          const doc = await scienceDirectRequest.call(MLRuntime, url.startsWith('https://doi.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/pdf-article"))} : url, ...args);
+          return args[1] === 'document' ? Zotero.HTTP.wrapDocument(new win.DOMParser().parseFromString(doc.documentElement.outerHTML, 'text/html'), pageURL) : doc;
+        };
+        let translatorCalls = 0;
+        Zotero.Utilities.Internal.getFileFromDocument = async doc => {
+          if (doc.location.href !== pageURL) throw new Error('Wrong publisher document');
+          translatorCalls++;
+          return {url:${JSON.stringify(slowURL.replace("/pending", "/pdf-current"))}};
+        };
+        MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:paper.toJSON(),warnings:[]})};
+        await win.ZoteroPane.selectItem(paper.id);
+        await MLRuntime.run(win, 'lint');
+        if (translatorCalls !== 1 || paper.getAttachments().length !== 1 || MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated) throw new Error('ScienceDirect skipped its PDF translator: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        result.scienceDirectPDFResolution = true;
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = scienceDirectRequest;
+        Zotero.Utilities.Internal.getFileFromDocument = nativeFileResolver;
+        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
+      }
       const arxivRequest = MLRuntime.request;
       const arxivDownload = Zotero.HTTP.download;
       try {
@@ -1103,7 +1133,7 @@ try {
     throw new Error("Native HTTP retried failed discovery sources");
   if (!abortedRequests)
     throw new Error("Shutdown did not abort the pending native HTTP request");
-  if (pdfDownloads !== 5 || pdfVersionChecks !== 3 || pdfAborts !== 1)
+  if (pdfDownloads !== 6 || pdfVersionChecks !== 3 || pdfAborts !== 1)
     throw new Error(
       `PDF downloads or cancellation failed: ${pdfDownloads}, ${pdfVersionChecks}, ${pdfAborts}`,
     );

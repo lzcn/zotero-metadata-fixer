@@ -731,3 +731,34 @@ test("annotations arriving during the import transaction roll back the new file 
   assert.equal(old.deleted, false);
   assert.equal(state.imported.length, 0);
 });
+
+test("ScienceDirect citation links are resolved by its translator before downloading", async () => {
+  const { item, operation, updater, zotero, doc, state } = fixture();
+  doc.location.href =
+    "https://www.sciencedirect.com/science/article/pii/S1569843222003296";
+  let translated = 0;
+  let pdfURL;
+  zotero.Utilities.Internal.getFileFromDocument = async (page) => {
+    assert.equal(page, doc);
+    translated++;
+    return { url: "https://pdf.sciencedirectassets.com/current.pdf" };
+  };
+  const download = zotero.HTTP.download;
+  zotero.HTTP.download = (url, ...args) => {
+    pdfURL = url;
+    return download(url, ...args);
+  };
+  assert.equal(await updater.update(item, operation), "added");
+  assert.equal(translated, 1);
+  assert.equal(pdfURL, "https://pdf.sciencedirectassets.com/current.pdf");
+  assert.equal(state.downloads, 1);
+});
+
+test("ScienceDirect without an available translated PDF does not download its intermediate citation link", async () => {
+  const { item, operation, updater, zotero, doc, state } = fixture();
+  doc.location.href =
+    "https://www.sciencedirect.com/science/article/pii/S1569843222003296";
+  zotero.Utilities.Internal.getFileFromDocument = async () => false;
+  assert.equal(await updater.update(item, operation), "unavailable");
+  assert.equal(state.downloads, 0);
+});
