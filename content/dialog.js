@@ -16,6 +16,8 @@ let sortDirection = 1;
 let sized = false;
 let renderFrame = null;
 let disposed = false;
+const statusText = (entry) =>
+  [entry.status, entry.pdfStatus].filter(Boolean).join(" · ");
 function done() {
   if (!data.finished && !data.cancelled) data.cancel();
   data.onResult(null);
@@ -69,8 +71,10 @@ function flushProgress() {
   entries = [...data.rows];
   if (sortField)
     entries.sort((left, right) => {
-      const a = left[sortField] || "";
-      const b = right[sortField] || "";
+      const a =
+        sortField === "status" ? statusText(left) : left[sortField] || "";
+      const b =
+        sortField === "status" ? statusText(right) : right[sortField] || "";
       return a.localeCompare(b, s.locale, { numeric: true }) * sortDirection;
     });
   const total = entries.length;
@@ -79,7 +83,7 @@ function flushProgress() {
     failed = 0;
   for (const row of entries) {
     if (![s.waiting, s.working, s.cancelled].includes(row.status)) completed++;
-    if (row.status === s.updated || row.status === s.pdfUpdated) updated++;
+    if (row.status === s.updated || row.pdfStatus === s.pdfUpdated) updated++;
     if (row.status === s.failed) failed++;
   }
   const pending = total - completed;
@@ -138,8 +142,8 @@ root.render(
       {
         dataKey: "status",
         label: s.status,
-        width: 110,
-        minWidth: 90,
+        width: 240,
+        minWidth: 160,
         staticWidth: true,
       },
     ],
@@ -162,7 +166,11 @@ root.render(
           }
         : null;
       for (const column of columns) {
-        const cell = renderCell(index, entry[column.dataKey] || "", column);
+        const text =
+          column.dataKey === "status"
+            ? statusText(entry)
+            : entry[column.dataKey] || "";
+        const cell = renderCell(index, text, column);
         if (column.dataKey === "title") {
           const text = document.createElement("span");
           text.className = "cell-text";
@@ -173,7 +181,12 @@ root.render(
           column.dataKey === "status"
             ? [
                 ...new Set(
-                  [entry.status, entry.problem, entry.detail].filter(Boolean),
+                  [
+                    s.metadataResult.replace("{status}", entry.status || ""),
+                    entry.problem,
+                    entry.pdfStatus,
+                    ...String(entry.detail || "").split(/\r?\n/),
+                  ].filter(Boolean),
                 ),
               ].join("\n")
             : entry[column.dataKey] || "";

@@ -8,11 +8,13 @@ export type Creator = {
 };
 // Transient source evidence; never written to Zotero item fields.
 export type ConferenceVenue = { id: string; title: string };
+export type PublicationEvidence = "identifier" | "index" | "proceedings";
 export type Metadata = {
   itemType: string;
   title: string;
   creators?: Creator[];
   conferenceVenue?: ConferenceVenue;
+  publicationEvidence?: PublicationEvidence;
   [field: string]: unknown;
 };
 export interface Item {
@@ -40,6 +42,7 @@ export type Candidate = {
   year?: number;
   venue?: string;
   conferenceVenue?: ConferenceVenue;
+  publicationEvidence?: PublicationEvidence;
   doi?: string;
   url?: string;
   bibtex?: string;

@@ -11,6 +11,7 @@ function sourceKey(url: URL): string {
 const INTERVALS: Record<string, number> = {
   // Public Crossref queries allow one request/second; single DOI lookups differ.
   "api.crossref.org": 1100,
+  "doi.org": 500,
   "arxiv.org": 3000,
   "scholar.google.com": 2000,
   "api.openalex.org": 200,
@@ -18,6 +19,9 @@ const INTERVALS: Record<string, number> = {
   "sparql.dblp.org": 1000,
   "api.semanticscholar.org": 1100,
   "api2.openreview.net": 500,
+  "neurips.cc": 500,
+  "icml.cc": 500,
+  "iclr.cc": 500,
   "eutils.ncbi.nlm.nih.gov": 400,
 };
 

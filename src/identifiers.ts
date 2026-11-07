@@ -18,6 +18,16 @@ export function canonicalDOI(value: string): string | undefined {
   return doi?.toLowerCase();
 }
 
+// Keep suffix slashes and existing escapes; only escape characters that would
+// change the request path.
+export function doiPath(doi: string): string {
+  return encodeURI(doi).replace(/\?/g, "%3F").replace(/#/g, "%23");
+}
+
+export function doiURL(doi: string): string {
+  return `https://doi.org/${doiPath(doi)}`;
+}
+
 export function preprintDOI(doi: string): boolean {
   return /^(10\.48550\/arxiv\.|10\.1101\/|10\.26434\/chemrxiv|10\.2139\/ssrn|10\.31234\/osf|10\.21203\/rs\.)/i.test(
     cleanDOI(doi) || "",
@@ -31,8 +41,46 @@ export function preprintVenue(venue: string): boolean {
   );
 }
 
+const CONFERENCE_SITES = new Map([
+  ["neurips.cc", "NeurIPS"],
+  ["icml.cc", "ICML"],
+  ["iclr.cc", "ICLR"],
+]);
+
+export function conferencePoster(value: string) {
+  try {
+    const url = new URL(value);
+    const conference = CONFERENCE_SITES.get(url.hostname);
+    const year = url.pathname.match(
+      /^\/virtual\/(20\d{2})\/poster\/\d+\/?$/,
+    )?.[1];
+    if (/^https?:$/.test(url.protocol) && conference && year)
+      return { host: url.hostname, conference, year };
+  } catch {
+    return;
+  }
+}
+
+export function conferenceSiteHint(value: string) {
+  const match = value.match(
+    /\b(NeurIPS|NIPS|ICML|ICLR|(?:Advances in )?Neural Information Processing Systems|International Conference on Machine Learning|International Conference on Learning Representations)\s*[-:]?\s*(20\d{2})\b/i,
+  );
+  if (!match) return;
+  const name = match[1].toLowerCase();
+  const conference = /neurips|nips|neural information/.test(name)
+    ? "NeurIPS"
+    : /icml|machine learning/.test(name)
+      ? "ICML"
+      : "ICLR";
+  const host = [...CONFERENCE_SITES].find(
+    ([, name]) => name === conference,
+  )![0];
+  return { host, conference, year: match[2] };
+}
+
 // Restrict shortcuts to individual publication pages, never venue homepages.
 export function officialPublicationURL(value: string): boolean {
+  if (conferencePoster(value)) return true;
   try {
     const { hostname, pathname, searchParams, protocol } = new URL(value);
     if (!/^https?:$/.test(protocol)) return false;

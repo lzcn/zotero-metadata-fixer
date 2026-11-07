@@ -11,15 +11,20 @@ import {
   preprintDOI,
   officialPublicationURL,
   arxivID,
+  isPreprint,
+  doiPath,
+  conferencePoster,
+  conferenceSiteHint,
 } from "./identifiers";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
 import { selectPublication } from "./selection";
+import { containerField } from "./venues";
 import { DEFAULT_CONFERENCE_RULES, normalizeConference } from "./conferences";
 
 export interface Network {
   json(url: string, headers?: Record<string, string>): Promise<any>;
-  text(url: string): Promise<string>;
+  text(url: string, headers?: Record<string, string>): Promise<string>;
   xml(text: string): Document;
   html(text: string): Document;
 }
@@ -34,6 +39,89 @@ const sparqlLiteral = (value: string): string =>
     .replace(/[\r\n]+/g, " ")}"`;
 const errorMessage = (error: unknown): string =>
   (error as any)?.message || String(error);
+
+const dateValue = (value: any): string | undefined => {
+  const parts = value?.["date-parts"]?.[0];
+  if (!Array.isArray(parts) || !parts.length || !parts[0]) return undefined;
+  return parts
+    .slice(0, 3)
+    .map((part, index) =>
+      part === undefined || part === null || part === ""
+        ? ""
+        : index && String(part).length === 1
+          ? `0${part}`
+          : String(part),
+    )
+    .filter(Boolean)
+    .join("-");
+};
+
+const crossrefType = (type: string): string | undefined => {
+  switch (type) {
+    case "journal-article":
+      return "journalArticle";
+    case "proceedings-article":
+      return "conferencePaper";
+    case "book-chapter":
+      return "bookSection";
+    default:
+      return undefined;
+  }
+};
+
+const openAlexType = (work: any): string | undefined => {
+  switch (work?.type) {
+    case "preprint":
+      return "preprint";
+    case "book-chapter":
+      return "bookSection";
+    case "proceedings-article":
+    case "conference-paper":
+      return "conferencePaper";
+    case "article":
+    case "review":
+      return work?.primary_location?.source?.type === "conference"
+        ? "conferencePaper"
+        : "journalArticle";
+    default:
+      return undefined;
+  }
+};
+
+const dataCiteType = (types: any): string | undefined => {
+  switch (String(types?.resourceTypeGeneral || "").toLowerCase()) {
+    case "journalarticle":
+      return "journalArticle";
+    case "conferencepaper":
+    case "proceedingsarticle":
+      return "conferencePaper";
+    case "bookchapter":
+      return "bookSection";
+    case "preprint":
+      return "preprint";
+    default:
+      return undefined;
+  }
+};
+
+const creator = (author: any, creatorType: string) => {
+  const lastName = String(author?.family || author?.name || "").trim();
+  if (!lastName) return [];
+  return [
+    {
+      firstName: String(author?.given || "").trim(),
+      lastName,
+      creatorType,
+    },
+  ];
+};
+
+const withContainer = (metadata: Metadata, container: string): void => {
+  metadata.publicationTitle = container;
+  const field = containerField(metadata.itemType);
+  if (field && field !== "publicationTitle") metadata[field] = container;
+};
+
 export function openReviewValue(note: any, key: string): any {
   const raw = note.content?.[key];
   return raw && typeof raw === "object" && "value" in raw ? raw.value : raw;
@@ -78,10 +166,8 @@ export class PublicationFinder {
   private dblpUnavailable?: Error;
   private dblpSparqlUnavailable?: Error;
   private scholarUnavailable?: Error;
-  constructor(
-    private net: Network,
-    private semanticScholarKey: () => string = () => "",
-  ) {}
+  private conferenceLists = new Map<string, Document>();
+  constructor(private net: Network) {}
 
   async googleScholar(item: Item): Promise<Candidate[]> {
     if (this.scholarUnavailable) throw this.scholarUnavailable;
@@ -313,14 +399,11 @@ export class PublicationFinder {
     const ids = identifiers(item);
     const fields = "title,externalIds,authors,year,venue,publicationVenue";
     const base = "https://api.semanticscholar.org/graph/v1/paper";
-    const key = String(this.semanticScholarKey() || "").trim();
-    const headers = key ? { "x-api-key": key } : undefined;
     let data;
     if (ids.arXiv) {
       try {
         data = await this.net.json(
           `${base}/ARXIV:${encode(ids.arXiv.replace(/v\d+$/, ""))}?fields=${fields}`,
-          headers,
         );
       } catch (error) {
         if (!/404|not found/i.test(String(error))) throw error;
@@ -335,7 +418,6 @@ export class PublicationFinder {
     ) {
       data = await this.net.json(
         `${base}/search/match?query=${encode(item.getField("title"))}&fields=${fields}`,
-        headers,
       );
     }
     return list<any>(data.data ?? data)
@@ -375,6 +457,7 @@ export class PublicationFinder {
       )
       .map((work) => ({
         source: "Crossref",
+        publicationEvidence: "index" as const,
         title: work.title?.[0] || "",
         doi: cleanDOI(work.DOI || ""),
         authors: list<any>(work.author).map((author) =>
@@ -386,6 +469,152 @@ export class PublicationFinder {
       .filter((candidate) => candidate.doi);
   }
 
+  async crossrefDOI(doi: string): Promise<Metadata | undefined> {
+    const data = await this.net.json(
+      `https://api.crossref.org/works/${doiPath(doi)}`,
+    );
+    const work = data?.message;
+    if (!work) return undefined;
+    const itemType = crossrefType(String(work.type || ""));
+    const title = String(list<string>(work.title)[0] || "").trim();
+    if (!itemType || !title) return undefined;
+    const metadata: Metadata = { itemType, title };
+    const recordDOI = cleanDOI(String(work.DOI || ""));
+    if (recordDOI) metadata.DOI = recordDOI;
+    const creators = [
+      ...list<any>(work.author).flatMap((author) => creator(author, "author")),
+      ...list<any>(work.editor).flatMap((author) => creator(author, "editor")),
+    ];
+    if (creators.length) metadata.creators = creators;
+    const container = String(
+      list<string>(work["container-title"])[0] || "",
+    ).trim();
+    if (container) withContainer(metadata, container);
+    if (work.publisher) metadata.publisher = String(work.publisher);
+    if (work.volume) metadata.volume = String(work.volume);
+    if (work.issue) metadata.issue = String(work.issue);
+    const pages = work.page || work["article-number"];
+    if (pages) metadata.pages = String(pages);
+    const issn = list<string>(work.ISSN)[0];
+    if (issn) metadata.ISSN = String(issn);
+    const isbn = list<string>(work.ISBN)[0];
+    if (isbn) metadata.ISBN = String(isbn);
+    if (work.language) metadata.language = String(work.language);
+    const abbreviation = list<string>(work["short-container-title"])[0];
+    if (abbreviation) metadata.journalAbbreviation = abbreviation;
+    if (work.event?.name) metadata.conferenceName = String(work.event.name);
+    if (work["edition-number"])
+      metadata.edition = String(work["edition-number"]);
+    const date =
+      dateValue(work.issued) ||
+      dateValue(work.published) ||
+      dateValue(work["published-print"]) ||
+      dateValue(work["published-online"]);
+    if (date) metadata.date = date;
+    return metadata;
+  }
+
+  async openAlexDOI(doi: string): Promise<Metadata | undefined> {
+    const work = await this.net.json(
+      `https://api.openalex.org/works/doi:${doiPath(doi)}`,
+    );
+    if (!work || work.error) return undefined;
+    const itemType = openAlexType(work);
+    const title = String(work.display_name || work.title || "").trim();
+    if (!itemType || !title) return undefined;
+    const metadata: Metadata = { itemType, title };
+    const recordDOI = cleanDOI(String(work.ids?.doi || work.doi || ""));
+    if (recordDOI) metadata.DOI = recordDOI;
+    const creators = list<any>(work.authorships).flatMap((authorship) => {
+      const name = String(
+        authorship?.raw_author_name || authorship?.author?.display_name || "",
+      ).trim();
+      if (!name) return [];
+      const words = name.split(/\s+/);
+      return [
+        {
+          firstName: words.slice(0, -1).join(" "),
+          lastName: words[words.length - 1],
+          creatorType: "author",
+        },
+      ];
+    });
+    if (creators.length) metadata.creators = creators;
+    const source = work.primary_location?.source;
+    const container = String(source?.display_name || "").trim();
+    if (container) withContainer(metadata, container);
+    if (work.publication_date) metadata.date = String(work.publication_date);
+    else if (work.publication_year)
+      metadata.date = String(work.publication_year);
+    if (work.language) metadata.language = String(work.language);
+    const biblio = work.biblio || {};
+    if (biblio.volume) metadata.volume = String(biblio.volume);
+    if (biblio.issue) metadata.issue = String(biblio.issue);
+    if (biblio.first_page)
+      metadata.pages =
+        biblio.last_page && biblio.last_page !== biblio.first_page
+          ? `${biblio.first_page}-${biblio.last_page}`
+          : String(biblio.first_page);
+    const issn = source?.issn_l || list<string>(source?.issn)[0];
+    if (issn) metadata.ISSN = String(issn);
+    return metadata;
+  }
+
+  async dataCiteDOI(doi: string): Promise<Metadata | undefined> {
+    const response = await this.net.json(
+      `https://api.datacite.org/dois/${doiPath(doi)}`,
+    );
+    const data = response?.data?.attributes;
+    if (!data) return undefined;
+    const itemType = dataCiteType(data.types);
+    const title = String(
+      list<any>(data.titles).find(
+        (entry) =>
+          entry?.title &&
+          !/^(?:alternative|subtitle|translated)title$/i.test(
+            String(entry.titleType || ""),
+          ),
+      )?.title || "",
+    ).trim();
+    if (!itemType || !title) return undefined;
+    const metadata: Metadata = { itemType, title };
+    const recordDOI = cleanDOI(String(data.doi || ""));
+    if (recordDOI) metadata.DOI = recordDOI;
+    const creators = list<any>(data.creators).flatMap((author) => {
+      const lastName = String(author?.familyName || author?.name || "").trim();
+      if (!lastName) return [];
+      return [
+        {
+          firstName: String(author?.givenName || "").trim(),
+          lastName,
+          creatorType: "author",
+        },
+      ];
+    });
+    if (creators.length) metadata.creators = creators;
+    const container = String(data.container?.title || "").trim();
+    if (container) withContainer(metadata, container);
+    if (data.publisher) metadata.publisher = String(data.publisher);
+    if (data.publicationYear) metadata.date = String(data.publicationYear);
+    if (data.language) metadata.language = String(data.language);
+    if (data.container?.volume) metadata.volume = String(data.container.volume);
+    if (data.container?.issue) metadata.issue = String(data.container.issue);
+    if (data.container?.firstPage)
+      metadata.pages =
+        data.container.lastPage &&
+        data.container.lastPage !== data.container.firstPage
+          ? `${data.container.firstPage}-${data.container.lastPage}`
+          : String(data.container.firstPage);
+    for (const identifier of list<any>(data.identifiers)) {
+      const type = String(identifier?.identifierType || "").toUpperCase();
+      const value = String(identifier?.identifier || "").trim();
+      if (!value) continue;
+      if (type === "ISSN" && !metadata.ISSN) metadata.ISSN = value;
+      if (type === "ISBN" && !metadata.ISBN) metadata.ISBN = value;
+    }
+    return metadata;
+  }
+
   async dblp(item: Item): Promise<Candidate[]> {
     if (this.dblpUnavailable) {
       try {
@@ -393,7 +622,7 @@ export class PublicationFinder {
         if (fallback) return fallback;
       } catch (fallbackError) {
         throw new Error(
-          `${errorMessage(this.dblpUnavailable)}; DBLP SPARQL: ${errorMessage(fallbackError)}`,
+          `${errorMessage(this.dblpUnavailable)}. DBLP SPARQL: ${errorMessage(fallbackError)}`,
         );
       }
       throw this.dblpUnavailable;
@@ -423,7 +652,7 @@ export class PublicationFinder {
             if (fallback) return fallback;
           } catch (fallbackError) {
             throw new Error(
-              `${errorMessage(error)}; DBLP SPARQL: ${errorMessage(fallbackError)}`,
+              `${errorMessage(error)}. DBLP SPARQL: ${errorMessage(fallbackError)}`,
             );
           }
           throw error;
@@ -431,10 +660,12 @@ export class PublicationFinder {
         failures.push(`${host}: ${String(error)}`);
       }
     }
-    if (!data) throw new Error(failures.join("; "));
+    if (!data) throw new Error(failures.join("\n"));
     return list<any>(data.result?.hits?.hit).flatMap((hit) => {
       const info = hit.info;
       if (!info || !publishedVenue(info.venue || "")) return [];
+      if (/informal|editorship|preprint/i.test(String(info.type || "")))
+        return [];
       const urls = list<string>(info.ee);
       const doi = cleanDOI(info.doi || "") || urls.map(cleanDOI).find(Boolean);
       let url =
@@ -447,6 +678,7 @@ export class PublicationFinder {
       return [
         {
           source: "DBLP",
+          publicationEvidence: "index" as const,
           title: info.title || "",
           doi,
           url,
@@ -494,10 +726,11 @@ LIMIT 10`;
         if (!publishedVenue(venue)) return [];
         const doi = cleanDOI(value("doi"));
         const url = value("page");
-        if (!doi && !officialPublicationURL(url)) return [];
+        if (!doi && !/^https?:\/\//i.test(url)) return [];
         return [
           {
             source: "DBLP",
+            publicationEvidence: "index" as const,
             title: value("title"),
             doi,
             url: url || undefined,
@@ -523,17 +756,39 @@ LIMIT 10`;
       .filter((work) =>
         ["article", "conference-paper", "book-chapter"].includes(work.type),
       )
-      .map((work) => ({
-        source: "OpenAlex",
-        title: work.display_name || "",
-        doi: cleanDOI(work.doi || ""),
-        authors: list<any>(work.authorships)
-          .map((authorship) => authorship.author?.display_name || "")
-          .filter(Boolean),
-        year: Number(work.publication_year) || undefined,
-        venue: work.primary_location?.source?.display_name || "",
-      }))
-      .filter((candidate) => candidate.doi && publishedVenue(candidate.venue));
+      .map((work) => {
+        const location = [work.primary_location, ...list<any>(work.locations)]
+          .filter(Boolean)
+          .find(
+            (location) =>
+              location.source?.type !== "repository" &&
+              location.version !== "submittedVersion" &&
+              publishedVenue(location.source?.display_name || "") &&
+              /^https?:\/\//i.test(location.landing_page_url || ""),
+          );
+        return {
+          source: "OpenAlex",
+          ...(location &&
+          (location.is_published === true ||
+            location.is_accepted === true ||
+            ["publishedVersion", "acceptedVersion"].includes(location.version))
+            ? { publicationEvidence: "index" as const }
+            : {}),
+          title: work.display_name || "",
+          doi: cleanDOI(work.doi || ""),
+          ...(location ? { url: location.landing_page_url } : {}),
+          authors: list<any>(work.authorships)
+            .map((authorship) => authorship.author?.display_name || "")
+            .filter(Boolean),
+          year: Number(work.publication_year) || undefined,
+          venue:
+            (location || work.primary_location)?.source?.display_name || "",
+        };
+      })
+      .filter(
+        (candidate) =>
+          (candidate.doi || candidate.url) && publishedVenue(candidate.venue),
+      );
   }
 
   async pubmed(item: Item): Promise<Candidate[]> {
@@ -548,21 +803,27 @@ LIMIT 10`;
         `${base}esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(",")}`,
       )
     ).result;
-    return ids
-      .map((id: string) => result?.[id])
-      .filter(Boolean)
-      .map((paper: any) => ({
-        source: "PubMed",
-        title: paper.title || "",
-        venue: paper.fulljournalname || "",
-        year: Number(paper.pubdate?.match(/\d{4}/)?.[0]) || undefined,
-        doi: cleanDOI(
-          list<any>(paper.articleids).find((id) => id.idtype === "doi")
-            ?.value || "",
-        ),
-        authors: list<any>(paper.authors).map((author) => author.name),
-      }))
-      .filter((candidate: Candidate) => candidate.doi);
+    return ids.flatMap((id: string) => {
+      const paper = result?.[id];
+      if (!paper || !/^\d+$/.test(id)) return [];
+      return [
+        {
+          source: "PubMed",
+          ...(publishedVenue(paper.fulljournalname || "")
+            ? { publicationEvidence: "index" as const }
+            : {}),
+          url: `https://pubmed.ncbi.nlm.nih.gov/${id}/`,
+          title: paper.title || "",
+          venue: paper.fulljournalname || "",
+          year: Number(paper.pubdate?.match(/\d{4}/)?.[0]) || undefined,
+          doi: cleanDOI(
+            list<any>(paper.articleids).find((id) => id.idtype === "doi")
+              ?.value || "",
+          ),
+          authors: list<any>(paper.authors).map((author) => author.name),
+        },
+      ];
+    });
   }
 
   async openreview(
@@ -579,11 +840,18 @@ LIMIT 10`;
       const venue = String(get("venue") || "");
       const venueID = String(get("venueid") || "");
       const authors = list<string>(get("authors")).filter(
-        (author) => typeof author === "string" && author.trim(),
+        (author) =>
+          typeof author === "string" &&
+          author.trim() &&
+          !/^(?:anonymous(?: authors?)?|匿名)$/i.test(author.trim()),
       );
       if (
         !publishedVenue(venue) ||
         !publishedVenue(`${venue} ${venueID}`) ||
+        !/\/(?:19|20)\d{2}\//.test(venueID) ||
+        /\/(?:Authors|Reviewers|Area_Chairs|Program_Chairs)(?:\/|$)/i.test(
+          venueID,
+        ) ||
         /^dblp\.org\//i.test(venueID) ||
         list<string>(note.invitations).some((invitation) =>
           /^dblp\.org\//i.test(invitation),
@@ -599,6 +867,7 @@ LIMIT 10`;
       return [
         {
           source: "OpenReview",
+          publicationEvidence: "index" as const,
           title: String(get("title") || ""),
           authors,
           venue: event?.title || venue,
@@ -612,6 +881,42 @@ LIMIT 10`;
         },
       ];
     });
+  }
+
+  async conferenceSite(
+    item: Pick<Item, "getField" | "getCreators">,
+    publicationHint: string,
+  ): Promise<Candidate[]> {
+    const site = conferenceSiteHint(publicationHint);
+    if (!site) return [];
+    const base = `https://${site.host}/virtual/${site.year}/papers.html`;
+    let doc = this.conferenceLists.get(base);
+    if (!doc) {
+      const text = await this.net.text(base);
+      checkAccess(text);
+      doc = this.net.html(text);
+      this.conferenceLists.set(base, doc);
+    }
+    const candidates: Candidate[] = [];
+    for (const link of Array.from(doc.querySelectorAll("a[href]"))) {
+      const url = new URL(link.getAttribute("href") || "", base).href;
+      const event = conferencePoster(url);
+      const title = link.textContent?.trim() || "";
+      if (
+        event?.host === site.host &&
+        event.year === site.year &&
+        titleScore(item.getField("title"), title) >= 0.9
+      )
+        candidates.push({
+          source: site.conference,
+          publicationEvidence: "proceedings",
+          title,
+          url,
+          venue: `${site.conference} ${site.year}`,
+          year: Number(site.year),
+        });
+    }
+    return rankCandidates(item, candidates);
   }
 
   // Publisher search is a last resort when general indexes have no publication.
@@ -644,23 +949,43 @@ LIMIT 10`;
   async find(
     item: Item,
     usePreprintLinks = true,
-    resolveOfficial?: (candidate: Candidate) => Promise<boolean>,
+    resolvePublication?: (candidate: Candidate) => Promise<boolean>,
   ): Promise<Lookup> {
     const warnings: string[] = [];
-    let publicationHint = "";
+    let publicationHint = [
+      item.getField("proceedingsTitle"),
+      item.getField("publicationTitle"),
+      item.getField("conferenceName"),
+      item.getField("date"),
+    ]
+      .filter(Boolean)
+      .join(" ");
     let answered = 0;
     const ids = identifiers(item);
-    const checkedURLs = new Set<string>();
-    const official = async (candidate: Candidate): Promise<boolean> => {
-      if (!resolveOfficial || !officialPublicationURL(candidate.url || ""))
+    const checkedRecords = new Set<string>();
+    const verify = async (candidate: Candidate): Promise<boolean> => {
+      if (!resolvePublication || (!candidate.url && !candidate.bibtex))
         return false;
-      if (checkedURLs.has(candidate.url!)) return false;
-      checkedURLs.add(candidate.url!);
+      const url = candidate.url;
+      if (
+        url &&
+        (!/^https?:\/\//i.test(url) ||
+          isPreprint({
+            itemType: "document",
+            isRegularItem: () => true,
+            getField: (field) => (field === "url" ? url : ""),
+          }))
+      )
+        return false;
+      const key = `${url || ""}\n${candidate.bibtex || ""}\n${candidate.publicationEvidence || ""}`;
+      if (checkedRecords.has(key)) return false;
+      checkedRecords.add(key);
       try {
-        const url = new URL(candidate.url!);
         // A forum URL alone says nothing about acceptance.
-        if (url.hostname.replace(/^www\./, "") === "openreview.net") {
-          const forum = url.searchParams.get("id")!;
+        const page = url ? new URL(url) : undefined;
+        if (page?.hostname.replace(/^www\./, "") === "openreview.net") {
+          const forum = page.searchParams.get("id");
+          if (page.pathname !== "/forum" || !forum) return false;
           const accepted = selectPublication(
             item,
             (await this.openreview(item, forum)).filter(
@@ -670,9 +995,9 @@ LIMIT 10`;
           if (!accepted) return false;
           candidate = accepted;
         }
-        return await resolveOfficial(candidate);
+        return await resolvePublication(candidate);
       } catch (error) {
-        warnings.push(`Official publication: ${String(error)}`);
+        warnings.push(`Publication metadata: ${String(error)}`);
         return false;
       }
     };
@@ -681,7 +1006,7 @@ LIMIT 10`;
       title: item.getField("title"),
       url: ids.URL,
     };
-    if (await official(current))
+    if (await verify(current))
       return { candidates: [current], warnings, answered: 1 };
     let linked: Candidate[] = [];
     try {
@@ -689,7 +1014,9 @@ LIMIT 10`;
       linked =
         usePreprintLinks || ids.arXiv
           ? await this.related(item, (hint) => {
-              publicationHint = hint;
+              publicationHint = [hint, publicationHint]
+                .filter(Boolean)
+                .join("\n");
             })
           : [];
       answered++;
@@ -697,8 +1024,19 @@ LIMIT 10`;
       warnings.push(`Preprint server: ${String(error)}`);
     }
     const rankedLinked = rankCandidates(item, linked);
-    if (rankedLinked.length)
-      return { candidates: rankedLinked, warnings, answered };
+    if (rankedLinked.length) {
+      const candidate = selectPublication(item, rankedLinked);
+      if (
+        !candidate ||
+        !resolvePublication ||
+        candidate.doi ||
+        (await verify(candidate))
+      )
+        return { candidates: rankedLinked, warnings, answered };
+    }
+    // Broad indexes run first, then venue indexes, then secondary fallbacks.
+    // Each stage runs in parallel and stops once a publication is verified, so
+    // later sources only cost requests when earlier ones fail.
     const stages = [
       [
         ["Crossref", () => this.crossref(item, publicationHint)],
@@ -707,18 +1045,40 @@ LIMIT 10`;
       [
         ["DBLP", () => this.dblp(item)],
         ["OpenReview", () => this.openreview(item)],
+        ...(conferenceSiteHint(publicationHint)
+          ? ([
+              [
+                "Conference website",
+                () => this.conferenceSite(item, publicationHint),
+              ],
+            ] as const)
+          : []),
       ],
       [
-        ["PubMed", () => this.pubmed(item)],
         ["Semantic Scholar", () => this.semanticScholar(item)],
+        ["PubMed", () => this.pubmed(item)],
       ],
     ] as const;
     const candidates: Candidate[] = [];
     let selected: Candidate | undefined;
     const accept = async (ranked: Candidate[]) => {
       selected = selectPublication(item, ranked);
-      if (selected && (selected.doi || (await official(selected))))
+      if (selected && (selected.doi || (await verify(selected))))
         return { candidates: ranked, warnings, answered };
+      if (selected) {
+        // Selection already established that these equally strong matches refer
+        // to one publication. A private forum must not hide its public record.
+        for (const alternative of ranked) {
+          if (
+            alternative === selected ||
+            (alternative.score || 0) < (selected.score || 0) - 0.05 ||
+            !selectPublication(item, [alternative])
+          )
+            continue;
+          if (alternative.doi || (await verify(alternative)))
+            return { candidates: [alternative], warnings, answered };
+        }
+      }
       // Later sources must not override a strong conflict from an earlier stage.
       if (
         !selected &&
@@ -749,17 +1109,17 @@ LIMIT 10`;
     const accepted = await accept(ranked);
     if (accepted) return accepted;
     // Search results locate records; only a verified article can authorize an update.
-    if (!selected && resolveOfficial) {
+    if (!selected && resolvePublication) {
       try {
         const publisher = await this.usenix(item);
         answered++;
         const record = selectPublication(item, publisher);
-        if (record && (await official(record)))
+        if (record && (await verify(record)))
           return { candidates: [record], warnings, answered };
       } catch (error) {
         warnings.push(`USENIX: ${String(error)}`);
       }
     }
-    return { candidates: ranked, warnings, answered };
+    return { candidates: resolvePublication ? [] : ranked, warnings, answered };
   }
 }

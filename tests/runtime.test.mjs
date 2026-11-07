@@ -6,9 +6,7 @@ import { FakeItem, hostFor, published } from "./helpers.mjs";
 
 globalThis.Zotero = { locale: "en-US", logError() {} };
 globalThis.MLRootURI = "file:///test/";
-const { Runtime, SEMANTIC_SCHOLAR_KEY_PREF } = await import(
-  "../.tests-build/runtime.js"
-);
+const { Runtime } = await import("../.tests-build/runtime.js");
 const { CONFERENCE_SETTINGS_PREF, DEFAULT_CONFERENCE_RULES } = await import(
   "../.tests-build/conferences.js"
 );
@@ -20,7 +18,9 @@ function runFixture(item) {
     ...hostFor(item),
     active: () => runtime.alive && runtime.generation === 1,
   });
-  runtime.retriever = { retrieve: async () => published };
+  runtime.retriever = {
+    retrieve: async () => ({ ...published, publicationEvidence: "identifier" }),
+  };
   const state = { previews: 0, progress: null };
   runtime.open = (_, data) => {
     if (data.kind === "progress") {
@@ -65,6 +65,7 @@ function lintFixture(item = new FakeItem()) {
         candidates: [
           {
             source: "Crossref",
+            publicationEvidence: "index",
             title: published.title,
             doi: published.DOI,
             venue: published.publicationTitle,
@@ -80,7 +81,7 @@ function lintFixture(item = new FakeItem()) {
   runtime.retriever = {
     candidate: async () => {
       calls.push("published metadata");
-      return published;
+      return { ...published, publicationEvidence: "identifier" };
     },
     retrieveCurrent: async () => {
       calls.push("current metadata");
@@ -163,6 +164,7 @@ test("DOI-free conference metadata is accepted and an absent DOI does not erase 
     candidates: [
       {
         source: "OpenReview",
+        publicationEvidence: "index",
         title: item.getField("title"),
         authors: ["Zhi Lu"],
         venue: "ICLR 2026",
@@ -406,30 +408,25 @@ test("preferences keep public settings separate from internal conference rules",
   const saved = [];
   const ids = [
     "ml-update-pdfs",
-    "ml-update-pdfs-help",
     "ml-publication-style",
     "ml-replace-publication",
-    "ml-replace-publication-help",
-    "ml-settings-help",
     "ml-publication-label",
     "ml-retrieved-names",
     "ml-standard-names",
     "ml-short-names",
-    "ml-publication-help",
-    "ml-semantic-scholar-key",
-    "ml-semantic-scholar-key-label",
-    "ml-semantic-scholar-key-help",
   ];
   const elements = Object.fromEntries(
-    ids.map((id) => [id, { textContent: "", addEventListener: () => {} }]),
+    ids.map((id) => [
+      id,
+      {
+        textContent: "",
+        addEventListener: () => {},
+        setAttribute(name, value) {
+          this[name] = value;
+        },
+      },
+    ]),
   );
-  const listeners = {};
-  elements["ml-semantic-scholar-key"] = {
-    value: "",
-    addEventListener: (type, listener) => {
-      listeners[type] = listener;
-    },
-  };
   const settings = {
     rules: DEFAULT_CONFERENCE_RULES,
     formatPublication: false,
@@ -439,8 +436,7 @@ test("preferences keep public settings separate from internal conference rules",
     rule.id === "eccv" ? { ...rule, name: "Maintained ECCV name" } : rule,
   );
   globalThis.Zotero.Prefs = {
-    get: (key) =>
-      key === SEMANTIC_SCHOLAR_KEY_PREF ? "" : JSON.stringify(settings),
+    get: () => JSON.stringify(settings),
     set: (...args) => saved.push(args),
   };
   try {
@@ -453,9 +449,15 @@ test("preferences keep public settings separate from internal conference rules",
         return elements[id];
       },
     });
+    assert.equal(
+      elements["ml-update-pdfs"].tooltiptext,
+      runtime.s.updatePDFsHelp,
+    );
+    assert.equal(
+      elements["ml-replace-publication"].tooltiptext,
+      runtime.s.replacePublicationHelp,
+    );
     runtime.setPublicationStyle("short");
-    listeners.change({ target: { value: " secret-key " } });
-    assert.deepEqual(saved[1], [SEMANTIC_SCHOLAR_KEY_PREF, "secret-key", true]);
     const stored = JSON.parse(saved[0][1]);
     assert.equal(saved[0][0], CONFERENCE_SETTINGS_PREF);
     assert.equal(stored.publicationStyle, "short");
@@ -468,8 +470,7 @@ test("preferences keep public settings separate from internal conference rules",
       new URL("../content/preferences.xhtml", import.meta.url),
       "utf8",
     );
-    assert.match(markup, /ml-semantic-scholar-key/);
-    assert.match(markup, /type="password"/);
+    assert.doesNotMatch(markup, /type="password"|ml-.*key/);
     assert.doesNotMatch(markup, /ml-conference-rules|button/);
   } finally {
     delete globalThis.Zotero.Prefs;
@@ -1055,7 +1056,7 @@ test("a preprint already carrying a published DOI skips title discovery and upgr
   runtime.retriever.candidate = async (candidate) => {
     assert.equal(candidate.doi, published.DOI);
     calls.push("DOI");
-    return published;
+    return { ...published, publicationEvidence: "identifier" };
   };
   await runtime.run(win, "lint");
   assert.deepEqual(calls, ["DOI"]);
@@ -1129,6 +1130,7 @@ test("official DOI-free publication metadata updates in place without broad sear
   runtime.finder.openreview = async () => [
     {
       source: "OpenReview",
+      publicationEvidence: "index",
       title: item.getField("title"),
       authors: ["Zhi Lu"],
       venue: "ICLR 2026",
@@ -1144,6 +1146,7 @@ test("official DOI-free publication metadata updates in place without broad sear
     translated++;
     return {
       ...published,
+      publicationEvidence: "index",
       itemType: "conferencePaper",
       DOI: undefined,
       proceedingsTitle: "ICLR 2026",
@@ -1162,7 +1165,7 @@ test("an exact PMID is retrieved before title search when DOI is missing", async
   item.data.extra += "\nPMID: 123456";
   runtime.retriever.retrieve = async (_, source) => {
     calls.push(source);
-    return published;
+    return { ...published, publicationEvidence: "index" };
   };
   await runtime.run(win, "lint");
   assert.deepEqual(calls, ["PMID"]);
@@ -1183,12 +1186,12 @@ test("unaccepted or mismatched official records cannot bypass publication valida
     const finder = new PublicationFinder({});
     finder.related = async () => [];
     finder.googleScholar = async () => [];
-    finder.semanticScholar =
-      finder.crossref =
+    finder.crossref =
       finder.openAlex =
       finder.dblp =
       finder.pubmed =
       finder.openreview =
+      finder.semanticScholar =
         async () => [];
     runtime.finder = finder;
     runtime.retriever.candidate = async () => ({
@@ -1391,6 +1394,38 @@ test("a batch shares pending and completed text responses but isolates documents
     );
   } finally {
     delete globalThis.Zotero.HTTP;
+  }
+});
+
+test("different Accept headers do not share a cached text response", async () => {
+  const { runtime } = runFixture(new FakeItem());
+  const { Operation } = await import("../.tests-build/operation.js");
+  const operation = new Operation();
+  runtime.busy = true;
+  runtime.operationGeneration = runtime.generation;
+  let calls = 0;
+  globalThis.Zotero.HTTP = {
+    request: async (_, __, options) => {
+      calls++;
+      return { responseText: options.headers.Accept };
+    },
+    wrapDocument: (doc) => doc,
+  };
+  try {
+    const [html, bibtex] = await Promise.all([
+      runtime.request("https://example.test/doi", operation, "text", 20000, {
+        Accept: "text/html",
+      }),
+      runtime.request("https://example.test/doi", operation, "text", 20000, {
+        Accept: "application/x-bibtex",
+      }),
+    ]);
+    assert.equal(html, "text/html");
+    assert.equal(bibtex, "application/x-bibtex");
+    assert.equal(calls, 2);
+  } finally {
+    delete globalThis.Zotero.HTTP;
+    operation.cancel();
   }
 });
 
@@ -1654,7 +1689,8 @@ test("lint updates a PDF even when bibliographic metadata is unchanged", async (
   };
   await runtime.run(win, "lint");
   assert.equal(checked, 1);
-  assert.equal(state.progress.rows[0].status, "PDF updated");
+  assert.equal(state.progress.rows[0].status, "No changes");
+  assert.equal(state.progress.rows[0].pdfStatus, "PDF updated");
 });
 
 test("a blocked PDF does not undo a successful metadata update", async () => {
@@ -1666,10 +1702,11 @@ test("a blocked PDF does not undo a successful metadata update", async () => {
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.rows[0].status, "Updated");
   assert.equal(state.progress.rows[0].problem, "");
-  assert.match(state.progress.rows[0].detail, /PDF unavailable/);
+  assert.match(state.progress.rows[0].detail, /PDF: Access blocked/);
+  assert.equal(state.progress.rows[0].pdfStatus, "PDF: Access blocked");
 });
 
-test("an unavailable PDF marks an unchanged item as partially checked", async () => {
+test("an unavailable PDF retains the successful metadata result", async () => {
   const item = new FakeItem();
   Object.assign(item.data, published);
   item.itemTypeID = 2;
@@ -1679,8 +1716,9 @@ test("an unavailable PDF marks an unchanged item as partially checked", async ()
   };
   runtime.updatePDF = async () => "unavailable";
   await runtime.run(win, "lint");
-  assert.equal(state.progress.rows[0].status, "Incomplete");
-  assert.equal(state.progress.rows[0].problem, "PDF unavailable");
+  assert.equal(state.progress.rows[0].status, "No changes");
+  assert.equal(state.progress.rows[0].problem, "");
+  assert.equal(state.progress.rows[0].pdfStatus, "PDF unavailable");
 });
 
 test("the PDF preference disables downloads while metadata updates still run", async () => {
@@ -1766,4 +1804,34 @@ test("HTTP-200 challenges cool down a source before another batch reaches the ne
   } finally {
     globalThis.Zotero.HTTP = old;
   }
+});
+
+test("PDF cancellation retains metadata already saved", async () => {
+  const { runtime, state, win, item } = lintFixture();
+  runtime.updatePDF = async () => {
+    runtime.cancel();
+    throw new Error("Operation cancelled");
+  };
+  await runtime.run(win, "lint");
+  assert.equal(item.getField("DOI"), published.DOI);
+  assert.equal(state.progress.rows[0].status, "Updated");
+  assert.equal(state.progress.rows[0].pdfStatus, "PDF cancelled");
+  assert.equal(state.progress.cancelled, true);
+});
+
+test("a verified unchanged record is not marked incomplete by a failed alternate source", async () => {
+  const item = new FakeItem();
+  Object.assign(item.data, published);
+  const { runtime, win, state } = runFixture(item);
+  runtime.retriever = {
+    retrieveCurrent: async () => ({
+      source: "DOI",
+      metadata: { ...published, publicationEvidence: "identifier" },
+      warnings: ["Alternate source: HTTP 403"],
+    }),
+  };
+  await runtime.run(win, "lint");
+  assert.equal(state.progress.rows[0].status, "No changes");
+  assert.equal(state.progress.rows[0].problem, "");
+  assert.match(state.progress.rows[0].detail, /403/);
 });

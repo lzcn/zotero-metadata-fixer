@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
-import { en } from "../.tests-build/strings.js";
+import { en, zh } from "../.tests-build/strings.js";
 
 class Element {
   children = [];
@@ -177,7 +177,7 @@ test("native progress shows concise results with diagnostic details on hover", a
   );
   assert.equal(
     ui.content.children[1].children[1].title,
-    "Failed\nRate-limited\nLong HTTP error",
+    "Metadata: Failed\nRate-limited\nLong HTTP error",
   );
   let stopped = false;
   ui.content.children[1].children[1].events.get("mouseover")({
@@ -328,4 +328,49 @@ test("reused batch history keeps cancelled rows out of the processed count", asy
   assert.match(ui.summary.title, /Done.*2 \/ 3.*1 updated.*1 failed/);
   assert.equal(ui.progress.value, 2);
   assert.equal(ui.progress.hidden, true);
+});
+
+test("metadata and PDF outcomes render separately with localized, deduplicated details", async () => {
+  for (const s of [en, zh]) {
+    const pdfProblem = s.pdfUnavailableReason.replace(
+      "{reason}",
+      s.sourceBlocked,
+    );
+    const state = {
+      total: 2,
+      finished: true,
+      rows: [
+        {
+          title: "Blocked PDF",
+          status: s.noChanges,
+          pdfStatus: pdfProblem,
+          detail: `${pdfProblem}\nHTTP 403`,
+        },
+        { title: "New PDF", status: s.noChanges, pdfStatus: s.pdfUpdated },
+      ],
+      strings: s,
+      cancel() {},
+      onResult() {},
+    };
+    const ui = await dialog(state);
+    const cell = ui.content.children[0].children[1];
+    assert.equal(cell.textContent, `${s.noChanges} · ${pdfProblem}`);
+    assert.equal(
+      cell.title,
+      [
+        s.metadataResult.replace("{status}", s.noChanges),
+        pdfProblem,
+        "HTTP 403",
+      ].join("\n"),
+    );
+    assert.ok(
+      ui.summary.title.includes(
+        s.progressFinished
+          .replace("{completed}", "2")
+          .replace("{total}", "2")
+          .replace("{updated}", "1")
+          .replace("{failed}", "0"),
+      ),
+    );
+  }
 });

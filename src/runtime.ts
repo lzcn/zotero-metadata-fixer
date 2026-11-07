@@ -14,9 +14,13 @@ import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
 import { PDFVersionCache } from "./pdf-cache";
 import { SourcePolicy } from "./source-policy";
 import { checkAccess, classifyProblem, parseJSONResponse } from "./responses";
-import { normalizeMetadata } from "./metadata";
+import {
+  normalizeMetadata,
+  matchesPublication,
+  hasPublicationEvidence,
+} from "./metadata";
 import { buildRepairPlan } from "./repair";
-import { publishedVenue, rankCandidates, titleScore } from "./matching";
+import { titleScore } from "./matching";
 import { selectPublication } from "./selection";
 import { en, zh } from "./strings";
 import { addJournalAliases } from "./publication-short";
@@ -32,9 +36,6 @@ import {
   type ConferenceSettings,
   type PublicationStyle,
 } from "./conferences";
-
-export const SEMANTIC_SCHOLAR_KEY_PREF =
-  "extensions.metadata-linter.semanticScholarKey";
 
 declare const Zotero: any;
 declare const MLRootURI: string;
@@ -77,7 +78,8 @@ export class Runtime {
         this.sourcePolicy.remember(url, text);
         return value;
       },
-      text: (url) => this.request(url, operation),
+      text: (url, headers) =>
+        this.request(url, operation, "text", 20000, headers),
       html: (text) => {
         if (!operation.active()) throw new Error(this.s.cancelled);
         return new (Zotero.getMainWindow().DOMParser)().parseFromString(
@@ -115,6 +117,12 @@ export class Runtime {
     // Keep immutable responses within one batch; documents remain private to translators.
     if (responseType !== "text")
       return this.fetchResponse(url, operation, responseType, timeout, headers);
+    // The same URL can produce different representations for different Accept
+    // headers, so keep those responses apart.
+    const key =
+      headers && Object.keys(headers).length
+        ? `${url}\n${JSON.stringify(headers)}`
+        : url;
     let responses = this.responses.get(operation);
     if (!responses) {
       responses = new Map();
@@ -122,10 +130,10 @@ export class Runtime {
       const batch = responses;
       operation.onCancel(() => batch.clear());
     }
-    let pending = responses.get(url);
+    let pending = responses.get(key);
     if (pending) {
-      responses.delete(url);
-      responses.set(url, pending);
+      responses.delete(key);
+      responses.set(key, pending);
     }
     if (!pending) {
       pending = this.fetchResponse(
@@ -135,16 +143,16 @@ export class Runtime {
         timeout,
         headers,
       ).catch((error) => {
-        if (responses.get(url) === pending) responses.delete(url);
+        if (responses.get(key) === pending) responses.delete(key);
         throw error;
       });
-      responses.set(url, pending);
+      responses.set(key, pending);
       while (responses.size > 128)
         responses.delete(responses.keys().next().value!);
     }
     const result = await pending;
-    if (result.length > 1024 * 1024 && responses.get(url) === pending)
-      responses.delete(url);
+    if (result.length > 1024 * 1024 && responses.get(key) === pending)
+      responses.delete(key);
     if (!operation.active() || !this.alive) throw new Error(this.s.cancelled);
     return result;
   }
@@ -439,29 +447,14 @@ export class Runtime {
     };
     for (const [id, listener] of Object.entries(commands))
       doc.getElementById(id).addEventListener("command", listener, false, true);
-    doc.getElementById("ml-semantic-scholar-key").addEventListener(
-      "change",
-      (event: any) => {
-        Zotero.Prefs.set(
-          SEMANTIC_SCHOLAR_KEY_PREF,
-          String(event.target.value || "").trim(),
-          true,
-        );
-      },
-      false,
-      true,
-    );
     this.refreshPreferences(doc);
   }
 
   refreshPreferences(doc: any): void {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
-      "ml-semantic-scholar-key-label": this.s.semanticScholarKey,
       "ml-update-pdfs": this.s.updatePDFs,
-      "ml-update-pdfs-help": this.s.updatePDFsHelp,
       "ml-replace-publication": this.s.replacePublication,
-      "ml-replace-publication-help": this.s.replacePublicationHelp,
       "ml-publication-label": this.s.publicationStyle,
       "ml-retrieved-names": this.s.retrievedNames,
       "ml-standard-names": this.s.standardNames,
@@ -474,17 +467,18 @@ export class Runtime {
         element.setAttribute("value", text);
       else element.textContent = text;
     }
+    doc
+      .getElementById("ml-update-pdfs")
+      .setAttribute("tooltiptext", this.s.updatePDFsHelp);
+    doc
+      .getElementById("ml-replace-publication")
+      .setAttribute("tooltiptext", this.s.replacePublicationHelp);
     doc.getElementById("ml-replace-publication").checked =
       this.publicationView.enabled();
     doc.getElementById("ml-update-pdfs").checked =
       Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false;
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
-    doc.getElementById("ml-semantic-scholar-key").value = String(
-      Zotero.Prefs?.get(SEMANTIC_SCHOLAR_KEY_PREF, true) || "",
-    );
-    doc.getElementById("ml-semantic-scholar-key").placeholder =
-      this.s.semanticScholarKeyPlaceholder;
   }
 
   setPublicationStyle(publicationStyle: PublicationStyle | boolean): void {
@@ -523,44 +517,14 @@ export class Runtime {
     return value;
   }
 
-  private semanticScholarKey(): string {
-    return String(
-      Zotero.Prefs?.get(SEMANTIC_SCHOLAR_KEY_PREF, true) || "",
-    ).trim();
-  }
-
   private validatePublication(
     item: Item,
     candidate: Candidate,
     metadata: Metadata,
   ): void {
     if (
-      !["journalArticle", "conferencePaper", "bookSection"].includes(
-        metadata.itemType,
-      ) ||
-      (typeof metadata.DOI === "string" && preprintDOI(metadata.DOI)) ||
-      !metadata.creators?.length ||
-      titleScore(item.getField("title"), metadata.title) <
-        (candidate.linked ? 0.75 : 0.9) ||
-      !publishedVenue(
-        String(
-          metadata.publicationTitle ||
-            metadata.proceedingsTitle ||
-            metadata.bookTitle ||
-            candidate.venue ||
-            "",
-        ),
-      ) ||
-      !rankCandidates(item, [
-        {
-          ...candidate,
-          linked: false,
-          title: metadata.title,
-          authors: metadata.creators.map(
-            (author) => `${author.firstName || ""} ${author.lastName}`,
-          ),
-        },
-      ]).length
+      !matchesPublication(item, candidate, metadata) ||
+      !hasPublicationEvidence(candidate, metadata)
     )
       throw new Error(this.s.unsupported);
   }
@@ -627,9 +591,7 @@ export class Runtime {
     this.operation = operation;
     this.operationWindow = win;
     const net = this.network(operation);
-    const finder =
-      this.finder ??
-      new PublicationFinder(net, () => this.semanticScholarKey());
+    const finder = this.finder ?? new PublicationFinder(net);
     const retriever =
       this.retriever ??
       new MetadataRetriever(
@@ -696,8 +658,9 @@ export class Runtime {
           row: any;
         };
         row.status = this.s.working;
-        let pdfUnavailable = false;
+        row.pdfStatus = "";
         let pdfDetail = "";
+        let metadataConfirmed = false;
         if (!progress.window.closed)
           this.cleanup(() => progress.window.renderProgress?.());
         try {
@@ -718,6 +681,7 @@ export class Runtime {
                 { source: "PMID", title: item.getField("title") },
                 resolved,
               );
+              metadataConfirmed = true;
               metadata = resolved;
               publication = preprint;
             } catch (error) {
@@ -726,6 +690,8 @@ export class Runtime {
             }
           }
           if (source === "lint" && !metadata && (preprint || missingDOI)) {
+            // A formal DOI is the shortest path; only missing or preprint DOIs
+            // need title discovery.
             const lookup = !missingDOI
               ? {
                   candidates: [
@@ -744,7 +710,10 @@ export class Runtime {
                     const resolved = await operation.wait(
                       retriever.candidate(candidate, host.active),
                     );
+                    if (!hasPublicationEvidence(candidate, resolved))
+                      return false;
                     this.validatePublication(item, candidate, resolved);
+                    metadataConfirmed = true;
                     metadata = resolved;
                     return true;
                   }),
@@ -771,6 +740,7 @@ export class Runtime {
                 retriever.candidate(candidate, host.active),
               );
               this.validatePublication(item, candidate, metadata);
+              metadataConfirmed = true;
               publication = preprint;
             }
           }
@@ -781,6 +751,24 @@ export class Runtime {
                   retriever.retrieveCurrent(item, host.active),
                 );
                 metadata = current.metadata;
+                metadataConfirmed =
+                  matchesPublication(
+                    item,
+                    {
+                      source: current.source,
+                      title: item.getField("title"),
+                      url: ids.URL,
+                    },
+                    metadata,
+                  ) &&
+                  hasPublicationEvidence(
+                    {
+                      source: current.source,
+                      title: item.getField("title"),
+                      url: ids.URL,
+                    },
+                    metadata,
+                  );
                 if (
                   item.getField("title") &&
                   titleScore(item.getField("title"), metadata.title) < 0.9
@@ -843,16 +831,23 @@ export class Runtime {
             try {
               const pdf = await this.updatePDF(item, operation, pdfCache);
               if (!host.active()) throw new Error(this.s.cancelled);
-              if (pdf === "added") row.status = this.s.pdfUpdated;
+              if (pdf === "added") row.pdfStatus = this.s.pdfUpdated;
               if (pdf === "unavailable") {
-                pdfUnavailable = true;
+                row.pdfStatus = this.s.pdfUnavailable;
                 pdfDetail = this.s.pdfUnavailable;
               }
             } catch (error) {
-              if (!host.active()) throw error;
-              pdfUnavailable = true;
-              pdfDetail = `${this.s.pdfUnavailable}: ${String(error)}`;
-              Zotero.logError(error);
+              if (!host.active()) {
+                row.pdfStatus = this.s.pdfCancelled;
+                pdfDetail = this.s.pdfCancelled;
+              } else {
+                row.pdfStatus = this.s.pdfUnavailableReason.replace(
+                  "{reason}",
+                  classifyProblem(String(error), this.s).message,
+                );
+                pdfDetail = `${row.pdfStatus}\n${String(error)}`;
+                Zotero.logError(error);
+              }
             }
           }
         } catch (error) {
@@ -862,15 +857,17 @@ export class Runtime {
         } finally {
           // A failed source does not make an applied update a failed item.
           const problem = classifyProblem(row.detail, this.s);
-          row.problem = [this.s.updated, this.s.pdfUpdated].includes(row.status)
-            ? ""
-            : problem.message;
+          row.problem =
+            row.status === this.s.updated || metadataConfirmed
+              ? ""
+              : problem.message;
           if (pdfDetail)
             row.detail = [row.detail, pdfDetail].filter(Boolean).join("\n");
-          if (row.status === this.s.noChanges && pdfUnavailable) {
-            row.status = this.s.unchangedPartial;
-            if (!row.problem) row.problem = this.s.pdfUnavailable;
-          } else if (row.status === this.s.noChanges && problem.incomplete)
+          if (
+            row.status === this.s.noChanges &&
+            problem.incomplete &&
+            !metadataConfirmed
+          )
             row.status = this.s.unchangedPartial;
           if (!progress.window.closed)
             this.cleanup(() => progress.window.renderProgress?.());

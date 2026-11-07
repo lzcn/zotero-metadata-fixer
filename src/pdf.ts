@@ -2,7 +2,7 @@ import type { Item, Metadata } from "./model";
 import { resolveArxivPDF } from "./arxiv-pdf";
 import { canonicalDOI, identifiers, isPreprint } from "./identifiers";
 import { articleEvidence } from "./metadata";
-import { matchesAuthor, titleScore } from "./matching";
+import { matchesAuthors, titleScore } from "./matching";
 import { fingerprint } from "./update";
 import type { Operation } from "./operation";
 import type { SourcePolicy } from "./source-policy";
@@ -172,8 +172,7 @@ export class PDFUpdater {
             (evidence.title &&
               titleScore(item.getField("title"), evidence.title) < 0.9) ||
             (!sameDOI &&
-              (!evidence.title ||
-                !matchesAuthor(item.getCreators()[0]?.lastName || "", authors)))
+              (!evidence.title || !matchesAuthors(item.getCreators(), authors)))
           )
             throw new Error("No matching article identity for PDF");
           const links = [

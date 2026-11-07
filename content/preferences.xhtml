@@ -1,33 +1,12 @@
 <vbox
   class="plugin-preferences"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   onload="Zotero.MetadataLinter?.initializePreferences(document)"
   onshowing="Zotero.MetadataLinter?.refreshPreferences(document)"
 >
   <vbox class="main-section">
-    <vbox class="preference-option">
-      <checkbox
-        native="true"
-        id="ml-update-pdfs"
-        aria-describedby="ml-update-pdfs-help"
-      />
-      <description
-        id="ml-update-pdfs-help"
-        class="preference-help"
-      ></description>
-    </vbox>
-    <vbox class="preference-option">
-      <checkbox
-        native="true"
-        id="ml-replace-publication"
-        aria-describedby="ml-replace-publication-help"
-      />
-      <description
-        id="ml-replace-publication-help"
-        class="preference-help"
-      ></description>
-    </vbox>
+    <checkbox native="true" id="ml-update-pdfs" />
+    <checkbox native="true" id="ml-replace-publication" />
     <hbox class="preference-row" align="center">
       <label id="ml-publication-label" control="ml-publication-style"></label>
       <menulist native="true" id="ml-publication-style">
@@ -37,18 +16,6 @@
           <menuitem id="ml-short-names" value="short"></menuitem>
         </menupopup>
       </menulist>
-    </hbox>
-    <hbox class="preference-row" align="center">
-      <label
-        id="ml-semantic-scholar-key-label"
-        control="ml-semantic-scholar-key"
-      ></label>
-      <html:input
-        id="ml-semantic-scholar-key"
-        type="password"
-        autocomplete="off"
-        spellcheck="false"
-      />
     </hbox>
   </vbox>
 </vbox>

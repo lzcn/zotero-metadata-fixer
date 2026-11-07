@@ -41,8 +41,8 @@ test("problem summaries distinguish source limits, timeouts and matching failure
   for (const s of [en, zh]) {
     assert.equal(summarizeProblem("", s), "");
     assert.equal(
-      summarizeProblem("Semantic Scholar: HTTP 429", s),
-      `${s.rateLimited}: Semantic Scholar`,
+      summarizeProblem("OpenAlex: HTTP 429", s),
+      `${s.rateLimited}: OpenAlex`,
     );
     assert.equal(
       summarizeProblem("Error: Metadata request timed out", s),
@@ -54,6 +54,10 @@ test("problem summaries distinguish source limits, timeouts and matching failure
       s.noTranslator,
     );
     assert.equal(summarizeProblem("Error: " + s.unsupported, s), s.unsupported);
+    assert.equal(
+      summarizeProblem("URL: Error: Unverified publication metadata", s),
+      s.unsupported,
+    );
     assert.equal(summarizeProblem(s.noPublished, s), s.noPublished);
     assert.equal(summarizeProblem("Crossref: HTTP 503", s), s.sourceFailed);
     assert.equal(summarizeProblem("Error: database failed", s), s.updateFailed);

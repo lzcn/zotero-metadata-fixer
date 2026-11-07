@@ -1,14 +1,73 @@
-import type { Metadata } from "./model";
+import type { Candidate, Item, Metadata } from "./model";
 import {
   canonicalDOI,
   cleanDOI,
   officialPublicationURL,
   preprintDOI,
   isPreprint,
+  conferencePoster,
 } from "./identifiers";
-import { titleScore, matchesAuthor } from "./matching";
+import { titleScore, matchesAuthors, publishedVenue } from "./matching";
+import { publicationVenueKey } from "./selection";
 
-import { containerField } from "./venues";
+import { containerField, containerTitle } from "./venues";
+
+export function hasPublicationEvidence(
+  candidate: Candidate,
+  metadata: Metadata,
+): boolean {
+  if (candidate.publicationEvidence || metadata.publicationEvidence)
+    return true;
+  const url = candidate.url || "";
+  // Forums and conference posters require their explicit acceptance/list checks.
+  return (
+    officialPublicationURL(url) &&
+    !conferencePoster(url) &&
+    new URL(url).hostname.replace(/^www\./, "") !== "openreview.net"
+  );
+}
+
+// Identifiers locate records; publication fields and identity authorize updates.
+export function matchesPublication(
+  item: Pick<Item, "getField" | "getCreators">,
+  candidate: Candidate,
+  metadata: Metadata,
+): boolean {
+  const venue =
+    containerTitle(metadata) ||
+    (metadata.itemType === "conferencePaper"
+      ? String(metadata.conferenceName || "")
+      : "");
+  const authors = metadata.creators
+    ?.filter((author) => author.creatorType !== "editor")
+    .map((author) =>
+      `${author.firstName || ""} ${author.lastName || ""}`.trim(),
+    )
+    .filter(Boolean);
+  return Boolean(
+    ["journalArticle", "conferencePaper", "bookSection"].includes(
+      metadata.itemType,
+    ) &&
+      (!metadata.DOI ||
+        (cleanDOI(String(metadata.DOI)) &&
+          !preprintDOI(String(metadata.DOI)))) &&
+      authors?.length &&
+      titleScore(item.getField("title"), metadata.title) >=
+        (candidate.linked ? 0.75 : 0.9) &&
+      matchesAuthors(item.getCreators(), authors) &&
+      publishedVenue(venue) &&
+      (!candidate.conferenceVenue ||
+        !metadata.conferenceVenue ||
+        candidate.conferenceVenue.id === metadata.conferenceVenue.id) &&
+      (candidate.doi ||
+        !candidate.venue ||
+        [venue, String(metadata.journalAbbreviation || "")].some(
+          (value) =>
+            publicationVenueKey(value) ===
+            publicationVenueKey(candidate.venue!),
+        )),
+  );
+}
 
 export function needsContainerTitle(metadata: Metadata): boolean {
   const field = containerField(metadata.itemType);
@@ -45,14 +104,31 @@ export function supplementMetadata(
 ): Metadata {
   const leftDOI = canonicalDOI(String(primary.DOI || ""));
   const rightDOI = canonicalDOI(String(extra.DOI || ""));
+  if (extra.publicationEvidence) {
+    const venues = (record: Metadata) =>
+      [containerTitle(record), record.journalAbbreviation]
+        .filter(
+          (value): value is string =>
+            typeof value === "string" && Boolean(value.trim()),
+        )
+        .map(publicationVenueKey);
+    const left = venues(primary),
+      right = venues(extra);
+    if (
+      left.length &&
+      right.length &&
+      !left.some((value) => right.includes(value))
+    )
+      throw new Error("Conflicting publication venues");
+  }
   if (
     titleScore(primary.title, extra.title) < 0.9 ||
     (primary.conferenceVenue &&
       extra.conferenceVenue &&
       primary.conferenceVenue.id !== extra.conferenceVenue.id) ||
     (leftDOI && rightDOI && leftDOI !== rightDOI) ||
-    !matchesAuthor(
-      primary.creators?.[0]?.lastName || "",
+    !matchesAuthors(
+      primary.creators || [],
       extra.creators?.map(
         (author) => `${author.firstName || ""} ${author.lastName}`,
       ),

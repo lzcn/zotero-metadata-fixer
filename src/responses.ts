@@ -33,6 +33,8 @@ export function classifyProblem(detail: string, s: Strings): ProblemSummary {
     return { message: s.noTranslator, incomplete };
   if (/invalid (?:JSON|XML)|Non-JSON|非 JSON/i.test(detail))
     return { message: s.invalidResponse, incomplete };
+  if (/Unverified publication metadata/i.test(detail))
+    return { message: s.unsupported, incomplete };
   for (const message of [
     s.itemChanged,
     s.ambiguous,

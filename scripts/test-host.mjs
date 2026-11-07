@@ -18,6 +18,44 @@ let arxivDownloads = 0;
 const pdfTitle =
   "Unified Metric Learning for Personalized Fashion Recommendations with Fast User Adaptation";
 const pdfDOI = "10.1109/TMM.2026.3694502";
+const genericTitle = "Generic DOI-Free Host Paper";
+const genericConferenceTitle = "Generic DOI-Free Conference Host Paper";
+const conferenceFixtures = await Promise.all(
+  [
+    {
+      conference: "NeurIPS",
+      host: "neurips.cc",
+      id: "151663",
+      file: "neurips-beyond-selection.html",
+    },
+    {
+      conference: "ICML",
+      host: "icml.cc",
+      id: "66328",
+      file: "icml-2026.html",
+    },
+    {
+      conference: "ICLR",
+      host: "iclr.cc",
+      id: "10006831",
+      file: "iclr-2026.html",
+    },
+  ].map(async (paper) => {
+    const html = await readFile(
+      new URL(`../tests/fixtures/${paper.file}`, import.meta.url),
+      "utf8",
+    );
+    const record = JSON.parse(
+      html.match(/<script[^>]*>([\s\S]*?)<\/script>/)[1],
+    );
+    return {
+      ...paper,
+      html,
+      title: record.name,
+      authors: record.author.map((author) => author.name),
+    };
+  }),
+);
 function pdfFixture(label) {
   const stream = `BT /F1 12 Tf 40 100 Td (${label}) Tj ET`;
   const objects = [
@@ -41,6 +79,37 @@ function pdfFixture(label) {
   return content;
 }
 const server = createServer((request, response) => {
+  if (
+    [
+      "/generic-journal",
+      "/generic-conference",
+      "/generic-unconfirmed",
+      "/generic-wrong-author",
+    ].includes(request.url)
+  ) {
+    const conference = request.url === "/generic-conference";
+    const title =
+      request.url === "/generic-unconfirmed"
+        ? "Unconfirmed Publication Host Paper"
+        : request.url === "/generic-wrong-author"
+          ? "Different Author Host Paper"
+          : conference
+            ? genericConferenceTitle
+            : genericTitle;
+    const author =
+      request.url === "/generic-wrong-author" ? "Lu, Wei" : "Lu, Zhi";
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(`<!doctype html><html><head>
+      <meta name="citation_title" content="${title}">
+      <meta name="citation_author" content="${author}">
+      <meta name="${conference ? "citation_conference_title" : "citation_journal_title"}" content="${conference ? "Unlisted Systems Meeting" : "Regional Methods Journal"}">
+      <meta name="citation_publication_date" content="2026">
+      <meta name="citation_volume" content="7">
+      <meta name="citation_firstpage" content="11">
+      <meta name="citation_lastpage" content="19">
+    </head><body>${conference ? `<pre>@inproceedings{generic,title={${title}},author={Lu, Zhi},booktitle={Proceedings of the Unlisted Systems Meeting},year={2026},volume={7},pages={11--19}}</pre>` : ""}</body></html>`);
+    return;
+  }
   if (request.url === "/pdf-article" || request.url === "/pdf-slow-article") {
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(
@@ -438,7 +507,7 @@ startup = async function(data) {
       await preprint.saveTx();
       const originalID = preprint.id, originalKey = preprint.key;
       await win.ZoteroPane.selectItem(preprint.id);
-      MLRuntime.finder = {find:async () => ({candidates:[{source:'OpenReview',title:'Host Test Preprint',authors:['Zhi Lu'],venue:'ICLR 2026',url:'https://openreview.net/forum?id=fixture'}],warnings:[],answered:1})};
+      MLRuntime.finder = {find:async () => ({candidates:[{source:'OpenReview',publicationEvidence:'index',title:'Host Test Preprint',authors:['Zhi Lu'],venue:'ICLR 2026',url:'https://openreview.net/forum?id=fixture'}],warnings:[],answered:1})};
       MLRuntime.retriever = {candidate:async () => ({itemType:'conferencePaper',title:'HOST TEST PREPRINT',proceedingsTitle:'ICLR 2026',url:'https://openreview.net/forum?id=fixture',creators:[{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]})};
       await MLRuntime.run(win, 'lint');
       result.upgrade = {id:preprint.id, key:preprint.key, type:preprint.itemType, title:preprint.getField('title'), DOI:preprint.getField('DOI')};
@@ -460,8 +529,7 @@ startup = async function(data) {
         await IOUtils.write(${JSON.stringify(process.env.ML_HOST_SCREENSHOT || "")}, new Uint8Array(await blob.arrayBuffer()));
       }
       await capture('settings',settings);
-      const keyField=settings.document.getElementById('ml-semantic-scholar-key');
-      if (settings.getComputedStyle(keyField).fontFamily.includes('Avenir Next')) throw new Error('Settings inherited the Bear font');
+      if (settings.getComputedStyle(select).fontFamily.includes('Avenir Next')) throw new Error('Settings inherited the Bear font');
       if([...settings.document.styleSheets].some(sheet=>sheet.href?.includes('metadata-linter/content/ui.css')))throw new Error('Settings loaded the operational theme stylesheet');
       if (settings.document.getElementById('ml-ui-style')) throw new Error('Settings expose an appearance picker');
       const updatePDFs = settings.document.getElementById('ml-update-pdfs');
@@ -473,7 +541,7 @@ startup = async function(data) {
       updatePDFs.dispatchEvent(new settings.Event('command'));
       result.pdfPreference = true;
       const replace = settings.document.getElementById('ml-replace-publication');
-      if (settings.document.getElementById('ml-replace-publication-help')?.textContent !== MLRuntime.preferenceData().strings.replacePublicationHelp) throw new Error('Missing localized Zotero Style compatibility reminder');
+      if (replace.getAttribute('tooltiptext') !== MLRuntime.preferenceData().strings.replacePublicationHelp) throw new Error('Missing localized Zotero Style compatibility reminder');
       if (!replace.checked || replace.getAttribute('native') !== 'true') throw new Error('Missing native replacement setting');
       const originalTitlePrefs = JSON.stringify(win.ZoteroPane.itemsView._getColumnPrefs().title);
       replace.checked = false;
@@ -558,7 +626,7 @@ startup = async function(data) {
       MLRuntime.finder = undefined;
       MLRuntime.retriever = {candidate:async candidate => {
         if (candidate.source !== 'Google Scholar' || candidate.doi !== '10.1000/host-scholar') throw new Error('Scholar did not resolve the published DOI');
-        return {itemType:'conferencePaper',title:'SCHOLAR HOST TEST PAPER',DOI:candidate.doi,proceedingsTitle:'CVPR 2026',creators:scholarItem.getCreators()};
+        return {itemType:'conferencePaper',publicationEvidence:'identifier',title:'SCHOLAR HOST TEST PAPER',DOI:candidate.doi,proceedingsTitle:'CVPR 2026',creators:scholarItem.getCreators()};
       }};
       await MLRuntime.run(win, 'lint');
       result.scholar = {requests:scholarCalls.filter(url => url.startsWith('https://scholar.google.com/')).length,type:scholarItem.itemType,DOI:scholarItem.getField('DOI'),id:scholarItem.id};
@@ -594,6 +662,139 @@ startup = async function(data) {
 
       }
       MLRuntime.finder = undefined;
+      // Use official conference records when DOI and OpenReview lookup cannot help.
+      const conferenceRequest = MLRuntime.request;
+      result.conferenceOfficialFallback = [];
+      for (const fixture of ${JSON.stringify(conferenceFixtures)}) try {
+        const preprint = fixture.conference === 'NeurIPS';
+        const paper = new Zotero.Item(preprint ? 'preprint' : 'conferencePaper');
+        paper.setField('title', fixture.title);
+        paper.setField('date', '2026');
+        if (preprint) {
+          paper.setField('url', 'http://arxiv.org/abs/2609.35232');
+          paper.setField('DOI', '10.48550/arXiv.2609.35232');
+          paper.setField('archiveID', 'arXiv:2609.35232');
+        } else paper.setField('proceedingsTitle', fixture.conference);
+        const words = fixture.authors[0].split(' ');
+        paper.setCreators([{firstName:words.slice(0,-1).join(' '),lastName:words.at(-1),creatorType:'author'}]);
+        paper.addTag('keep-conference-tag');
+        await paper.saveTx();
+        const identity = {id:paper.id,key:paper.key};
+        const note = new Zotero.Item('note');
+        note.parentID = paper.id;
+        note.setNote('<p>Keep this note</p>');
+        await note.saveTx();
+        const requests = [];
+        const pageURL = 'https://' + fixture.host + '/virtual/2026/poster/' + fixture.id;
+        MLRuntime.request = async (url, operation, responseType) => {
+          requests.push(url);
+          if (url.startsWith('https://export.arxiv.org/api/query?')) return '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom"><entry><id>http://arxiv.org/abs/2609.35232v2</id><title>' + fixture.title + '</title><author><name>Rui Zhong</name></author><arxiv:comment>Accepted at NeurIPS 2026 (Spotlight)</arxiv:comment></entry></feed>';
+          if (url === 'https://' + fixture.host + '/virtual/2026/papers.html') return '<a href="/virtual/2026/poster/' + fixture.id + '">' + fixture.title + '</a>';
+          if (url === pageURL && responseType === 'document') return new win.DOMParser().parseFromString(fixture.html, 'text/html');
+          if (url.startsWith('https://api.crossref.org/')) return '{"message":{"items":[]}}';
+          if (url.startsWith('https://api.openalex.org/')) return '{"results":[]}';
+          if (url.startsWith('https://api2.openreview.net/')) throw new Error('HTTP 403: private forum');
+          if (url.startsWith('https://dblp.org/') || url.startsWith('https://sparql.dblp.org/')) return '{"result":{"hits":{"hit":[]}},"results":{"bindings":[]}}';
+          throw new Error('Unexpected conference request: ' + url);
+        };
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+        await win.ZoteroPane.selectItem(paper.id);
+        await MLRuntime.run(win, 'lint');
+        const row = MLRuntime.progressState.rows.at(-1);
+        const expectedVenue = fixture.conference + (preprint ? ' 2026' : '');
+        if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expectedVenue || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getCreators().length !== (preprint ? fixture.authors.length : 1) || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-conference-tag') || !paper.getNotes().includes(note.id)) throw new Error(fixture.conference + ' official fallback failed: ' + JSON.stringify(row));
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        requests.length = 0;
+        await MLRuntime.run(win, 'lint');
+        if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || requests.some(url => url !== pageURL && url !== 'https://' + fixture.host + '/virtual/2026/papers.html')) throw new Error(fixture.conference + ' repeat lookup changed the item or searched again');
+        result.conferenceOfficialFallback.push({conference:fixture.conference,updated:true,repeated:true,identityPreserved:true,noteAndTagPreserved:true});
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = conferenceRequest;
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+      }
+      const genericRequest = MLRuntime.request;
+      result.genericDOIFree = [];
+      for (const type of ['journalArticle', 'conferencePaper']) try {
+        const journal = type === 'journalArticle';
+        const title = journal ? ${JSON.stringify(genericTitle)} : ${JSON.stringify(genericConferenceTitle)};
+        const pageURL = journal ? 'https://uncatalogued-publisher.test/articles/paper' : 'https://unlisted-meeting.test/proceedings/17';
+        const paper = new Zotero.Item('preprint');
+        paper.setField('title', title);
+        paper.setField('url', journal ? 'https://arxiv.org/abs/2601.12345' : pageURL);
+        if (journal) paper.setField('archiveID', 'arXiv:2601.12345');
+        paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+        paper.addTag('keep-generic-tag');
+        await paper.saveTx();
+        const identity = {id:paper.id,key:paper.key};
+        const note = new Zotero.Item('note');
+        note.parentID = paper.id;
+        note.setNote('<p>Keep generic paper note</p>');
+        await note.saveTx();
+        const requests = [];
+        MLRuntime.request = async (url, ...args) => {
+          requests.push(url);
+          if (url === pageURL) {
+            const document = await genericRequest.call(MLRuntime, ${JSON.stringify(slowURL.replace("/pending", "/generic-journal"))}.replace('/generic-journal', journal ? '/generic-journal' : '/generic-conference'), ...args);
+            return Zotero.HTTP.wrapDocument(new win.DOMParser().parseFromString(document.documentElement.outerHTML, 'text/html'), pageURL);
+          }
+          if (url.startsWith('https://export.arxiv.org/api/query?')) return '<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2601.12345v1</id><title>' + ${JSON.stringify(genericTitle)} + '</title><author><name>Zhi Lu</name></author></entry></feed>';
+          if (url.startsWith('https://api.crossref.org/')) return '{"message":{"items":[]}}';
+          if (url.startsWith('https://api.openalex.org/')) return JSON.stringify({results:[{display_name:title,type:journal?'article':'conference-paper',doi:null,primary_location:{version:'publishedVersion',landing_page_url:pageURL,source:{display_name:journal?'Regional Methods Journal':'Proceedings of the Unlisted Systems Meeting',type:journal?'journal':'conference'}},authorships:[{author:{display_name:'Zhi Lu'}}]}]});
+          throw new Error('Unexpected generic request: ' + url);
+        };
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+        await win.ZoteroPane.selectItem(paper.id);
+        await MLRuntime.run(win, 'lint');
+        const row = MLRuntime.progressState.rows.at(-1);
+        const venue = paper.getField(journal ? 'publicationTitle' : 'proceedingsTitle');
+        if (row.status !== strings.updated || paper.itemType !== type || venue !== (journal ? 'Regional Methods Journal' : 'Proceedings of the Unlisted Systems Meeting') || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getField('volume') !== '7' || !/^11[-–]19$/.test(paper.getField('pages')) || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-generic-tag') || !paper.getNotes().includes(note.id)) throw new Error('Generic DOI-free update failed: ' + JSON.stringify({type,venue,row,paper:paper.toJSON()}));
+        for (const window of [...MLRuntime.dialogs]) window.close();
+        requests.length = 0;
+        await MLRuntime.run(win, 'lint');
+        if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || requests.some(url => url !== paper.getField('url') && !url.startsWith('https://export.arxiv.org/api/query?') && !url.startsWith('https://api.crossref.org/') && !url.startsWith('https://api.openalex.org/'))) throw new Error('Generic DOI-free repeat lookup changed the item or searched again: ' + JSON.stringify(requests));
+        result.genericDOIFree.push({type,venue,repeated:true,identityPreserved:true,noteAndTagPreserved:true});
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = genericRequest;
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+      }
+      const evidenceRequest = MLRuntime.request;
+      result.publicationEvidenceGuards = [];
+      for (const kind of ['unconfirmed', 'wrong-author']) try {
+        const title = kind === 'unconfirmed' ? 'Unconfirmed Publication Host Paper' : 'Different Author Host Paper';
+        const pageURL = 'https://personal-paper.test/' + kind;
+        const paper = new Zotero.Item('preprint');
+        paper.setField('title', title);
+        paper.setField('url', pageURL);
+        paper.setCreators([{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]);
+        await paper.saveTx();
+        const baseline = JSON.stringify(paper.toJSON());
+        MLRuntime.request = async (url, ...args) => {
+          if (url === pageURL) {
+            const document = await evidenceRequest.call(MLRuntime, ${JSON.stringify(slowURL.replace("/pending", "/generic-unconfirmed"))}.replace('/generic-unconfirmed', kind === 'unconfirmed' ? '/generic-unconfirmed' : '/generic-wrong-author'), ...args);
+            return Zotero.HTTP.wrapDocument(new win.DOMParser().parseFromString(document.documentElement.outerHTML, 'text/html'), pageURL);
+          }
+          if (url.startsWith('https://api.crossref.org/')) return '{"message":{"items":[]}}';
+          if (url.startsWith('https://api.openalex.org/')) return JSON.stringify({results:kind === 'unconfirmed' ? [] : [{display_name:title,type:'article',primary_location:{version:'publishedVersion',landing_page_url:pageURL,source:{display_name:'Regional Methods Journal',type:'journal'}},authorships:[{author:{display_name:'Zhi Lu'}}]}]});
+          throw new Error('No other publication source in evidence fixture');
+        };
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+        await win.ZoteroPane.selectItem(paper.id);
+        await MLRuntime.run(win, 'lint');
+        if (JSON.stringify(paper.toJSON()) !== baseline || paper.itemType !== 'preprint') throw new Error('Publication evidence or given-name guard wrote an unverified item');
+        result.publicationEvidenceGuards.push(kind);
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = evidenceRequest;
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+      }
       result.localTypeRepairs = [];
       for (const [type, venue, url, doi, expected] of [
         ['document', '', 'https://arxiv.org/abs/2401.01234', '', 'preprint'],
@@ -756,11 +957,22 @@ startup = async function(data) {
         for (const window of [...MLRuntime.dialogs]) window.close();
         await annotation.eraseTx();
         await MLRuntime.run(win, 'lint');
-        if (MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated || pdfItem.getAttachments().length !== 2) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        if (MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated || pdfItem.getAttachments().length !== 2) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         for (const window of [...MLRuntime.dialogs]) window.close();
         await MLRuntime.run(win, 'lint');
         if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.noChanges) throw new Error('Identical PDF was duplicated');
         for (const window of [...MLRuntime.dialogs]) window.close();
+        const nativeUpdatePDF = MLRuntime.updatePDF;
+        try {
+          MLRuntime.updatePDF = async () => { throw new Error('HTTP 403'); };
+          await MLRuntime.run(win, 'lint');
+          const row = MLRuntime.progressState.rows.at(-1);
+          if (row.status !== strings.noChanges || row.pdfStatus !== strings.pdfUnavailableReason.replace('{reason}', strings.sourceBlocked) || row.problem) throw new Error('PDF access error hid a successful metadata result: ' + JSON.stringify(row));
+          await wait(() => MLRuntime.progressWindow?.document.getElementById('content')?.textContent.includes(row.pdfStatus));
+          await capture('pdf-access-blocked', MLRuntime.progressWindow);
+          result.separatePDFStatus = true;
+          for (const window of [...MLRuntime.dialogs]) window.close();
+        } finally { MLRuntime.updatePDF = nativeUpdatePDF; }
         const firstPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
         await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
         await MLRuntime.run(win, 'lint');
@@ -776,7 +988,7 @@ startup = async function(data) {
         };
         try {
           await MLRuntime.run(win, 'lint');
-          if (currentPublished.deleted || pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('Cancellation during replacement did not roll back');
+          if (currentPublished.deleted || pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfCancelled) throw new Error('Cancellation during replacement did not roll back');
         } finally { currentPublished.save = originalSave; }
         for (const window of [...MLRuntime.dialogs]) window.close();
         slowPDF = true;
@@ -789,7 +1001,7 @@ startup = async function(data) {
           await new Promise(resolve => setTimeout(resolve, 150));
           MLRuntime.cancel();
           await pendingPDF;
-          if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.cancelled) throw new Error('PDF cancellation wrote an attachment');
+          if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfCancelled) throw new Error('PDF cancellation wrote an attachment');
         } finally { Zotero.HTTP.download = nativeDownload; }
         for (const window of [...MLRuntime.dialogs]) window.close();
         slowPDF = false;
@@ -809,11 +1021,11 @@ startup = async function(data) {
             await note.saveTx();
           }
           const requestsBefore = pdfRequests;
-          MLRuntime.finder = {find:async () => ({candidates:[{source:'arXiv',title:paper.getField('title'),doi:${JSON.stringify(pdfDOI)},linked:true}],warnings:[],answered:1})};
+          MLRuntime.finder = {find:async () => ({candidates:[{source:'arXiv',publicationEvidence:'identifier',title:paper.getField('title'),doi:${JSON.stringify(pdfDOI)},linked:true}],warnings:[],answered:1})};
           MLRuntime.retriever = {candidate:async () => ({itemType:publishedType,title:paper.getField('title'),DOI:${JSON.stringify(pdfDOI)},url:'https://ieeexplore.ieee.org/document/11523638/',publicationTitle:publishedType==='journalArticle'?'IEEE Transactions on Multimedia':undefined,proceedingsTitle:publishedType==='conferencePaper'?'ICLR 2026':undefined,creators:paper.getCreators()})};
           await win.ZoteroPane.selectItem(paper.id);
           await MLRuntime.run(win, 'lint');
-          if (paper.itemType !== publishedType || paper.id !== identity.id || paper.key !== identity.key || manuscript.deleted === annotated || paper.getAttachments().length !== 1 || ((await paper.getBestAttachment()).id === manuscript.id) !== annotated || MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.updated : strings.pdfUpdated) || (annotated && pdfRequests !== requestsBefore)) throw new Error('Formal publication did not replace the manuscript: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          if (paper.itemType !== publishedType || paper.id !== identity.id || paper.key !== identity.key || manuscript.deleted === annotated || paper.getAttachments().length !== 1 || ((await paper.getBestAttachment()).id === manuscript.id) !== annotated || MLRuntime.progressState.rows.at(-1).status !== strings.updated || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || (annotated && pdfRequests !== requestsBefore)) throw new Error('Formal publication did not replace the manuscript: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
           for (const window of [...MLRuntime.dialogs]) window.close();
         }
         result.formalPDFReplacesPreprint = true;
@@ -844,7 +1056,7 @@ startup = async function(data) {
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:paper.toJSON(),warnings:[]})};
         await win.ZoteroPane.selectItem(paper.id);
         await MLRuntime.run(win, 'lint');
-        if (translatorCalls !== 1 || paper.getAttachments().length !== 1 || MLRuntime.progressState.rows.at(-1).status !== strings.pdfUpdated) throw new Error('ScienceDirect skipped its PDF translator: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+        if (translatorCalls !== 1 || paper.getAttachments().length !== 1 || MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) throw new Error('ScienceDirect skipped its PDF translator: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         result.scienceDirectPDFResolution = true;
         for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
@@ -880,7 +1092,7 @@ startup = async function(data) {
           }
           await win.ZoteroPane.selectItem(paper.id);
           await MLRuntime.run(win, 'lint');
-          if (MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.noChanges : strings.pdfUpdated) || paper.getAttachments().length !== 1 || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || paper.getAttachments().length !== 1 || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
           if (annotated && (await old.attachmentHash !== oldHash || old.getAnnotations()[0]?.annotationText !== 'Keep this annotation')) throw new Error('arXiv annotations changed');
           for (const window of [...MLRuntime.dialogs]) window.close();
           await MLRuntime.run(win, 'lint');

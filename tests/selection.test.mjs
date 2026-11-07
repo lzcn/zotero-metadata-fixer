@@ -171,3 +171,26 @@ test("revision dates do not exclude older publications and identity conflicts st
     undefined,
   );
 });
+
+test("case-sensitive publisher URL paths and record IDs remain distinct", () => {
+  const item = new FakeItem();
+  for (const urls of [
+    [
+      "https://openreview.net/forum?id=AbCd",
+      "https://openreview.net/forum?id=abcd",
+    ],
+    [
+      "https://publisher.example/paper/ABC",
+      "https://publisher.example/paper/abc",
+    ],
+  ]) {
+    const candidates = urls.map((url, i) => ({
+      source: "Index",
+      title: item.getField("title"),
+      authors: ["Zhi Lu"],
+      url,
+      venue: i ? "Journal B" : "Journal A",
+    }));
+    assert.equal(selectPublication(item, candidates), undefined);
+  }
+});

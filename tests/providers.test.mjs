@@ -149,12 +149,12 @@ test("supplementation rejects conflicting structured event identities", () => {
 
 function emptyIndexes(finder) {
   for (const source of [
-    "semanticScholar",
     "crossref",
     "openAlex",
     "dblp",
     "pubmed",
     "openreview",
+    "semanticScholar",
   ])
     finder[source] = async () => [];
 }
@@ -512,30 +512,6 @@ test("Semantic Scholar falls back from missing arXiv record or a preprint-only D
     assert.equal(calls.length, 2);
   }
 });
-test("Semantic Scholar sends an optional API key", async () => {
-  for (const key of ["", "test-key"]) {
-    const requests = [];
-    const finder = new PublicationFinder(
-      {
-        json: async (url, headers) => {
-          requests.push({ url, headers });
-          return { data: [] };
-        },
-        text: async () => "",
-        xml() {},
-      },
-      () => key,
-    );
-    const item = new FakeItem();
-    item.data.archiveID = "";
-    item.data.url = "";
-    await finder.semanticScholar(item);
-    assert.equal(requests.length, 1);
-    assert.match(requests[0].url, /search\/match/);
-    assert.equal(requests[0].headers?.["x-api-key"], key || undefined);
-  }
-});
-
 test("Crossref searches more results and excludes preprints in the API query", async () => {
   let query;
   const finder = new PublicationFinder({
@@ -708,6 +684,7 @@ test("DBLP falls back to its official SPARQL endpoint when search is blocked", a
   const expected = [
     {
       source: "DBLP",
+      publicationEvidence: "index",
       title: published.title + ".",
       doi: undefined,
       url: "https://openreview.net/forum?id=paper",
@@ -1124,7 +1101,10 @@ test("exact OpenReview lookup rejects submissions even when a web translator cou
   await assert.rejects(retriever.url(item.data.url), /No published OpenReview/);
   assert.deepEqual(urls, ["https://api2.openreview.net/notes?id=submitted"]);
   accepted = true;
-  assert.deepEqual(await retriever.url(item.data.url), published);
+  assert.deepEqual(await retriever.url(item.data.url), {
+    ...published,
+    publicationEvidence: "index",
+  });
 });
 
 test("OpenReview main-conference presentation labels keep the ICLR venue", async () => {
@@ -1223,16 +1203,8 @@ test("OpenReview event hierarchy preserves unlisted workshops and tracks without
       "Unknown Workshop poster",
       "Unknown Workshop poster",
     ],
-    [
-      "ICLR.cc/2025/Conference/Authors",
-      "Unknown event label",
-      "Unknown event label",
-    ],
-    [
-      "ICLR.cc/2025/Conference/-/Submission",
-      "Unknown event label",
-      "Unknown event label",
-    ],
+    ["ICLR.cc/2025/Conference/Authors", "Unknown event label", undefined],
+    ["ICLR.cc/2025/Conference/-/Submission", "Unknown event label", undefined],
   ]) {
     const finder = new PublicationFinder({
       json: async () => ({
@@ -1250,6 +1222,10 @@ test("OpenReview event hierarchy preserves unlisted workshops and tracks without
       }),
     });
     const [candidate] = await finder.openreview(new FakeItem());
+    if (expected === undefined) {
+      assert.equal(candidate, undefined);
+      continue;
+    }
     assert.equal(candidate.venue, expected);
     if (candidate.conferenceVenue) {
       assert.equal(candidate.conferenceVenue.id, venueid);
@@ -1578,8 +1554,8 @@ test("reliable structured results skip Scholar pacing and slow Scholar requests"
   finder.related = async () => [];
   finder.dblp =
     finder.openreview =
-    finder.semanticScholar =
     finder.pubmed =
+    finder.semanticScholar =
       async () => {
         throw new Error(
           "Secondary source must not run on a reliable primary match",
@@ -1649,4 +1625,240 @@ test("parallel indexes wait for conflicting late results and cannot be overridde
   assert.equal(selectPublication(item, result.candidates), undefined);
   assert.equal(result.candidates.length, 2);
   assert.equal(scholarCalls, 0);
+});
+
+test("single-DOI Crossref records supply bibliographic fields without a title search", async () => {
+  const calls = [];
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      calls.push(url);
+      return {
+        message: {
+          type: "proceedings-article",
+          title: ["Learning useful representations"],
+          DOI: "10.1000/PUBLISHED",
+          author: [{ given: "Zhi", family: "Lu" }],
+          editor: [{ given: "Ada", family: "Lovelace" }],
+          "container-title": ["Proceedings of Useful Systems"],
+          publisher: "Useful Press",
+          page: "1-10",
+          volume: "3",
+          issue: "2",
+          ISSN: ["1234-5678"],
+          ISBN: ["978-1-2345-6789-0"],
+          language: "en",
+          "short-container-title": ["Proc. Useful Syst."],
+          event: { name: "Useful Systems 2026" },
+          issued: { "date-parts": [[2026, 2, 3]] },
+        },
+      };
+    },
+  });
+  const metadata = await finder.crossrefDOI(published.DOI);
+  assert.deepEqual(calls, ["https://api.crossref.org/works/10.1000/published"]);
+  assert.equal(metadata.itemType, "conferencePaper");
+  assert.equal(metadata.proceedingsTitle, "Proceedings of Useful Systems");
+  assert.equal(metadata.publicationTitle, "Proceedings of Useful Systems");
+  assert.equal(metadata.publisher, "Useful Press");
+  assert.equal(metadata.pages, "1-10");
+  assert.equal(metadata.volume, "3");
+  assert.equal(metadata.issue, "2");
+  assert.equal(metadata.ISSN, "1234-5678");
+  assert.equal(metadata.ISBN, "978-1-2345-6789-0");
+  assert.equal(metadata.journalAbbreviation, "Proc. Useful Syst.");
+  assert.equal(metadata.conferenceName, "Useful Systems 2026");
+  assert.equal(metadata.date, "2026-02-03");
+  assert.deepEqual(metadata.creators, [
+    { firstName: "Zhi", lastName: "Lu", creatorType: "author" },
+    { firstName: "Ada", lastName: "Lovelace", creatorType: "editor" },
+  ]);
+});
+
+test("single-DOI OpenAlex records map conference sources and pages", async () => {
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      assert.equal(url, "https://api.openalex.org/works/doi:10.1000/published");
+      return {
+        type: "article",
+        display_name: "Learning useful representations",
+        ids: { doi: "https://doi.org/10.1000/published" },
+        authorships: [{ author: { display_name: "Zhi Lu" } }],
+        primary_location: {
+          source: {
+            display_name: "Useful Systems",
+            type: "conference",
+            issn_l: "1234-5678",
+          },
+        },
+        publication_date: "2026-02-03",
+        biblio: {
+          volume: "3",
+          issue: "2",
+          first_page: "1",
+          last_page: "10",
+        },
+      };
+    },
+  });
+  const metadata = await finder.openAlexDOI(published.DOI);
+  assert.equal(metadata.itemType, "conferencePaper");
+  assert.equal(metadata.proceedingsTitle, "Useful Systems");
+  assert.equal(metadata.date, "2026-02-03");
+  assert.equal(metadata.volume, "3");
+  assert.equal(metadata.issue, "2");
+  assert.equal(metadata.pages, "1-10");
+  assert.equal(metadata.ISSN, "1234-5678");
+  assert.deepEqual(metadata.creators, [
+    { firstName: "Zhi", lastName: "Lu", creatorType: "author" },
+  ]);
+});
+
+test("single-DOI DataCite records fill journal fields", async () => {
+  const finder = new PublicationFinder({
+    json: async (url) => {
+      assert.equal(url, "https://api.datacite.org/dois/10.1000/published");
+      return {
+        data: {
+          attributes: {
+            doi: "10.1000/published",
+            types: { resourceTypeGeneral: "JournalArticle" },
+            titles: [{ title: "Learning useful representations" }],
+            creators: [{ givenName: "Zhi", familyName: "Lu" }],
+            publisher: "Useful Press",
+            publicationYear: 2026,
+            container: {
+              title: "Journal of Useful Research",
+              volume: "3",
+              issue: "2",
+              firstPage: "1",
+              lastPage: "10",
+            },
+            identifiers: [{ identifierType: "ISSN", identifier: "1234-5678" }],
+          },
+        },
+      };
+    },
+  });
+  const metadata = await finder.dataCiteDOI(published.DOI);
+  assert.equal(metadata.itemType, "journalArticle");
+  assert.equal(metadata.publicationTitle, "Journal of Useful Research");
+  assert.equal(metadata.publisher, "Useful Press");
+  assert.equal(metadata.date, "2026");
+  assert.equal(metadata.volume, "3");
+  assert.equal(metadata.issue, "2");
+  assert.equal(metadata.pages, "1-10");
+  assert.equal(metadata.ISSN, "1234-5678");
+  assert.deepEqual(metadata.creators, [
+    { firstName: "Zhi", lastName: "Lu", creatorType: "author" },
+  ]);
+});
+
+test("DOI translation falls back to BibTeX content negotiation and enriches blanks", async () => {
+  class Search {
+    setIdentifier() {}
+    async getTranslators() {
+      return [];
+    }
+  }
+  class Import {
+    setString() {}
+    async getTranslators() {
+      return ["bibtex"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate() {
+      return [
+        {
+          ...published,
+          title: "LEARNING USEFUL REPRESENTATIONS FOR LANGUAGE",
+          publicationTitle: undefined,
+        },
+      ];
+    }
+  }
+  const requests = [];
+  let crossrefCalls = 0;
+  const retriever = new MetadataRetriever(
+    { Translate: { Search, Import } },
+    {
+      crossrefDOI: async (doi) => {
+        crossrefCalls++;
+        assert.equal(doi, published.DOI);
+        return {
+          itemType: "journalArticle",
+          title: published.title,
+          DOI: published.DOI,
+          publicationTitle: "Journal of Useful Research",
+          creators: published.creators,
+        };
+      },
+      openAlexDOI: async () => {
+        throw new Error(
+          "OpenAlex must not run after Crossref fills the container",
+        );
+      },
+      dataCiteDOI: async () => {
+        throw new Error(
+          "DataCite must not run after Crossref fills the container",
+        );
+      },
+    },
+    {
+      text: async (url, headers) => {
+        requests.push([url, headers]);
+        return "@article{useful}";
+      },
+    },
+  );
+  const warnings = [];
+  const metadata = await retriever.identifier({ DOI: published.DOI }, warnings);
+  assert.deepEqual(requests, [
+    ["https://doi.org/10.1000/published", { Accept: "application/x-bibtex" }],
+  ]);
+  assert.equal(crossrefCalls, 1);
+  assert.equal(metadata.publicationTitle, "Journal of Useful Research");
+  assert.equal(metadata.title, "LEARNING USEFUL REPRESENTATIONS FOR LANGUAGE");
+  assert.equal(metadata.DOI, published.DOI);
+  assert.deepEqual(warnings, []);
+});
+
+test("DOI retrieval retains the requested identifier and rejects mismatched enrichment", async () => {
+  class Search {
+    setIdentifier() {}
+    async getTranslators() {
+      return ["doi"];
+    }
+    setTranslator() {}
+    setHandler() {}
+    async translate() {
+      return [{ ...published, DOI: undefined, publicationTitle: undefined }];
+    }
+  }
+  const retriever = new MetadataRetriever(
+    { Translate: { Search } },
+    {
+      crossrefDOI: async () => ({
+        ...published,
+        DOI: "10.1000/wrong",
+        publicationTitle: "Wrong journal",
+      }),
+      dataCiteDOI: async () => ({
+        ...published,
+        publicationTitle: "Confirmed journal",
+      }),
+      openAlexDOI: async () => assert.fail("Unexpected fallback"),
+    },
+    {},
+  );
+  assert.equal(
+    (await retriever.identifier({ DOI: published.DOI })).DOI,
+    published.DOI,
+  );
+  const warnings = [];
+  const metadata = await retriever.identifier({ DOI: published.DOI }, warnings);
+  assert.equal(metadata.DOI, published.DOI);
+  assert.equal(metadata.publicationTitle, "Confirmed journal");
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /Crossref:.*Conflicting DOI/);
 });
