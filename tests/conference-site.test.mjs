@@ -39,7 +39,7 @@ for (const [conference, host, id] of [
     "utf8",
   );
   const record = JSON.parse(html.match(/<script[^>]*>([\s\S]*?)<\/script>/)[1]);
-  test(`${conference} DOI-free records use item venue/year hints and survive a private OpenReview match`, async () => {
+  test(`${conference} venue hints resolve official records before broad indexes or private forums`, async () => {
     const item = new FakeItem();
     Object.assign(item.data, {
       itemType: "conferencePaper",
@@ -70,18 +70,15 @@ for (const [conference, host, id] of [
         ],
       }),
     });
-    for (const name of ["related", "crossref", "openAlex", "dblp"])
-      finder[name] = async () => [];
-    finder.openreview = async () => [
-      {
-        source: "OpenReview",
-        title: record.name,
-        authors: record.author.map((author) => author.name),
-        venue: `${conference} 2026`,
-        year: 2026,
-        url: "https://openreview.net/forum?id=private",
-      },
-    ];
+    for (const name of [
+      "related",
+      "crossref",
+      "openAlex",
+      "dblp",
+      "openreview",
+    ])
+      finder[name] = async () =>
+        assert.fail("Verified official hint should stop discovery");
     const retriever = new MetadataRetriever(
       {},
       finder,
@@ -91,7 +88,6 @@ for (const [conference, host, id] of [
     );
     let metadata;
     const lookup = await finder.find(item, false, async (candidate) => {
-      if (candidate.source === "OpenReview") throw new Error("HTTP 403");
       metadata = await retriever.candidate(candidate);
       Runtime.prototype.validatePublication.call(
         { s: en },
@@ -102,7 +98,7 @@ for (const [conference, host, id] of [
       return true;
     });
     assert.equal(lookup.candidates[0].url, pageURL);
-    assert.match(lookup.warnings[0], /403/);
+    assert.deepEqual(lookup.warnings, []);
     assert.equal(metadata.proceedingsTitle, `${conference} 2026`);
     assert.equal(metadata.date, "2026");
     assert.equal(metadata.DOI, undefined);
@@ -147,7 +143,7 @@ test("a poster outside the official paper list cannot be promoted to the main co
   await assert.rejects(retriever.url(url), /cancelled/);
 });
 
-test("NeurIPS official records upgrade Beyond Selection when OpenReview is inaccessible", async () => {
+test("arXiv conference hints resolve Beyond Selection before broad indexes", async () => {
   const item = new FakeItem();
   Object.assign(item.data, {
     title: work.name,
@@ -177,12 +173,14 @@ test("NeurIPS official records upgrade Beyond Selection when OpenReview is inacc
     hint("Accepted at NeurIPS 2026 (Spotlight). Code: https://example.org");
     return [];
   };
-  for (const name of ["crossref", "openAlex", "dblp"])
-    finder[name] = async () => [];
-  finder.openreview = async () => {
-    throw new Error("HTTP 403");
-  };
-  finder.googleScholar = async () => assert.fail("Unnecessary broad search");
+  for (const name of [
+    "crossref",
+    "openAlex",
+    "dblp",
+    "openreview",
+    "googleScholar",
+  ])
+    finder[name] = async () => assert.fail("Unnecessary broad search");
   const retriever = new MetadataRetriever(
     {},
     finder,
@@ -203,7 +201,7 @@ test("NeurIPS official records upgrade Beyond Selection when OpenReview is inacc
   });
   assert.deepEqual(requests, ["https://neurips.cc/virtual/2026/papers.html"]);
   assert.equal(lookup.candidates.length, 1);
-  assert.match(lookup.warnings[0], /OpenReview.*403/);
+  assert.deepEqual(lookup.warnings, []);
   assert.equal(metadata.itemType, "conferencePaper");
   assert.equal(metadata.proceedingsTitle, "NeurIPS 2026");
   assert.equal(metadata.date, "2026");

@@ -24,13 +24,20 @@ Lookup uses Zotero translators and scholarly metadata services. Conflicting or u
 
 ## Update flow
 
-Identifiers and official publication links come first. Existing DOIs use Zotero translators, with DOI content negotiation and single-record Crossref/OpenAlex/DataCite enrichment as fallbacks. Title search runs only without a formal DOI. Title searches expand from Crossref/OpenAlex to DBLP/OpenReview and then secondary sources only when needed. Reliable matches stop further searches. Conflicting candidates stop automatic updates. Requests share caching, pacing and cooldowns across batches. Blocked sources are paused.
+Existing formal DOIs use Zotero translators, with DOI content negotiation and single-record Crossref/OpenAlex/DataCite enrichment as fallbacks. Without a formal DOI, lookup proceeds in this order:
 
-DOI-free lookup uses the item's URL first, then title/author matches from scholarly indexes. Candidate HTTP(S) pages and single-record BibTeX are retrieved with Zotero translators and checked against the item's title, authors, publication type, venue and publication status. This applies to conferences and journals without requiring their names or publisher domains in a catalog. OpenAlex publisher links and PubMed records are retained without a DOI. Conflicting or unverifiable matches leave the item unchanged. Missing DOIs and other unavailable fields stay blank.
+1. Check the item's URL for a verified publication.
+2. Use venue/year hints, including `Conference:` in Extra, to check official conference paper lists.
+3. Follow repository publication links and check newly discovered conference hints.
+4. Search Crossref/OpenAlex, then DBLP/OpenReview, then Semantic Scholar/PubMed, and finally Google Scholar or publisher search.
+
+A verified match stops further discovery. An unavailable or unverified source falls through; a strong conflict stops automatic updates. Each hinted conference list is attempted once per lookup. Requests share caching, pacing and cooldowns across batches. Blocked sources are paused.
+
+Candidate HTTP(S) pages and single-record BibTeX are retrieved with Zotero translators and checked against the item's title, authors, publication type, venue and publication status. BibTeX supplied by a verified index is used before requesting its page. This applies to conferences and journals without requiring their names or publisher domains in a catalog. OpenAlex publisher links and PubMed records are retained without a DOI. Conflicting or unverifiable matches leave the item unchanged. Missing DOIs and other unavailable fields stay blank.
 
 Automatic publication upgrades require a completed identifier lookup, an accepted venue record, an official proceedings page or explicit publication evidence from an index. Citation tags or an author-provided BibTeX alone do not prove publication. Author checks compare given names or initials and corroborate multiple authors when both lists provide them. A shared surname alone cannot override conflicting given names. Evidence markers are temporary and are never saved to the library.
 
-Conference-site integrations provide additional discovery routes. NeurIPS (NIPS), ICML and ICLR hints can locate official paper lists. OpenReview submissions and main-conference/workshop identities are checked separately. Requests stop after a verified match, with equivalent public records tried when another source is inaccessible.
+Conference-site integrations support NeurIPS (NIPS), ICML and ICLR. Hints locate records and do not prove acceptance. OpenReview submissions and main-conference/workshop identities are checked separately. Accepted OpenReview records are reused within the batch for forum verification and retrieval; contradictory event identities remain visible. Equivalent public records are tried when another source is inaccessible.
 
 ```mermaid
 flowchart LR

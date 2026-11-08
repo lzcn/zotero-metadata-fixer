@@ -448,8 +448,13 @@ export class MetadataRetriever {
         () => this.identifier({ DOI: candidate.doi }, errors),
       ]);
     const official = candidate.url && officialPublicationURL(candidate.url);
+    // Reuse bibliography supplied by a verified index before requesting its page.
+    const indexedBibtex =
+      candidate.publicationEvidence === "index" && candidate.bibtex;
+    if (indexedBibtex)
+      sources.push(["BibTeX", () => this.bibtex(indexedBibtex)]);
     if (official) sources.push(["Article", () => this.url(candidate.url!)]);
-    if (candidate.bibtex)
+    if (candidate.bibtex && !indexedBibtex)
       sources.push(["BibTeX", () => this.bibtex(candidate.bibtex!)]);
     if (candidate.url && !official)
       sources.push(["URL", () => this.url(candidate.url!)]);

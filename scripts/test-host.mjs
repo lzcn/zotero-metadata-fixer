@@ -20,6 +20,12 @@ const pdfTitle =
 const pdfDOI = "10.1109/TMM.2026.3694502";
 const genericTitle = "Generic DOI-Free Host Paper";
 const genericConferenceTitle = "Generic DOI-Free Conference Host Paper";
+const openReviewFixture = JSON.parse(
+  await readFile(
+    new URL("../tests/fixtures/openreview-rbfm-2024.json", import.meta.url),
+    "utf8",
+  ),
+);
 const conferenceFixtures = await Promise.all(
   [
     {
@@ -27,6 +33,14 @@ const conferenceFixtures = await Promise.all(
       host: "neurips.cc",
       id: "151663",
       file: "neurips-beyond-selection.html",
+    },
+    {
+      conference: "NeurIPS",
+      host: "neurips.cc",
+      id: "151793",
+      file: "neurips-eventprune.html",
+      arxivID: "2605.19506",
+      extra: "Conference: NeurIPS 2026",
     },
     {
       conference: "ICML",
@@ -671,9 +685,11 @@ startup = async function(data) {
         paper.setField('title', fixture.title);
         paper.setField('date', '2026');
         if (preprint) {
-          paper.setField('url', 'http://arxiv.org/abs/2609.35232');
-          paper.setField('DOI', '10.48550/arXiv.2609.35232');
-          paper.setField('archiveID', 'arXiv:2609.35232');
+          const arxivID = fixture.arxivID || '2609.35232';
+          paper.setField('url', 'http://arxiv.org/abs/' + arxivID);
+          paper.setField('DOI', '10.48550/arXiv.' + arxivID);
+          paper.setField('archiveID', 'arXiv:' + arxivID);
+          if (fixture.extra) paper.setField('extra', fixture.extra);
         } else paper.setField('proceedingsTitle', fixture.conference);
         const words = fixture.authors[0].split(' ');
         paper.setCreators([{firstName:words.slice(0,-1).join(' '),lastName:words.at(-1),creatorType:'author'}]);
@@ -688,6 +704,7 @@ startup = async function(data) {
         const pageURL = 'https://' + fixture.host + '/virtual/2026/poster/' + fixture.id;
         MLRuntime.request = async (url, operation, responseType) => {
           requests.push(url);
+          if (fixture.extra && url.includes('arxiv.org/')) throw new Error('HTTP 429: arXiv rate-limited');
           if (url.startsWith('https://export.arxiv.org/api/query?')) return '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom"><entry><id>http://arxiv.org/abs/2609.35232v2</id><title>' + fixture.title + '</title><author><name>Rui Zhong</name></author><arxiv:comment>Accepted at NeurIPS 2026 (Spotlight)</arxiv:comment></entry></feed>';
           if (url === 'https://' + fixture.host + '/virtual/2026/papers.html') return '<a href="/virtual/2026/poster/' + fixture.id + '">' + fixture.title + '</a>';
           if (url === pageURL && responseType === 'document') return new win.DOMParser().parseFromString(fixture.html, 'text/html');
@@ -704,11 +721,47 @@ startup = async function(data) {
         const row = MLRuntime.progressState.rows.at(-1);
         const expectedVenue = fixture.conference + (preprint ? ' 2026' : '');
         if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expectedVenue || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getCreators().length !== (preprint ? fixture.authors.length : 1) || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-conference-tag') || !paper.getNotes().includes(note.id)) throw new Error(fixture.conference + ' official fallback failed: ' + JSON.stringify(row));
+        if (fixture.extra && requests.some(url => url !== pageURL && url !== 'https://' + fixture.host + '/virtual/2026/papers.html')) throw new Error('Local conference hint contacted unnecessary sources: ' + JSON.stringify(requests));
         for (const window of [...MLRuntime.dialogs]) window.close();
         requests.length = 0;
         await MLRuntime.run(win, 'lint');
         if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || requests.some(url => url !== pageURL && url !== 'https://' + fixture.host + '/virtual/2026/papers.html')) throw new Error(fixture.conference + ' repeat lookup changed the item or searched again');
         result.conferenceOfficialFallback.push({conference:fixture.conference,updated:true,repeated:true,identityPreserved:true,noteAndTagPreserved:true});
+        for (const window of [...MLRuntime.dialogs]) window.close();
+      } finally {
+        MLRuntime.request = conferenceRequest;
+        MLRuntime.finder = undefined;
+        MLRuntime.retriever = undefined;
+      }
+      // Search can expose accepted workshop BibTeX while the forum API is blocked.
+      try {
+        const fixture = ${JSON.stringify(openReviewFixture)};
+        const paper = new Zotero.Item('preprint');
+        paper.setField('title', fixture.content.title.value);
+        paper.setField('url', 'http://arxiv.org/abs/2408.12637');
+        paper.setField('DOI', '10.48550/arXiv.2408.12637');
+        paper.setCreators(fixture.content.authors.value.map(name => {
+          const words = name.split(' ');
+          return {firstName:words.slice(0,-1).join(' '),lastName:words.at(-1),creatorType:'author'};
+        }));
+        paper.addTag('keep-workshop-tag');
+        await paper.saveTx();
+        const identity = {id:paper.id,key:paper.key};
+        const requests = [];
+        MLRuntime.request = async url => {
+          requests.push(url);
+          if (url.startsWith('https://api2.openreview.net/notes/search?')) return JSON.stringify({notes:[fixture]});
+          if (url.startsWith('https://api2.openreview.net/notes?id=')) throw new Error('HTTP 403: forum lookup blocked');
+          if (url.startsWith('https://api.crossref.org/')) return '{"message":{"items":[]}}';
+          if (url.startsWith('https://api.openalex.org/')) return '{"results":[]}';
+          if (url.startsWith('https://dblp.org/')) return '{"result":{"hits":{"hit":[]}}}';
+          throw new Error('HTTP 429: unavailable source');
+        };
+        await win.ZoteroPane.selectItem(paper.id);
+        await MLRuntime.run(win, 'lint');
+        const row = MLRuntime.progressState.rows.at(-1);
+        if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== 'NeurIPS 2024 Workshop RBFM' || paper.getField('url') !== 'https://openreview.net/forum?id=iSL0FHZStr' || paper.getField('DOI') || paper.getCreators().length !== 4 || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-workshop-tag') || requests.some(url => url.includes('/notes?id='))) throw new Error('RBFM search BibTeX fallback failed: ' + JSON.stringify(row));
+        result.openReviewSearchBibtex = {updated:true,identityPreserved:true,forumRequests:0,authors:paper.getCreators().length};
         for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
         MLRuntime.request = conferenceRequest;

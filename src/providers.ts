@@ -15,6 +15,7 @@ import {
   doiPath,
   conferencePoster,
   conferenceSiteHint,
+  extraValue,
 } from "./identifiers";
 import { publishedVenue, rankCandidates, titleScore } from "./matching";
 import { checkAccess, JSONResponseError } from "./responses";
@@ -167,6 +168,8 @@ export class PublicationFinder {
   private dblpSparqlUnavailable?: Error;
   private scholarUnavailable?: Error;
   private conferenceLists = new Map<string, Document>();
+  // The finder belongs to one batch; keep accepted records for subsequent retrieval.
+  private openReviewRecords = new Map<string, Candidate[]>();
   constructor(private net: Network) {}
 
   async googleScholar(item: Item): Promise<Candidate[]> {
@@ -830,12 +833,17 @@ LIMIT 10`;
     item: Pick<Item, "getField">,
     forum?: string,
   ): Promise<Candidate[]> {
+    const cached = forum && this.openReviewRecords.get(forum);
+    if (cached) return cached;
     const data = await this.net.json(
       forum
         ? `https://api2.openreview.net/notes?id=${encode(forum)}`
         : `https://api2.openreview.net/notes/search?term=${encode(item.getField("title"))}&content=title&source=forum&limit=25`,
     );
-    return list<any>(data.notes).flatMap((note) => {
+    const notes = list<any>(data.notes);
+    for (const note of notes)
+      this.openReviewRecords.delete(note.forum || note.id);
+    const candidates = notes.flatMap((note) => {
       const get = (key: string) => openReviewValue(note, key);
       const venue = String(get("venue") || "");
       const venueID = String(get("venueid") || "");
@@ -881,6 +889,13 @@ LIMIT 10`;
         },
       ];
     });
+    for (const candidate of candidates) {
+      const id = new URL(candidate.url).searchParams.get("id")!;
+      const records = this.openReviewRecords.get(id) || [];
+      records.push(candidate);
+      this.openReviewRecords.set(id, records);
+    }
+    return candidates;
   }
 
   async conferenceSite(
@@ -956,6 +971,7 @@ LIMIT 10`;
       item.getField("proceedingsTitle"),
       item.getField("publicationTitle"),
       item.getField("conferenceName"),
+      extraValue(item.getField("extra"), "Conference"),
       item.getField("date"),
     ]
       .filter(Boolean)
@@ -1001,64 +1017,6 @@ LIMIT 10`;
         return false;
       }
     };
-    const current: Candidate = {
-      source: "URL",
-      title: item.getField("title"),
-      url: ids.URL,
-    };
-    if (await verify(current))
-      return { candidates: [current], warnings, answered: 1 };
-    let linked: Candidate[] = [];
-    try {
-      // Retained arXiv provenance can also supply a missing published DOI.
-      linked =
-        usePreprintLinks || ids.arXiv
-          ? await this.related(item, (hint) => {
-              publicationHint = [hint, publicationHint]
-                .filter(Boolean)
-                .join("\n");
-            })
-          : [];
-      answered++;
-    } catch (error) {
-      warnings.push(`Preprint server: ${String(error)}`);
-    }
-    const rankedLinked = rankCandidates(item, linked);
-    if (rankedLinked.length) {
-      const candidate = selectPublication(item, rankedLinked);
-      if (
-        !candidate ||
-        !resolvePublication ||
-        candidate.doi ||
-        (await verify(candidate))
-      )
-        return { candidates: rankedLinked, warnings, answered };
-    }
-    // Broad indexes run first, then venue indexes, then secondary fallbacks.
-    // Each stage runs in parallel and stops once a publication is verified, so
-    // later sources only cost requests when earlier ones fail.
-    const stages = [
-      [
-        ["Crossref", () => this.crossref(item, publicationHint)],
-        ["OpenAlex", () => this.openAlex(item)],
-      ],
-      [
-        ["DBLP", () => this.dblp(item)],
-        ["OpenReview", () => this.openreview(item)],
-        ...(conferenceSiteHint(publicationHint)
-          ? ([
-              [
-                "Conference website",
-                () => this.conferenceSite(item, publicationHint),
-              ],
-            ] as const)
-          : []),
-      ],
-      [
-        ["Semantic Scholar", () => this.semanticScholar(item)],
-        ["PubMed", () => this.pubmed(item)],
-      ],
-    ] as const;
     const candidates: Candidate[] = [];
     let selected: Candidate | undefined;
     const accept = async (ranked: Candidate[]) => {
@@ -1086,6 +1044,74 @@ LIMIT 10`;
       )
         return { candidates: ranked, warnings, answered };
     };
+    const current: Candidate = {
+      source: "URL",
+      title: item.getField("title"),
+      url: ids.URL,
+    };
+    if (await verify(current))
+      return { candidates: [current], warnings, answered: 1 };
+    const checkedConferences = new Set<string>();
+    const tryConference = async () => {
+      const site = conferenceSiteHint(publicationHint);
+      if (!site || checkedConferences.has(`${site.host}/${site.year}`)) return;
+      checkedConferences.add(`${site.host}/${site.year}`);
+      // Hints locate official records; acceptance and identity still require verification.
+      try {
+        candidates.push(...(await this.conferenceSite(item, publicationHint)));
+        answered++;
+      } catch (error) {
+        warnings.push(`Conference website: ${String(error)}`);
+      }
+      return accept(rankCandidates(item, candidates));
+    };
+    const hinted = await tryConference();
+    if (hinted) return hinted;
+    let linked: Candidate[] = [];
+    try {
+      // Retained arXiv provenance can also supply a missing published DOI.
+      linked =
+        usePreprintLinks || ids.arXiv
+          ? await this.related(item, (hint) => {
+              publicationHint = [hint, publicationHint]
+                .filter(Boolean)
+                .join("\n");
+            })
+          : [];
+      answered++;
+    } catch (error) {
+      warnings.push(`Preprint server: ${String(error)}`);
+    }
+    const rankedLinked = rankCandidates(item, linked);
+    if (rankedLinked.length) {
+      const candidate = selectPublication(item, rankedLinked);
+      if (
+        !candidate ||
+        !resolvePublication ||
+        candidate.doi ||
+        (await verify(candidate))
+      )
+        return { candidates: rankedLinked, warnings, answered };
+    }
+    const repositoryHinted = await tryConference();
+    if (repositoryHinted) return repositoryHinted;
+    // Broad indexes run first, then venue indexes, then secondary fallbacks.
+    // Each stage runs in parallel and stops once a publication is verified, so
+    // later sources only cost requests when earlier ones fail.
+    const stages = [
+      [
+        ["Crossref", () => this.crossref(item, publicationHint)],
+        ["OpenAlex", () => this.openAlex(item)],
+      ],
+      [
+        ["DBLP", () => this.dblp(item)],
+        ["OpenReview", () => this.openreview(item)],
+      ],
+      [
+        ["Semantic Scholar", () => this.semanticScholar(item)],
+        ["PubMed", () => this.pubmed(item)],
+      ],
+    ] as const;
     for (const sources of stages) {
       const results = await Promise.allSettled(sources.map(([, run]) => run()));
       results.forEach((result, index) => {

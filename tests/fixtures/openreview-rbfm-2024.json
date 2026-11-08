@@ -1,0 +1,32 @@
+{
+  "id": "iSL0FHZStr",
+  "forum": "iSL0FHZStr",
+  "invitations": [
+    "NeurIPS.cc/2024/Workshop/RBFM/-/Submission",
+    "NeurIPS.cc/2024/Workshop/RBFM/-/Post_Submission",
+    "NeurIPS.cc/2024/Workshop/RBFM/-/Edit",
+    "NeurIPS.cc/2024/Workshop/RBFM/Submission10/-/Revision"
+  ],
+  "content": {
+    "title": {
+      "value": "Building and better understanding vision-language models: insights and future directions"
+    },
+    "authors": {
+      "value": [
+        "Hugo Laurençon",
+        "Andrés Marafioti",
+        "Victor Sanh",
+        "Leo Tronchon"
+      ]
+    },
+    "venue": {
+      "value": "NeurIPS 2024 Workshop RBFM Poster"
+    },
+    "venueid": {
+      "value": "NeurIPS.cc/2024/Workshop/RBFM"
+    },
+    "_bibtex": {
+      "value": "@inproceedings{\nlaurencon2024building,\ntitle={Building and better understanding vision-language models: insights and future directions},\nauthor={Hugo Lauren{\\c{c}}on and Andr{\\'e}s Marafioti and Victor Sanh and Leo Tronchon},\nbooktitle={Workshop on Responsibly Building the Next Generation of Multimodal Foundational Models},\nyear={2024},\nurl={https://openreview.net/forum?id=iSL0FHZStr}\n}"
+    }
+  }
+}
