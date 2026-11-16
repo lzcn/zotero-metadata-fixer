@@ -52,6 +52,28 @@ test("publication column recognizes known journal names and aliases", () => {
     assert.equal(publicationShort(journal(name)), short);
 });
 
+test("publisher codes resolve to verified journal display acronyms", () => {
+  for (const [name, expected] of [
+    ["IEEE Antennas and Wireless Propagation Letters", "AWPL"],
+    ["IEEE Computer Graphics and Applications", "CG&A"],
+    ["IEEE Internet of Things Journal", "IoT-J"],
+    ["IEEE Internet of Things Magazine", "IoTM"],
+    ["IEEE Photonics Technology Letters", "PTL"],
+    ["IEEE Robotics & Automation Magazine", "RA-M"],
+    ["IEEE Robotics and Automation Letters", "RA-L"],
+    ["IEEE Transactions on Communications", "TCOM"],
+    ["IEEE Transactions on Field Robotics", "T-FR"],
+    ["IEEE Transactions on Industrial Informatics", "TII"],
+    ["IEEE Wireless Communications Letters", "WCL"],
+    ["JIOT", "IoT-J"],
+    ["IEEE IoT-J", "IoT-J"],
+    ["IEEE Internet Things J.", "IoT-J"],
+    ["T-CASAI", "TCASAI"],
+  ]) {
+    assert.equal(publicationShort(journal(name)), expected);
+  }
+});
+
 test("unknown, ambiguous, missing and secondary publications are preserved", () => {
   for (const name of [
     "Uncommon Journal",
@@ -249,10 +271,24 @@ test("every catalog full name resolves to its dedicated acronym or full name wit
     ),
   );
   const names = new Set();
+  const aliases = new Map();
   for (const row of rows) {
     assert.ok(/^https:\/\//.test(row.source), row.name);
     assert.ok(!names.has(row.name.toLowerCase()), row.name);
     names.add(row.name.toLowerCase());
+    const expected = row.acronym || row.name;
+    for (const alias of [row.name, expected, ...row.aliases]) {
+      const key = alias
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "");
+      assert.ok(
+        !aliases.has(key) || aliases.get(key) === expected,
+        `Conflicting alias: ${alias}`,
+      );
+      aliases.set(key, expected);
+      assert.equal(publicationShort(journal(alias)), expected, alias);
+    }
     assert.equal(
       publicationShort(journal(row.name)),
       row.acronym || row.name,

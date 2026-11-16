@@ -609,10 +609,10 @@
     "publisherAcronym": "M-AP"
   },
   {
-    "acronym": "LAWP",
+    "acronym": "AWPL",
     "name": "IEEE Antennas and Wireless Propagation Letters",
-    "aliases": ["L-AWP"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["L-AWP", "LAWP"],
+    "source": "https://awpl.ee.cuhk.edu.hk/resources.html",
     "publisherAcronym": "L-AWP"
   },
   {
@@ -665,10 +665,10 @@
     "publisherAcronym": "L-CA"
   },
   {
-    "acronym": "MCG&A",
+    "acronym": "CG&A",
     "name": "IEEE Computer Graphics and Applications",
-    "aliases": ["M-CG&A"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["M-CG&A", "MCG&A"],
+    "source": "https://www.computer.org/volunteering/boards-and-committees/resources/eic-manual",
     "publisherAcronym": "M-CG&A"
   },
   {
@@ -762,17 +762,23 @@
     "publisherAcronym": "M-IC"
   },
   {
-    "acronym": "JIOT",
+    "acronym": "IoT-J",
     "name": "IEEE Internet of Things Journal",
-    "aliases": ["J-IOT"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": [
+      "J-IOT",
+      "JIOT",
+      "IEEE IoT-J",
+      "IEEE IoT Journal",
+      "IEEE Internet Things J."
+    ],
+    "source": "https://ieee-iotj.org/",
     "publisherAcronym": "J-IOT"
   },
   {
-    "acronym": "MIOT",
+    "acronym": "IoTM",
     "name": "IEEE Internet of Things Magazine",
-    "aliases": ["M-IOT"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["M-IOT", "MIOT"],
+    "source": "https://www.comsoc.org/publications/magazines/ieee-internet-things-magazine",
     "publisherAcronym": "M-IOT"
   },
   {
@@ -1140,10 +1146,10 @@
     "publisherAcronym": "JPHOT"
   },
   {
-    "acronym": "LPT",
+    "acronym": "PTL",
     "name": "IEEE Photonics Technology Letters",
-    "aliases": ["L-PT"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["L-PT", "LPT"],
+    "source": "https://ieeephotonics.org/publications/photonics-technology-letters/",
     "publisherAcronym": "L-PT"
   },
   {
@@ -1168,17 +1174,17 @@
     "publisherAcronym": "IEEE-RITA"
   },
   {
-    "acronym": "MRA",
+    "acronym": "RA-M",
     "name": "IEEE Robotics & Automation Magazine",
-    "aliases": ["M-RA"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["M-RA", "MRA"],
+    "source": "https://www.ieee-ras.org/publications/ra-l/faq/",
     "publisherAcronym": "M-RA"
   },
   {
-    "acronym": "LRA",
+    "acronym": "RA-L",
     "name": "IEEE Robotics and Automation Letters",
-    "aliases": ["L-RA"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["L-RA", "LRA"],
+    "source": "https://www.ieee-ras.org/publications/ra-l/faq/",
     "publisherAcronym": "L-RA"
   },
   {
@@ -1405,10 +1411,10 @@
     "publisherAcronym": "T-CCN"
   },
   {
-    "acronym": "TCOMM",
+    "acronym": "TCOM",
     "name": "IEEE Transactions on Communications",
-    "aliases": ["T-COMM"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["T-COMM", "TCOMM"],
+    "source": "https://www.comsoc.org/publications/journals/ieee-transactions-communications",
     "publisherAcronym": "T-COMM"
   },
   {
@@ -1559,11 +1565,10 @@
     "publisherAcronym": "T-EVC"
   },
   {
-    "acronym": "TCASAI",
+    "acronym": "T-FR",
     "name": "IEEE Transactions on Field Robotics",
-    "aliases": ["T-CASAI"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
-    "publisherAcronym": "T-CASAI"
+    "aliases": [],
+    "source": "https://www.ieee-ras.org/Publications/T-FR/"
   },
   {
     "acronym": "TFUZZ",
@@ -1629,10 +1634,10 @@
     "publisherAcronym": "T-IE"
   },
   {
-    "acronym": "TIINF",
+    "acronym": "TII",
     "name": "IEEE Transactions on Industrial Informatics",
-    "aliases": ["T-IINF"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["T-IINF", "TIINF"],
+    "source": "https://iten.ieee-ies.org/announcement/2025/call-for-nominations-for-two-co-editors-in-chief-positions-at-ieee-tii/",
     "publisherAcronym": "T-IINF"
   },
   {
@@ -2047,10 +2052,10 @@
     "publisherAcronym": "M-VT"
   },
   {
-    "acronym": "LWC",
+    "acronym": "WCL",
     "name": "IEEE Wireless Communications Letters",
-    "aliases": ["L-WC"],
-    "source": "https://open.ieee.org/wp-content/uploads/IEEE-Title-List-August-2024.pdf",
+    "aliases": ["L-WC", "LWC"],
+    "source": "https://www.comsoc.org/publications/journals/ieee-wcl/ieee-wireless-communications-letters-editorial-board",
     "publisherAcronym": "L-WC"
   },
   {
