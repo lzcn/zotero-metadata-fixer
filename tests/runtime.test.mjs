@@ -1215,6 +1215,38 @@ test("unaccepted or mismatched official records cannot bypass publication valida
   }
 });
 
+test("mixed actions for the same item execute once each in submission order", async () => {
+  const { runtime, state, win, item } = fixFixture();
+  const calls = [];
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const retrieve = runtime.retriever.candidate;
+  runtime.retriever.candidate = async (...args) => {
+    calls.push("metadata");
+    await gate;
+    return retrieve(...args);
+  };
+  runtime.updatePDF = async (paper) => {
+    assert.equal(paper.id, item.id);
+    calls.push("pdf");
+    return "added";
+  };
+  const running = runtime.run(win, "fill");
+  await runtime.run(win, "pdf");
+  await runtime.run(win, "pdf");
+  await runtime.run(win, "fill");
+  assert.deepEqual(
+    state.progress.rows.map((row) => row.action),
+    ["Complete Metadata", "Update PDF"],
+  );
+  release();
+  await running;
+  assert.deepEqual(calls, ["metadata", "pdf"]);
+  assert.equal(state.progress.rows[1].pdfStatus, "PDF updated");
+});
+
 test("new selections share one queue and completed results remain until the window closes", async () => {
   const items = [new FakeItem(), new FakeItem(), new FakeItem()];
   items.forEach((item, index) => {

@@ -50,6 +50,7 @@ export class Runtime {
   private generation = 0;
   private busy = false;
   private operationGeneration = 0;
+  private queued = new Map<Action, Set<number>>();
   private windows = new Map<any, () => void>();
   private dialogs = new Set<any>();
   private preferencePane?: string;
@@ -242,7 +243,7 @@ export class Runtime {
     if (!popup) return;
     const separator = doc.createXULElement("menuseparator");
     separator.id = "metadata-linter-actions";
-    const entries = new Map<string, any>();
+    const entries = new Map<Action, any>();
     const icons = { fill: "plus", fix: "edit", pdf: "refresh" };
     for (const mode of ["fill", "fix", "pdf"] as const) {
       const action = doc.createXULElement("menuitem");
@@ -269,7 +270,9 @@ export class Runtime {
       const preferred = this.defaultAction();
       for (const mode of [
         preferred,
-        ...["fill", "fix", "pdf"].filter((mode) => mode !== preferred),
+        ...(["fill", "fix", "pdf"] as const).filter(
+          (mode) => mode !== preferred,
+        ),
       ])
         popup.insertBefore(entries.get(mode), separator);
     };
@@ -281,9 +284,12 @@ export class Runtime {
           item.isRegularItem() && item.isEditable() && !item.deleted,
       );
       refreshDefault();
-      for (const action of entries.values()) {
+      for (const [mode, action] of entries) {
         action.hidden = false;
-        action.disabled = !selected.length || this.busy;
+        const queued = this.queued.get(mode);
+        action.disabled =
+          (this.busy && !this.operation?.active()) ||
+          !selected.some((item) => !queued?.has(item.id));
       }
     };
     popup.addEventListener("popupshowing", showing);
@@ -571,18 +577,20 @@ export class Runtime {
 
   private enqueue(items: Item[], source: Action): void {
     const state = this.progressState;
-    // Check each selection once; scanning every queued row per item is
-    // quadratic for large selections.
-    const queued = new Set(
-      state.rows.map((row: any) => `${row.generation}/${row.itemID}`),
-    );
+    let queued = this.queued.get(source);
+    if (!queued) {
+      queued = new Set();
+      this.queued.set(source, queued);
+    }
     for (const item of items) {
-      const key = `${this.generation}/${item.id}`;
-      if (queued.has(key)) continue;
-      queued.add(key);
+      if (queued.has(item.id)) continue;
+      queued.add(item.id);
       const row = {
         itemID: item.id,
-        generation: this.generation,
+        action:
+          source === "fill" || source === "fix" || source === "pdf"
+            ? this.s[source]
+            : source,
         title: item.getField("title"),
         status: this.s.waiting,
         detail: "",
@@ -925,6 +933,7 @@ export class Runtime {
       if (!progress.window.closed)
         this.cleanup(() => progress.window.renderProgress?.());
       state.tasks = [];
+      this.queued.clear();
       operation.cancel();
       this.busy = false;
       this.operation = undefined;

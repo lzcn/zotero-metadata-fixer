@@ -16,8 +16,7 @@ let sortDirection = 1;
 let sized = false;
 let renderFrame = null;
 let disposed = false;
-const statusText = (entry) =>
-  [entry.status, entry.pdfStatus].filter(Boolean).join(" · ");
+const statusText = (entry) => entry.pdfStatus || entry.status || "";
 function done() {
   if (!data.finished && !data.cancelled) data.cancel();
   data.onResult(null);
@@ -140,6 +139,12 @@ root.render(
         primary: true,
       },
       {
+        dataKey: "action",
+        label: s.action,
+        width: 144,
+        minWidth: 100,
+      },
+      {
         dataKey: "status",
         label: s.status,
         width: 240,
@@ -182,7 +187,7 @@ root.render(
             ? [
                 ...new Set(
                   [
-                    s.metadataResult.replace("{status}", entry.status || ""),
+                    entry.status,
                     entry.problem,
                     entry.pdfStatus,
                     ...String(entry.detail || "").split(/\r?\n/),

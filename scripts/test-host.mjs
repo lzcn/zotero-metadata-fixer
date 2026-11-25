@@ -1214,8 +1214,8 @@ startup = async function(data) {
       const compactSummary = strings.progressFinishedCompact.replace('{completed}', '3').replace('{total}', '3');
       if (batchDoc.getElementById('summary').textContent !== compactSummary || batchDoc.getElementById('summary').title !== finishedSummary || !batchDoc.getElementById('progress').hidden) throw new Error('Completed progress summary or tooltip is incorrect');
       const headings = [...batchDoc.querySelectorAll('.virtualized-table-header .cell')];
-      const failedStatus = batchDoc.querySelectorAll('.virtualized-table .row')[1].children[1];
-      if (headings.length !== 2 || failedStatus.textContent !== strings.failed || !failedStatus.title.includes(strings.rateLimited) || !failedStatus.title.includes('HTTP 429')) throw new Error('Native progress did not keep diagnostic details in the status tooltip');
+      const failedStatus = batchDoc.querySelectorAll('.virtualized-table .row')[1].children[2];
+      if (headings.length !== 3 || failedStatus.textContent !== strings.failed || !failedStatus.title.includes(strings.rateLimited) || !failedStatus.title.includes('HTTP 429')) throw new Error('Native progress did not keep diagnostic details in the status tooltip');
       failedStatus.dispatchEvent(new batchDialog.MouseEvent('mouseover', {bubbles:true}));
       if (!failedStatus.title.includes('HTTP 429')) throw new Error('Hover replaced the diagnostic tooltip');
       const sort = heading => { heading.dispatchEvent(new batchDialog.MouseEvent('mousedown', {bubbles:true, button:0})); heading.dispatchEvent(new batchDialog.MouseEvent('mouseup', {bubbles:true, button:0})); };
@@ -1224,7 +1224,7 @@ startup = async function(data) {
       sort(headings[0]);
       await wait(() => batchDoc.querySelector('.virtualized-table-header .sort-indicator.descending') && batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 2');
       if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 2' || progressState.rows[0].itemID !== batch[0].id) throw new Error('Title sorting changed the task order');
-      sort(headings[1]);
+      sort(headings[2]);
       await wait(() => batchDoc.querySelector('.virtualized-table .row .cell').textContent === 'Batch Host Paper 1');
       if (batchDoc.querySelector('.virtualized-table .row .cell').textContent !== 'Batch Host Paper 1') throw new Error('Status sorting did not put the failed row first');
       const selectedRow = progressState.rows.find(row => row.title === 'Batch Host Paper 1');
@@ -1255,6 +1255,25 @@ startup = async function(data) {
       await MLRuntime.run(win, 'fix');
       await wait(() => batchDoc.querySelectorAll('.virtualized-table .row').length === 4);
       if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('.virtualized-table .row').length !== 4) throw new Error('Completed window was not reused with history retained');
+      let finishLookup;
+      const lookupGate = new Promise(resolve => { finishLookup = resolve; });
+      const previousRetriever = MLRuntime.retriever;
+      MLRuntime.retriever = {retrieveCurrent: async paper => {await lookupGate;return previousRetriever.retrieveCurrent(paper);}};
+      const mixed = MLRuntime.run(win, 'fill');
+      const showActions = () => doc.getElementById('zotero-itemmenu').dispatchEvent(new win.Event('popupshowing'));
+      showActions();
+      const repairAction = doc.getElementById('metadata-linter-fix');
+      try {
+        if (!menu.disabled || repairAction.disabled || doc.getElementById('metadata-linter-pdf').disabled) throw new Error('Busy menu did not distinguish new and queued actions');
+        repairAction.dispatchEvent(new win.Event('command', {bubbles:true}));
+        await wait(()=>progressState.rows.length === 6);
+        showActions();
+        if (!repairAction.disabled || progressState.rows.length !== 6) throw new Error('Queued action still enabled: ' + JSON.stringify({rows:progressState.rows.map(row=>row.action),disabled:repairAction.disabled,selected:win.ZoteroPane.getSelectedItems().map(item=>item.id)}));
+      } finally { finishLookup(); }
+      await mixed;
+      MLRuntime.retriever = previousRetriever;
+      if(progressState.rows.slice(-2).some(row=>row.status!==strings.noChanges) || progressState.rows.at(-2).action!==strings.fill || progressState.rows.at(-1).action!==strings.fix)throw new Error('Mixed actions did not settle in order');
+      await wait(()=>batchDoc.getElementById('content').textContent.includes(strings.fill));
       batchDoc.getElementById('actions').firstElementChild.dispatchEvent(new batchDialog.Event('command'));
       await wait(() => batchDialog.closed);
       const doiRepair = new Zotero.Item('journalArticle');

@@ -169,18 +169,18 @@ test("native progress shows concise results with diagnostic details on hover", a
   assert.equal(ui.progress.value, 2);
   assert.deepEqual(
     Array.from(ui.props.columns, (column) => column.label),
-    [en.title, en.status],
+    [en.title, en.action, en.status],
   );
   assert.deepEqual(
     ui.content.children[1].children.map((cell) => cell.textContent),
-    ["Second", en.failed],
+    ["Second", "", en.failed],
   );
   assert.equal(
-    ui.content.children[1].children[1].title,
-    "Metadata: Failed\nRate-limited\nLong HTTP error",
+    ui.content.children[1].children[2].title,
+    "Failed\nRate-limited\nLong HTTP error",
   );
   let stopped = false;
-  ui.content.children[1].children[1].events.get("mouseover")({
+  ui.content.children[1].children[2].events.get("mouseover")({
     stopPropagation() {
       stopped = true;
     },
@@ -203,7 +203,7 @@ test("native progress shows concise results with diagnostic details on hover", a
   assert.equal(ui.summary.textContent, "Done · 4 / 4");
   assert.match(ui.summary.title, /Done.*4 \/ 4.*2 updated.*1 failed/);
   assert.equal(ui.progress.hidden, true);
-  assert.equal(ui.content.children[2].children[1].textContent, en.updated);
+  assert.equal(ui.content.children[2].children[2].textContent, en.updated);
   assert.equal(ui.actions.children[0].label, en.close);
   ui.win.events.get("unload")();
   assert.equal(ui.unmounted(), true);
@@ -248,7 +248,7 @@ test("native sorting affects display without reordering processing", async () =>
   ui.props.onColumnSort(0, -1);
   ui.flushFrames();
   assert.deepEqual(titles(), ["Zulu", "Beta", "Alpha"]);
-  ui.props.onColumnSort(1, 1);
+  ui.props.onColumnSort(2, 1);
   ui.flushFrames();
   assert.deepEqual(titles(), ["Alpha", "Beta", "Zulu"]);
   state.rows[0].status = en.cancelled;
@@ -342,6 +342,7 @@ test("metadata and PDF outcomes render separately with localized, deduplicated d
       rows: [
         {
           title: "Blocked PDF",
+          action: s.pdf,
           status: s.noChanges,
           pdfStatus: pdfProblem,
           detail: `${pdfProblem}\nHTTP 403`,
@@ -353,16 +354,10 @@ test("metadata and PDF outcomes render separately with localized, deduplicated d
       onResult() {},
     };
     const ui = await dialog(state);
-    const cell = ui.content.children[0].children[1];
-    assert.equal(cell.textContent, `${s.noChanges} · ${pdfProblem}`);
-    assert.equal(
-      cell.title,
-      [
-        s.metadataResult.replace("{status}", s.noChanges),
-        pdfProblem,
-        "HTTP 403",
-      ].join("\n"),
-    );
+    const cell = ui.content.children[0].children[2];
+    assert.equal(ui.content.children[0].children[1].textContent, s.pdf);
+    assert.equal(cell.textContent, pdfProblem);
+    assert.equal(cell.title, [s.noChanges, pdfProblem, "HTTP 403"].join("\n"));
     assert.ok(
       ui.summary.title.includes(
         s.progressFinished
