@@ -349,3 +349,24 @@ test("preprint type repair does not downgrade a published item retaining arXiv p
     false,
   );
 });
+
+test("verified Fix corrects title word order rather than treating the token set as typography", () => {
+  const item = new FakeItem();
+  Object.assign(item.data, published, {
+    title: "Networks learning representations",
+  });
+  const plan = buildRepairPlan(
+    item,
+    { ...published, title: "Learning networks representations", date: "2026" },
+    hostFor(item),
+    undefined,
+    false,
+    false,
+    undefined,
+    true,
+  );
+  assert.equal(
+    plan.changes.find((change) => change.field === "title").after,
+    "Learning networks representations",
+  );
+});

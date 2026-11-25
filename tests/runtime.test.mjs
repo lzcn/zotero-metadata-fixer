@@ -14,9 +14,9 @@ const { CONFERENCE_SETTINGS_PREF, DEFAULT_CONFERENCE_RULES } = await import(
 function runFixture(item) {
   const runtime = new Runtime();
   runtime.updatePDF = async () => "skipped";
-  runtime.host = () => ({
+  runtime.host = (token) => ({
     ...hostFor(item),
-    active: () => runtime.alive && runtime.generation === 1,
+    active: () => runtime.alive && runtime.generation === token,
   });
   runtime.retriever = {
     retrieve: async () => ({ ...published, publicationEvidence: "identifier" }),
@@ -53,7 +53,7 @@ function runFixture(item) {
   return { runtime, state, win };
 }
 
-function lintFixture(item = new FakeItem()) {
+function fixFixture(item = new FakeItem()) {
   const fixture = runFixture(item);
   const { runtime, state } = fixture;
   const calls = [];
@@ -98,9 +98,9 @@ function lintFixture(item = new FakeItem()) {
   return { ...fixture, calls, item };
 }
 
-test("Lint checks preprint status and uses published metadata and updates in place without prompting", async () => {
-  const { runtime, win, state, calls, item } = lintFixture();
-  await runtime.run(win, "lint");
+test("Fix checks preprint status and uses published metadata and updates in place without prompting", async () => {
+  const { runtime, win, state, calls, item } = fixFixture();
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["find", "published metadata"]);
   assert.equal(item.id, 42);
   assert.equal(item.itemType, "journalArticle");
@@ -108,43 +108,43 @@ test("Lint checks preprint status and uses published metadata and updates in pla
   assert.match(item.data.extra, /Preprint URL:/);
 });
 
-test("Lint falls back to current preprint metadata when no publication is found", async () => {
-  const { runtime, win, state, calls, item } = lintFixture();
+test("Fix falls back to current preprint metadata when no publication is found", async () => {
+  const { runtime, win, state, calls, item } = fixFixture();
   runtime.finder.find = async () => {
     calls.push("find");
     return { candidates: [], warnings: [], answered: 5 };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["find", "current metadata"]);
   assert.equal(item.itemType, "preprint");
   assert.equal(item.getField("abstractNote"), "Current version abstract");
   assert.match(state.progress.rows[0].detail, /No publication/);
 });
 
-test("Lint directly retrieves metadata for a published item without publication discovery", async () => {
+test("Fix directly retrieves metadata for a published item without publication discovery", async () => {
   const item = new FakeItem();
   Object.assign(item.data, published);
   item.itemTypeID = 2;
-  const { runtime, win, calls, state } = lintFixture(item);
-  await runtime.run(win, "lint");
+  const { runtime, win, calls, state } = fixFixture(item);
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["current metadata"]);
   assert.equal(item.itemType, "journalArticle");
   assert.doesNotMatch(item.data.extra, /Preprint URL:/);
 });
 
-test("the single Lint action enriches a missing published DOI without changing item identity", async () => {
+test("Fix enriches a missing published DOI without changing item identity", async () => {
   const item = new FakeItem();
   Object.assign(item.data, published);
   delete item.data.DOI;
   item.data.url = "https://publisher.example/paper";
   item.itemTypeID = 2;
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   const find = runtime.finder.find;
   runtime.finder.find = (selected, usePreprintLinks) => {
     assert.equal(usePreprintLinks, false);
     return find(selected);
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(item.id, 42);
   assert.deepEqual(item.data.attachments, [7]);
@@ -159,7 +159,7 @@ test("DOI-free conference metadata is accepted and an absent DOI does not erase 
     url: "https://openreview.net/forum?id=accepted",
   });
   item.itemTypeID = 3;
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   runtime.finder.find = async () => ({
     candidates: [
       {
@@ -178,7 +178,7 @@ test("DOI-free conference metadata is accepted and an absent DOI does not erase 
     ...item.toJSON(),
     abstractNote: "Accepted conference paper",
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.getField("DOI"), "");
   assert.equal(item.getField("abstractNote"), "Accepted conference paper");
   assert.equal(state.progress.rows[0].status, "Updated");
@@ -195,7 +195,7 @@ test("no matching DOI remains a normal no-change result when a publication has n
     archiveID: "",
   });
   item.itemTypeID = 3;
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   runtime.finder.find = async () => ({
     candidates: [],
     warnings: [],
@@ -204,27 +204,27 @@ test("no matching DOI remains a normal no-change result when a publication has n
   runtime.retriever.retrieveCurrent = async () => {
     throw new Error("Item has no valid metadata identifier");
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "No changes");
   assert.match(state.progress.rows[0].detail, /No DOI/);
 });
 
-test("Lint preserves discovery warnings when current metadata succeeds", async () => {
-  const { runtime, win, state, item } = lintFixture();
+test("Fix preserves discovery warnings when current metadata succeeds", async () => {
+  const { runtime, win, state, item } = fixFixture();
   runtime.finder.find = async () => ({
     candidates: [],
     warnings: ["Crossref: 429"],
     answered: 4,
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.saved, 1);
   assert.match(state.progress.rows[0].detail, /429/);
   assert.match(state.progress.rows[0].detail, /No match/);
 });
 
 test("source access warnings do not mark a successful update as a problem", async () => {
-  const { runtime, win, state, item } = lintFixture();
+  const { runtime, win, state, item } = fixFixture();
   runtime.finder.find = async () => ({
     candidates: [
       {
@@ -239,7 +239,7 @@ test("source access warnings do not mark a successful update as a problem", asyn
     warnings: ["DBLP: Error: Access blocked"],
     answered: 5,
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.rows[0].status, "Updated");
   assert.equal(state.progress.rows[0].problem, "");
@@ -256,7 +256,7 @@ test("source access warnings mark an unchanged lookup as incomplete", async () =
     archiveID: "",
   });
   item.itemTypeID = 3;
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   runtime.finder.find = async () => ({
     candidates: [],
     warnings: ["DBLP: Error: Access blocked"],
@@ -265,21 +265,21 @@ test("source access warnings mark an unchanged lookup as incomplete", async () =
   runtime.retriever.retrieveCurrent = async () => {
     throw new Error("Item has no valid metadata identifier");
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(state.progress.rows[0].status, "Incomplete");
   assert.equal(state.progress.rows[0].problem, "Access blocked");
 });
 
 test("result rows can select their item in the owner window", async () => {
-  const { runtime, win, state } = lintFixture();
-  await runtime.run(win, "lint");
+  const { runtime, win, state } = fixFixture();
+  await runtime.run(win, "fix");
   state.progress.selectItem(42);
   assert.equal(win.selectedItemID, 42);
   assert.equal(win.focused, true);
 });
 
 test("ambiguous published matches are skipped automatically without fallback or writing", async () => {
-  const { runtime, win, state, calls, item } = lintFixture();
+  const { runtime, win, state, calls, item } = fixFixture();
   runtime.finder.find = async () => {
     calls.push("find");
     return {
@@ -303,7 +303,7 @@ test("ambiguous published matches are skipped automatically without fallback or 
       answered: 2,
     };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["find"]);
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "Skipped");
@@ -311,30 +311,30 @@ test("ambiguous published matches are skipped automatically without fallback or 
 });
 
 test("cancelling publication discovery prevents current-metadata fallback and all writes", async () => {
-  const { runtime, win, calls, item } = lintFixture();
+  const { runtime, win, calls, item } = fixFixture();
   runtime.finder.find = async () => {
     calls.push("find");
     runtime.cancel();
     return { candidates: [], warnings: [], answered: 1 };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["find"]);
   assert.equal(item.saved, 0);
 });
 
 test("invalid published metadata cannot silently trigger a different update", async () => {
-  const { runtime, win, calls, item, state } = lintFixture();
+  const { runtime, win, calls, item, state } = fixFixture();
   runtime.retriever.candidate = async () => {
     calls.push("published metadata");
     return { ...published, itemType: "preprint" };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["find", "published metadata"]);
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "Failed");
 });
 
-test("Lint corrects an existing ECCV book section locally when metadata retrieval fails", async () => {
+test("Fix corrects an existing ECCV book section locally when metadata retrieval fails", async () => {
   const item = new FakeItem();
   Object.assign(item.data, {
     itemType: "bookSection",
@@ -353,7 +353,7 @@ test("Lint corrects an existing ECCV book section locally when metadata retrieva
       throw new Error("No metadata identifier");
     },
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.itemType, "conferencePaper");
   assert.equal(
     item.getField("proceedingsTitle"),
@@ -367,8 +367,8 @@ test("Lint corrects an existing ECCV book section locally when metadata retrieva
   assert.deepEqual(item.data.attachments, [7]);
 });
 
-test("Lint applies the Publication switch to a matched ECCV publication and preserves the preprint item", async () => {
-  const { runtime, win, state, item } = lintFixture();
+test("Fix applies the Publication switch to a matched ECCV publication and preserves the preprint item", async () => {
+  const { runtime, win, state, item } = fixFixture();
   runtime.retriever.candidate = async () => ({
     ...published,
     itemType: "bookSection",
@@ -387,7 +387,7 @@ test("Lint applies the Publication switch to a matched ECCV publication and pres
       }),
   };
   try {
-    await runtime.run(win, "lint");
+    await runtime.run(win, "fix");
     assert.equal(item.itemType, "conferencePaper");
     assert.equal(
       item.getField("proceedingsTitle"),
@@ -407,7 +407,11 @@ test("preferences keep public settings separate from internal conference rules",
   const runtime = new Runtime();
   const saved = [];
   const ids = [
-    "ml-update-pdfs",
+    "ml-default-action",
+    "ml-default-label",
+    "ml-default-fill",
+    "ml-default-fix",
+    "ml-default-pdf",
     "ml-publication-style",
     "ml-replace-publication",
     "ml-publication-label",
@@ -449,10 +453,6 @@ test("preferences keep public settings separate from internal conference rules",
         return elements[id];
       },
     });
-    assert.equal(
-      elements["ml-update-pdfs"].tooltiptext,
-      runtime.s.updatePDFsHelp,
-    );
     assert.equal(
       elements["ml-replace-publication"].tooltiptext,
       runtime.s.replacePublicationHelp,
@@ -522,7 +522,7 @@ test("cancelling during retrieval prevents preview and writing after the result 
 });
 
 test("a linked DOI cannot bypass verification of translated title and authors", async () => {
-  const { runtime, win, item, state } = lintFixture();
+  const { runtime, win, item, state } = fixFixture();
   runtime.finder.find = async () => ({
     candidates: [
       { source: "arXiv", title: "", linked: true, doi: "10.1000/wrong" },
@@ -534,7 +534,7 @@ test("a linked DOI cannot bypass verification of translated title and authors", 
     ...published,
     title: "Completely unrelated publication",
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "Failed");
 });
@@ -560,6 +560,11 @@ test("menu injection and removal are idempotent and stop removes all windows", (
       this.children.push(node);
       node.parent = this;
     },
+    insertBefore(node, reference) {
+      this.children = this.children.filter((child) => child !== node);
+      this.children.splice(this.children.indexOf(reference), 0, node);
+      node.parent = this;
+    },
     addEventListener(_, fn) {
       this.listeners.add(fn);
     },
@@ -577,6 +582,9 @@ test("menu injection and removal are idempotent and stop removes all windows", (
         this.attributes[name] = value;
       },
       addEventListener() {},
+      replaceChildren(...nodes) {
+        this.children = nodes;
+      },
       appendChild(node) {
         this.children.push(node);
       },
@@ -590,12 +598,12 @@ test("menu injection and removal are idempotent and stop removes all windows", (
   const win = { document: doc };
   runtime.inject(win);
   runtime.inject(win);
-  assert.equal(popup.children.length, 1);
+  assert.equal(popup.children.length, 4);
   assert.equal(popup.children[0].tagName, "menuitem");
   assert.equal(popup.children[0].children.length, 0);
   assert.equal(
     popup.children[0].attributes.image,
-    "file:///test/icons/icon-16.png",
+    "chrome://zotero/skin/16/universal/plus.svg",
   );
   assert.equal(popup.listeners.size, 1);
   runtime.stop();
@@ -735,14 +743,14 @@ test("dialog loading does not cancel an operation; only unloading the real dialo
 
 test("repeating the action while busy does not cancel; explicit cancellation clears running row statuses", async () => {
   const item = new FakeItem();
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   let finish;
   runtime.finder.find = () =>
     new Promise((resolve) => {
       finish = resolve;
     });
-  const running = runtime.run(win, "lint");
-  await runtime.run(win, "lint");
+  const running = runtime.run(win, "fix");
+  await runtime.run(win, "fix");
   assert.equal(runtime.generation, 1);
   assert.equal(state.progress.rows[0].status, "Updating…");
   runtime.cancel();
@@ -754,7 +762,7 @@ test("repeating the action while busy does not cancel; explicit cancellation cle
 });
 
 test("exact source records with missing authors are checked against the translated authors before writing", async () => {
-  const { runtime, win, item, state } = lintFixture();
+  const { runtime, win, item, state } = fixFixture();
   runtime.finder.find = async () => ({
     candidates: [
       {
@@ -771,7 +779,7 @@ test("exact source records with missing authors are checked against the translat
     ...published,
     creators: [{ lastName: "Other", creatorType: "author" }],
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.saved, 0);
   assert.equal(state.progress.rows[0].status, "Failed");
 });
@@ -799,7 +807,7 @@ test("published repair preserves populated fields and fixes a known incorrect co
     source: "DOI",
     warnings: [],
   });
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.getField("proceedingsTitle"), "CVPR 2024");
   assert.equal(item.getField("publisher"), "My Custom Publisher");
   assert.equal(item.getField("abstractNote"), "My Custom Abstract");
@@ -1002,7 +1010,7 @@ test("one batch updates selected editable papers and continues after an item fai
       };
     },
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, [1, 2, 3]);
   assert.deepEqual(
     items.map((item) => item.saved),
@@ -1051,14 +1059,14 @@ test("cancelling a batch stops unstarted papers and ignores the pending result",
 });
 
 test("a preprint already carrying a published DOI skips title discovery and upgrades in place", async () => {
-  const { runtime, win, calls, item } = lintFixture();
+  const { runtime, win, calls, item } = fixFixture();
   item.data.DOI = published.DOI;
   runtime.retriever.candidate = async (candidate) => {
     assert.equal(candidate.doi, published.DOI);
     calls.push("DOI");
     return { ...published, publicationEvidence: "identifier" };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["DOI"]);
   assert.equal(item.itemType, "journalArticle");
   assert.equal(item.id, 42);
@@ -1102,7 +1110,7 @@ test("successful retrieval still repairs a proceedings value misplaced in the ol
         }),
     };
     try {
-      await runtime.run(win, "lint");
+      await runtime.run(win, "fix");
       assert.equal(
         item.getField("proceedingsTitle"),
         publicationStyle === "short"
@@ -1124,7 +1132,7 @@ test("successful retrieval still repairs a proceedings value misplaced in the ol
 test("official DOI-free publication metadata updates in place without broad search", async () => {
   const item = new FakeItem();
   item.data.url = "https://openreview.net/forum?id=accepted";
-  const { runtime, win, state } = lintFixture(item);
+  const { runtime, win, state } = fixFixture(item);
   const { PublicationFinder } = await import("../.tests-build/providers.js");
   runtime.finder = new PublicationFinder({});
   runtime.finder.openreview = async () => [
@@ -1152,7 +1160,7 @@ test("official DOI-free publication metadata updates in place without broad sear
       proceedingsTitle: "ICLR 2026",
     };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(translated, 1);
   assert.equal(item.itemType, "conferencePaper");
   assert.equal(item.getField("DOI"), "");
@@ -1161,13 +1169,13 @@ test("official DOI-free publication metadata updates in place without broad sear
 });
 
 test("an exact PMID is retrieved before title search when DOI is missing", async () => {
-  const { runtime, win, item, calls } = lintFixture();
+  const { runtime, win, item, calls } = fixFixture();
   item.data.extra += "\nPMID: 123456";
   runtime.retriever.retrieve = async (_, source) => {
     calls.push(source);
     return { ...published, publicationEvidence: "index" };
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.deepEqual(calls, ["PMID"]);
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(item.itemType, "journalArticle");
@@ -1181,7 +1189,7 @@ test("unaccepted or mismatched official records cannot bypass publication valida
   ]) {
     const item = new FakeItem();
     item.data.url = "https://ieeexplore.ieee.org/document/12345678";
-    const { runtime, win } = lintFixture(item);
+    const { runtime, win } = fixFixture(item);
     const { PublicationFinder } = await import("../.tests-build/providers.js");
     const finder = new PublicationFinder({});
     finder.related = async () => [];
@@ -1201,7 +1209,7 @@ test("unaccepted or mismatched official records cannot bypass publication valida
       proceedingsTitle: "ICLR 2026",
       ...change,
     });
-    await runtime.run(win, "lint");
+    await runtime.run(win, "fix");
     assert.equal(item.itemType, "preprint");
     assert.equal(item.getField("DOI"), "");
   }
@@ -1260,10 +1268,10 @@ test("new selections share one queue and completed results remain until the wind
       };
     },
   };
-  const running = runtime.run(win, "lint");
+  const running = runtime.run(win, "fix");
   const otherWindow = { ZoteroPane: { getSelectedItems: () => items } };
-  await runtime.run(otherWindow, "lint");
-  await runtime.run(otherWindow, "lint");
+  await runtime.run(otherWindow, "fix");
+  await runtime.run(otherWindow, "fix");
   assert.equal(opened, 1);
   assert.equal(state.progress.total, 3);
   assert.deepEqual(
@@ -1275,7 +1283,7 @@ test("new selections share one queue and completed results remain until the wind
   assert.deepEqual(calls, [1, 2, 3]);
   assert.equal(dialog.closed, false);
   assert.equal(runtime.progressWindow, dialog);
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(opened, 1);
   assert.equal(dialog.closed, false);
   assert.equal(state.progress.rows.length, 4);
@@ -1285,11 +1293,11 @@ test("new selections share one queue and completed results remain until the wind
     ["Updated", "Updated", "Updated"],
   );
   dialog.close();
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(opened, 2);
   assert.equal(state.progress.rows.length, 1);
   runtime.retriever.retrieveCurrent = () => new Promise(() => {});
-  const cancelling = runtime.run(win, "lint");
+  const cancelling = runtime.run(win, "fix");
   assert.equal(opened, 2);
   dialog.close();
   await cancelling;
@@ -1340,7 +1348,7 @@ test("DMLNet official IEEE metadata fills DOI despite compound-word title differ
       ],
     }),
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(paper.getField("DOI"), "10.1109/LGRS.2026.3708839");
   assert.equal(paper.getField("title"), originalTitle);
   assert.equal(state.progress.rows[0].status, "Updated");
@@ -1546,7 +1554,7 @@ test("lint repairs arXiv documents locally when retrieval is unavailable", async
       throw new Error("Offline");
     },
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.itemType, "preprint");
   assert.equal(item.id, 42);
   assert.equal(item.getField("url"), "https://arxiv.org/abs/2501.01234v1");
@@ -1570,7 +1578,7 @@ test("lint repairs mislabeled conference journals locally without replacing user
       throw new Error("Offline");
     },
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.itemType, "conferencePaper");
   assert.equal(
     item.getField("proceedingsTitle"),
@@ -1674,79 +1682,29 @@ test("validated JSON is reused across batches without sharing mutable objects", 
   }
 });
 
-test("lint updates a PDF even when bibliographic metadata is unchanged", async () => {
+test("PDF errors do not alter metadata and are reported separately", async () => {
   const item = new FakeItem();
-  Object.assign(item.data, published);
-  item.itemTypeID = 2;
   const { runtime, state, win } = runFixture(item);
-  runtime.retriever = {
-    retrieveCurrent: async () => ({ metadata: item.toJSON(), warnings: [] }),
-  };
-  let checked = 0;
-  runtime.updatePDF = async () => {
-    checked++;
-    return "added";
-  };
-  await runtime.run(win, "lint");
-  assert.equal(checked, 1);
-  assert.equal(state.progress.rows[0].status, "No changes");
-  assert.equal(state.progress.rows[0].pdfStatus, "PDF updated");
-});
-
-test("a blocked PDF does not undo a successful metadata update", async () => {
-  const { runtime, state, win, item } = lintFixture();
+  const before = item.toJSON();
   runtime.updatePDF = async () => {
     throw new Error("HTTP 403");
   };
-  await runtime.run(win, "lint");
-  assert.equal(item.getField("DOI"), published.DOI);
-  assert.equal(state.progress.rows[0].status, "Updated");
-  assert.equal(state.progress.rows[0].problem, "");
-  assert.match(state.progress.rows[0].detail, /PDF: Access blocked/);
+  await runtime.run(win, "pdf");
+  assert.deepEqual(item.toJSON(), before);
+  assert.equal(item.saved, 0);
+  assert.equal(state.progress.rows[0].status, "Failed");
   assert.equal(state.progress.rows[0].pdfStatus, "PDF: Access blocked");
 });
 
-test("an unavailable PDF retains the successful metadata result", async () => {
-  const item = new FakeItem();
-  Object.assign(item.data, published);
-  item.itemTypeID = 2;
-  const { runtime, state, win } = runFixture(item);
-  runtime.retriever = {
-    retrieveCurrent: async () => ({ metadata: item.toJSON(), warnings: [] }),
-  };
-  runtime.updatePDF = async () => "unavailable";
-  await runtime.run(win, "lint");
-  assert.equal(state.progress.rows[0].status, "No changes");
-  assert.equal(state.progress.rows[0].problem, "");
-  assert.equal(state.progress.rows[0].pdfStatus, "PDF unavailable");
-});
-
-test("the PDF preference disables downloads while metadata updates still run", async () => {
-  const { runtime, win, item } = lintFixture();
-  const old = Zotero.Prefs;
-  Zotero.Prefs = {
-    get: (key) => (key.endsWith("updatePDFs") ? false : undefined),
-  };
-  runtime.updatePDF = async () => {
-    throw new Error("PDF check must be disabled");
-  };
-  try {
-    await runtime.run(win, "lint");
-    assert.equal(item.getField("DOI"), published.DOI);
-  } finally {
-    Zotero.Prefs = old;
-  }
-});
-
 test("edits made during metadata retrieval are retained without applying stale fields or PDFs", async () => {
-  for (const source of ["publication", "DOI", "lint"]) {
+  for (const source of ["publication", "DOI", "fix"]) {
     const item = new FakeItem();
     if (source !== "publication") {
       Object.assign(item.data, published);
       item.itemTypeID = 2;
     }
     const { runtime, win, state } =
-      source === "publication" ? lintFixture(item) : runFixture(item);
+      source === "publication" ? fixFixture(item) : runFixture(item);
     let pdfs = 0;
     runtime.updatePDF = async () => {
       pdfs++;
@@ -1764,7 +1722,7 @@ test("edits made during metadata retrieval are retained without applying stale f
         warnings: [],
       }),
     };
-    await runtime.run(win, source === "publication" ? "lint" : source);
+    await runtime.run(win, source === "publication" ? "fix" : source);
     assert.equal(
       item.getField("abstractNote"),
       "My edit while searching",
@@ -1807,15 +1765,17 @@ test("HTTP-200 challenges cool down a source before another batch reaches the ne
 });
 
 test("PDF cancellation retains metadata already saved", async () => {
-  const { runtime, state, win, item } = lintFixture();
+  const { runtime, state, win, item } = fixFixture();
   runtime.updatePDF = async () => {
     runtime.cancel();
     throw new Error("Operation cancelled");
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.rows[0].status, "Updated");
-  assert.equal(state.progress.rows[0].pdfStatus, "PDF cancelled");
+  await runtime.run(win, "pdf");
+  assert.equal(state.progress.rows.at(-1).pdfStatus, "PDF cancelled");
+  assert.equal(item.getField("DOI"), published.DOI);
   assert.equal(state.progress.cancelled, true);
 });
 
@@ -1830,8 +1790,197 @@ test("a verified unchanged record is not marked incomplete by a failed alternate
       warnings: ["Alternate source: HTTP 403"],
     }),
   };
-  await runtime.run(win, "lint");
+  await runtime.run(win, "fix");
   assert.equal(state.progress.rows[0].status, "No changes");
   assert.equal(state.progress.rows[0].problem, "");
   assert.match(state.progress.rows[0].detail, /403/);
+});
+
+test("an existing DOI repairs a wrong title before any title discovery", async () => {
+  for (const itemType of ["journalArticle", "preprint"]) {
+    const item = new FakeItem();
+    Object.assign(item.data, {
+      itemType,
+      DOI: published.DOI,
+      title: "Damaged imported title",
+    });
+    const { runtime, win, state } = runFixture(item);
+    let searches = 0;
+    runtime.finder = {
+      find: async () => {
+        searches++;
+        throw new Error("Unexpected title search");
+      },
+    };
+    const metadata = { ...published, publicationEvidence: "identifier" };
+    runtime.retriever = {
+      retrieveCurrent: async () => ({ metadata, source: "DOI", warnings: [] }),
+      candidate: async () => metadata,
+    };
+    await runtime.run(win, "fix");
+    assert.equal(searches, 0);
+    assert.equal(item.getField("title"), published.title);
+    assert.equal(item.id, 42);
+    assert.equal(state.progress.rows[0].status, "Updated");
+  }
+});
+
+test("DOI title repair still rejects wrong identifiers and conflicting authors", async () => {
+  for (const change of [
+    { DOI: "10.1234/different" },
+    {
+      creators: [
+        { firstName: "Other", lastName: "Person", creatorType: "author" },
+      ],
+    },
+    { publicationEvidence: undefined },
+  ]) {
+    const item = new FakeItem();
+    Object.assign(item.data, {
+      itemType: "journalArticle",
+      DOI: published.DOI,
+      title: "Damaged imported title",
+    });
+    const { runtime, win } = runFixture(item);
+    runtime.retriever = {
+      retrieveCurrent: async () => ({
+        metadata: {
+          ...published,
+          publicationEvidence: "identifier",
+          ...change,
+        },
+        source: "DOI",
+        warnings: [],
+      }),
+    };
+    await runtime.run(win, "fix");
+    assert.equal(item.saved, 0);
+    assert.equal(item.getField("title"), "Damaged imported title");
+  }
+});
+
+test("Fix corrects populated bibliographic fields and authors; Fill preserves them", async () => {
+  for (const mode of ["fix", "fill"]) {
+    const item = new FakeItem();
+    Object.assign(item.data, published, {
+      title: published.title,
+      creators: [
+        { firstName: "Wrong", lastName: "Author", creatorType: "author" },
+      ],
+      date: "1999",
+      pages: "1-2",
+      volume: "1",
+      issue: "1",
+      publisher: "Wrong publisher",
+      publicationTitle: "Wrong journal",
+      abstractNote: "My abstract",
+      language: "zh",
+      ISSN: "0000-0000",
+      url: "https://example.org/my-link",
+      shortTitle: "My short title",
+    });
+    delete item.data.ISBN;
+    item.itemTypeID = 2;
+    const before = structuredClone(item.data);
+    const { runtime, win, state } = runFixture(item);
+    const metadata = {
+      ...published,
+      date: "2026-11-17",
+      pages: "100-112",
+      volume: "9",
+      issue: "3",
+      publisher: "Correct publisher",
+      abstractNote: "Source abstract",
+      language: "en",
+      ISSN: "1234-5678",
+      ISBN: "9781234567890",
+      url: "https://example.org/source",
+      shortTitle: "",
+      publicationEvidence: "identifier",
+    };
+    runtime.finder = {
+      find: async () => {
+        throw new Error("DOI must come first");
+      },
+    };
+    runtime.retriever = {
+      retrieveCurrent: async () => ({ metadata, source: "DOI", warnings: [] }),
+    };
+    let pdfs = 0;
+    runtime.updatePDF = async () => {
+      pdfs++;
+      return "skipped";
+    };
+    await runtime.run(win, mode);
+    for (const field of [
+      "date",
+      "pages",
+      "volume",
+      "issue",
+      "publisher",
+      "publicationTitle",
+      "abstractNote",
+      "language",
+      "ISSN",
+      "url",
+      "creators",
+    ])
+      assert.deepEqual(
+        item.data[field],
+        mode === "fix" ? metadata[field] : before[field],
+        field,
+      );
+    assert.equal(item.getField("ISBN"), metadata.ISBN);
+    assert.equal(item.getField("shortTitle"), "My short title");
+    for (const field of [
+      "extra",
+      "collections",
+      "tags",
+      "relations",
+      "attachments",
+      "notes",
+      "dateAdded",
+    ])
+      assert.deepEqual(item.data[field], before[field], field);
+    assert.equal(pdfs, 0);
+    assert.equal(state.progress.rows[0].status, "Updated");
+  }
+});
+
+test("Fill does not convert types or apply conference formatting overrides", async () => {
+  const { runtime, win, item } = fixFixture();
+  const before = structuredClone(item.data);
+  await runtime.run(win, "fill");
+  assert.equal(item.itemType, "preprint");
+  assert.deepEqual(item.getCreators(), before.creators);
+  assert.equal(item.getField("date"), before.date);
+  assert.equal(item.getField("url"), before.url);
+  assert.equal(item.getField("extra"), before.extra);
+});
+
+test("Update PDF skips metadata retrieval and default action starts with Fill", async () => {
+  const item = new FakeItem();
+  const { runtime, win, state } = runFixture(item);
+  const before = item.toJSON();
+  runtime.finder = {
+    find: async () => {
+      throw new Error("No metadata lookup");
+    },
+  };
+  runtime.retriever = {
+    retrieveCurrent: async () => {
+      throw new Error("No metadata lookup");
+    },
+  };
+  let calls = 0;
+  runtime.updatePDF = async () => {
+    calls++;
+    return "added";
+  };
+  assert.equal(runtime.defaultAction(), "fill");
+  await runtime.run(win, "pdf");
+  assert.equal(calls, 1);
+  assert.equal(item.saved, 0);
+  assert.deepEqual(item.toJSON(), before);
+  assert.equal(state.progress.rows[0].pdfStatus, "PDF updated");
 });

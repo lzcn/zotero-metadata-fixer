@@ -5,7 +5,16 @@
   onshowing="Zotero.MetadataLinter?.refreshPreferences(document)"
 >
   <vbox class="main-section">
-    <checkbox native="true" id="ml-update-pdfs" />
+    <hbox class="preference-row" align="center">
+      <label id="ml-default-label" control="ml-default-action" />
+      <menulist native="true" id="ml-default-action">
+        <menupopup>
+          <menuitem id="ml-default-fill" value="fill" />
+          <menuitem id="ml-default-fix" value="fix" />
+          <menuitem id="ml-default-pdf" value="pdf" />
+        </menupopup>
+      </menulist>
+    </hbox>
     <checkbox native="true" id="ml-replace-publication" />
     <hbox class="preference-row" align="center">
       <label id="ml-publication-label" control="ml-publication-style"></label>

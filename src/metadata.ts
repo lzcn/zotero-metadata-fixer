@@ -1,6 +1,7 @@
 import type { Candidate, Item, Metadata } from "./model";
 import {
   canonicalDOI,
+  identifiers,
   cleanDOI,
   officialPublicationURL,
   preprintDOI,
@@ -24,6 +25,31 @@ export function hasPublicationEvidence(
     officialPublicationURL(url) &&
     !conferencePoster(url) &&
     new URL(url).hostname.replace(/^www\./, "") !== "openreview.net"
+  );
+}
+
+/** An exact existing DOI can repair a bad title, with title or author corroboration. */
+export function matchesExistingDOI(
+  item: Pick<Item, "getField" | "getCreators">,
+  metadata: Metadata,
+): boolean {
+  const doi = identifiers(item).DOI;
+  const authors = metadata.creators
+    ?.filter((author) => author.creatorType !== "editor")
+    .map((author) =>
+      `${author.firstName || ""} ${author.lastName || ""}`.trim(),
+    )
+    .filter(Boolean);
+  return Boolean(
+    doi &&
+      !preprintDOI(doi) &&
+      canonicalDOI(doi) === canonicalDOI(String(metadata.DOI || "")) &&
+      metadata.publicationEvidence === "identifier" &&
+      metadata.title?.trim() &&
+      (titleScore(item.getField("title"), metadata.title) >= 0.9 ||
+        (item.getCreators().length > 0 &&
+          authors?.length &&
+          matchesAuthors(item.getCreators(), authors))),
   );
 }
 
@@ -52,9 +78,11 @@ export function matchesPublication(
         (cleanDOI(String(metadata.DOI)) &&
           !preprintDOI(String(metadata.DOI)))) &&
       authors?.length &&
-      titleScore(item.getField("title"), metadata.title) >=
-        (candidate.linked ? 0.75 : 0.9) &&
-      matchesAuthors(item.getCreators(), authors) &&
+      (matchesExistingDOI(item, metadata) ||
+        titleScore(item.getField("title"), metadata.title) >=
+          (candidate.linked ? 0.75 : 0.9)) &&
+      (matchesExistingDOI(item, metadata) ||
+        matchesAuthors(item.getCreators(), authors)) &&
       publishedVenue(venue) &&
       (!candidate.conferenceVenue ||
         !metadata.conferenceVenue ||

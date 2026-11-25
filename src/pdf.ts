@@ -13,7 +13,6 @@ import {
   unchangedPDF,
 } from "./pdf-cache";
 
-export const UPDATE_PDFS_PREF = "extensions.metadata-linter.updatePDFs";
 export type PDFResult = "added" | "unchanged" | "unavailable" | "skipped";
 
 // Stage downloads separately; only the short import transaction may change the library.

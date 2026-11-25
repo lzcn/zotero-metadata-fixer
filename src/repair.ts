@@ -24,6 +24,7 @@ export function buildRepairPlan(
   publication = false,
   formatPublication = false,
   venuePolicy?: { preserve: boolean; repair: boolean },
+  repairMetadata = false,
 ): Plan {
   const metadata = { ...retrieved };
   const fields =
@@ -38,7 +39,7 @@ export function buildRepairPlan(
         normalize(item.getField("conferenceName")))
   )
     fields.proceedingsTitle = overrides.fields.proceedingsTitle;
-  if (!publication) {
+  if (!publication && !repairMetadata) {
     // Type conversion maps the existing venue before filling from another source.
     const targetType = overrides?.itemType || metadata.itemType;
     const venueField = containerField(targetType);
@@ -71,7 +72,7 @@ export function buildRepairPlan(
   const plan = buildPlan(
     item,
     metadata,
-    publication ? "replace" : "blank",
+    publication || repairMetadata ? "replace" : "blank",
     host,
     {
       ...overrides,
@@ -87,6 +88,12 @@ export function buildRepairPlan(
     },
   );
   plan.changes = plan.changes.filter((change) => {
+    if (
+      change.field === "title" &&
+      normalize(String(change.before)).replace(/\s+/g, "") ===
+        normalize(String(change.after)).replace(/\s+/g, "")
+    )
+      return false;
     if (typeof change.before === "string" && typeof change.after === "string")
       return [
         "DOI",

@@ -265,7 +265,6 @@ const prefs = {
   "extensions.zotero.automaticScraperUpdates": false,
   "extensions.zoteroMacWordIntegration.skipInstallation": true,
   "extensions.zoteroOpenOfficeIntegration.skipInstallation": true,
-  "extensions.metadata-linter.updatePDFs": false,
 };
 if (process.env.ML_HOST_COLOR_SCHEME) {
   prefs["ui.systemUsesDarkTheme"] =
@@ -439,10 +438,29 @@ startup = async function(data) {
       toggleEntry.setField('publicationTitle', 'IEEE Transactions on Mobile Computing');
       await toggleEntry.saveTx();
 
-      const menu = doc.getElementById('metadata-linter-menu');
-      if (!menu || menu.localName !== 'menuitem' || menu.children.length) throw new Error('Expected one direct context-menu action');
-      result.menu = {label: menu.getAttribute('label'), image: menu.getAttribute('image')};
-      if (!result.menu.image.endsWith('icons/icon-16.png')) throw new Error('Missing context-menu icon');
+      const menu = doc.getElementById('metadata-linter-fill');
+      const actionNodes = () => [...doc.getElementById('zotero-itemmenu').children].filter(node => ['metadata-linter-fill','metadata-linter-fix','metadata-linter-pdf'].includes(node.id));
+      if (!menu || actionNodes().length !== 3 || actionNodes().some(node => node.localName !== 'menuitem' || !node.getAttribute('image')?.endsWith('.svg'))) throw new Error('Expected three native actions with icons');
+      result.menu = {labels:actionNodes().map(node => node.getAttribute('label'))};
+      await win.ZoteroPane.selectItem(toggleEntry.id);
+      await win.ZoteroPane.buildItemContextMenu();
+      const savedMenuRun = MLRuntime.run;
+      const menuActions = [];
+      MLRuntime.run = async (_win, mode) => {menuActions.push(mode);};
+      try {
+        if (doc.getElementById('metadata-linter-default')) throw new Error('Duplicate plugin entry');
+        if (actionNodes()[0].id !== 'metadata-linter-fill') throw new Error('Preferred action is not first');
+        const listenerService = Cc['@mozilla.org/eventlistenerservice;1'].getService(Ci.nsIEventListenerService);
+        const invokeCommand = element => {
+          const listeners = listenerService.getListenerInfoFor(element).filter(info => info.type === 'command');
+          if (listeners.length !== 1) throw new Error('Expected one command handler on ' + element.id);
+          listeners[0].listenerObject.call(element, new win.Event('command'));
+        };
+        for (const mode of ['fill','fix','pdf']) invokeCommand(doc.getElementById('metadata-linter-' + mode));
+        if (JSON.stringify(menuActions) !== JSON.stringify(['fill','fix','pdf'])) throw new Error('Default or submenu action routing failed: ' + JSON.stringify({actions:menuActions,submenu:menu.outerHTML}));
+        result.menuActions = menuActions;
+      } finally { MLRuntime.run = savedMenuRun; }
+
       const item = new Zotero.Item('conferencePaper');
       item.setField('title', 'Disposable host test paper');
       item.setField('proceedingsTitle', 'ICLR 2026');
@@ -464,11 +482,11 @@ startup = async function(data) {
         return {candidates: [], warnings: []};
       }};
       MLRuntime.retriever = {retrieveCurrent: async () => ({metadata: {...item.toJSON(), title: item.getField('title').toUpperCase(), proceedingsTitle: 'International Conference on Learning Representations 2026', abstractNote:'Updated without confirmation'}, source: 'host fixture', warnings: []})};
-      const running = MLRuntime.run(win, 'lint');
+      const running = MLRuntime.run(win, 'fix');
       await new Promise(resolve => setTimeout(resolve, 400));
       if (progressState?.cancelled || !MLRuntime.busy) throw new Error('Operation cancelled during initial dialog loading');
       const generation = MLRuntime.generation;
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       if (generation !== MLRuntime.generation) throw new Error('Duplicate invocation cancelled an operation');
       await running;
       result.operation = {finished: progressState.finished, cancelled: progressState.cancelled, status: progressState.rows[0].status};
@@ -488,20 +506,20 @@ startup = async function(data) {
         await current.saveTx();
         return {metadata, source: 'host fixture', warnings: []};
       }};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       if (concurrentItem.getField('abstractNote') !== 'User edit during lookup' || concurrentItem.getField('DOI') || progressState.rows[0].status !== strings.failed || !progressState.rows[0].problem.includes(strings.itemChanged)) throw new Error('Concurrent native edit was not protected across retrieval');
       result.concurrentRetrievalEdit = true;
       for (const dialog of [...MLRuntime.dialogs]) dialog.close();
       MLRuntime.retriever = beforeConcurrentRetriever;
       await win.ZoteroPane.selectItem(item.id);
 
-      const cancelling = MLRuntime.run(win, 'lint');
+      const cancelling = MLRuntime.run(win, 'fix');
       const progressDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0]?.kind === 'progress' && window.document?.getElementById('actions')?.children.length));
       progressDialog.close();
       await cancelling;
       result.cancellation = {cancelled: progressState.cancelled, status: progressState.rows[0].status};
       if (!result.cancellation.cancelled || result.cancellation.status !== strings.cancelled) throw new Error('Closing a running dialog did not cancel');
-      const buttonCancelling = MLRuntime.run(win, 'lint');
+      const buttonCancelling = MLRuntime.run(win, 'fix');
       const cancelDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.getElementById('actions')?.children.length));
       cancelDialog.document.getElementById('actions').firstElementChild.dispatchEvent(new cancelDialog.Event('command'));
       await buttonCancelling;
@@ -523,7 +541,7 @@ startup = async function(data) {
       await win.ZoteroPane.selectItem(preprint.id);
       MLRuntime.finder = {find:async () => ({candidates:[{source:'OpenReview',publicationEvidence:'index',title:'Host Test Preprint',authors:['Zhi Lu'],venue:'ICLR 2026',url:'https://openreview.net/forum?id=fixture'}],warnings:[],answered:1})};
       MLRuntime.retriever = {candidate:async () => ({itemType:'conferencePaper',title:'HOST TEST PREPRINT',proceedingsTitle:'ICLR 2026',url:'https://openreview.net/forum?id=fixture',creators:[{firstName:'Zhi',lastName:'Lu',creatorType:'author'}]})};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       result.upgrade = {id:preprint.id, key:preprint.key, type:preprint.itemType, title:preprint.getField('title'), DOI:preprint.getField('DOI')};
       if (preprint.id !== originalID || preprint.key !== originalKey || preprint.itemType !== 'conferencePaper' || preprint.getField('title') !== 'Host Test Preprint' || preprint.getField('DOI') || !preprint.getField('extra').includes('Preprint DOI: 10.48550/arXiv.2501.01234') || preprint.getCreators()[0].lastName !== 'LU') throw new Error('In-place DOI-free upgrade did not preserve user values');
       for (const window of [...MLRuntime.dialogs]) window.close();
@@ -546,14 +564,7 @@ startup = async function(data) {
       if (settings.getComputedStyle(select).fontFamily.includes('Avenir Next')) throw new Error('Settings inherited the Bear font');
       if([...settings.document.styleSheets].some(sheet=>sheet.href?.includes('metadata-linter/content/ui.css')))throw new Error('Settings loaded the operational theme stylesheet');
       if (settings.document.getElementById('ml-ui-style')) throw new Error('Settings expose an appearance picker');
-      const updatePDFs = settings.document.getElementById('ml-update-pdfs');
-      if (!updatePDFs || updatePDFs.checked || updatePDFs.getAttribute('native') !== 'true') throw new Error('Missing native PDF preference');
-      updatePDFs.checked = true;
-      updatePDFs.dispatchEvent(new settings.Event('command'));
-      if (Zotero.Prefs.get('extensions.metadata-linter.updatePDFs', true) !== true) throw new Error('PDF preference was not saved');
-      updatePDFs.checked = false;
-      updatePDFs.dispatchEvent(new settings.Event('command'));
-      result.pdfPreference = true;
+      if (settings.document.getElementById('ml-update-pdfs')) throw new Error('Obsolete automatic PDF setting');
       const replace = settings.document.getElementById('ml-replace-publication');
       if (replace.getAttribute('tooltiptext') !== MLRuntime.preferenceData().strings.replacePublicationHelp) throw new Error('Missing localized Zotero Style compatibility reminder');
       if (!replace.checked || replace.getAttribute('native') !== 'true') throw new Error('Missing native replacement setting');
@@ -588,7 +599,7 @@ startup = async function(data) {
         await MLRuntime.network(MLRuntime.operation).json(${JSON.stringify(slowURL.replace("/pending", "/blocked"))});
         throw new Error('Expected a blocked JSON response');
       }};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       result.cvpr = {publication:cvpr.getField('proceedingsTitle'),conference:cvpr.getField('conferenceName'),date:cvpr.getField('date')};
       if (result.cvpr.publication !== 'Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition' || result.cvpr.conference !== 'My existing CVPR event' || result.cvpr.date !== '2026' || cvpr.getField('title') !== 'My Hand Edited CVPR TITLE') throw new Error('CVPR full-name normalization failed');
       if (!progressState.rows[0].detail.includes(strings.apiBlocked)) throw new Error('Native HTML API response was not classified as blocked');
@@ -600,7 +611,7 @@ startup = async function(data) {
         cvpr.setField('proceedingsTitle', venue);
         await cvpr.saveTx();
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:cvpr.toJSON(),source:'DOI',warnings:[]})};
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (cvpr.getField('proceedingsTitle') !== result.cvpr.publication || cvpr.getField('conferenceName') !== result.cvpr.conference || cvpr.getField('date') !== '2026' || cvpr.id !== identity.id || cvpr.key !== identity.key) throw new Error('Generic venue normalization changed the event, date or identity');
       }
       result.venueVariants = true;
@@ -620,7 +631,7 @@ startup = async function(data) {
       cvpr.setField('proceedingsTitle', 'Conference on computer vision and pattern recognition 2026');
       await cvpr.saveTx();
       MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:{itemType:'conferencePaper',title:cvpr.getField('title').toLowerCase(),DOI:cvpr.getField('DOI'),proceedingsTitle:'Conference on computer vision and pattern recognition 2026',conferenceName:'CVPR'},source:'DOI',warnings:[]})};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       result.proceedingsRepair = cvpr.getField('proceedingsTitle') === cvpr.getField('conferenceName');
       if (!result.proceedingsRepair) throw new Error('Misplaced proceedings value did not repair the publication field');
       for (const window of [...MLRuntime.dialogs]) window.close();
@@ -642,7 +653,7 @@ startup = async function(data) {
         if (candidate.source !== 'Google Scholar' || candidate.doi !== '10.1000/host-scholar') throw new Error('Scholar did not resolve the published DOI');
         return {itemType:'conferencePaper',publicationEvidence:'identifier',title:'SCHOLAR HOST TEST PAPER',DOI:candidate.doi,proceedingsTitle:'CVPR 2026',creators:scholarItem.getCreators()};
       }};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       result.scholar = {requests:scholarCalls.filter(url => url.startsWith('https://scholar.google.com/')).length,type:scholarItem.itemType,DOI:scholarItem.getField('DOI'),id:scholarItem.id};
       if (result.scholar.requests !== 1 || result.scholar.type !== 'conferencePaper' || result.scholar.DOI !== '10.1000/host-scholar' || scholarItem.id !== scholarID || scholarItem.getField('title') !== 'Scholar Host Test Paper') throw new Error('Native Scholar discovery or in-place DOI upgrade failed');
       MLRuntime.request = scholarRequest;
@@ -667,7 +678,7 @@ startup = async function(data) {
         };
         MLRuntime.finder = genericPublisher ? {find:async()=>({candidates:[],warnings:[],answered:1})} : undefined;
         MLRuntime.retriever = undefined;
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         const repairKey = genericPublisher ? 'genericBibliographyTypeRepair' : 'bibliographyTypeRepair';
         result[repairKey] = {type:mislabeled.itemType,venue:mislabeled.getField('proceedingsTitle'),requests:bibliographyCalls.length,status:MLRuntime.progressState.rows.at(-1).status};
         if (mislabeled.itemType !== 'conferencePaper' || mislabeled.getField('proceedingsTitle') !== 'International Conference on Learning Representations' || mislabeled.id !== mislabeledIdentity.id || mislabeled.key !== mislabeledIdentity.key || result[repairKey].status !== strings.updated || bibliographyCalls.length !== 2) throw new Error('Native linked-bibliography type correction failed: ' + JSON.stringify(result[repairKey]));
@@ -717,14 +728,14 @@ startup = async function(data) {
         MLRuntime.finder = undefined;
         MLRuntime.retriever = undefined;
         await win.ZoteroPane.selectItem(paper.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         const row = MLRuntime.progressState.rows.at(-1);
-        const expectedVenue = fixture.conference + (preprint ? ' 2026' : '');
-        if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expectedVenue || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getCreators().length !== (preprint ? fixture.authors.length : 1) || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-conference-tag') || !paper.getNotes().includes(note.id)) throw new Error(fixture.conference + ' official fallback failed: ' + JSON.stringify(row));
+        const expectedVenue = fixture.conference + ' 2026';
+        if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expectedVenue || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getCreators().length !== fixture.authors.length || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-conference-tag') || !paper.getNotes().includes(note.id)) throw new Error(fixture.conference + ' official fallback failed: ' + JSON.stringify(row));
         if (fixture.extra && requests.some(url => url !== pageURL && url !== 'https://' + fixture.host + '/virtual/2026/papers.html')) throw new Error('Local conference hint contacted unnecessary sources: ' + JSON.stringify(requests));
         for (const window of [...MLRuntime.dialogs]) window.close();
         requests.length = 0;
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || requests.some(url => url !== pageURL && url !== 'https://' + fixture.host + '/virtual/2026/papers.html')) throw new Error(fixture.conference + ' repeat lookup changed the item or searched again');
         result.conferenceOfficialFallback.push({conference:fixture.conference,updated:true,repeated:true,identityPreserved:true,noteAndTagPreserved:true});
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -758,7 +769,7 @@ startup = async function(data) {
           throw new Error('HTTP 429: unavailable source');
         };
         await win.ZoteroPane.selectItem(paper.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         const row = MLRuntime.progressState.rows.at(-1);
         if (row.status !== strings.updated || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== 'NeurIPS 2024 Workshop RBFM' || paper.getField('url') !== 'https://openreview.net/forum?id=iSL0FHZStr' || paper.getField('DOI') || paper.getCreators().length !== 4 || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-workshop-tag') || requests.some(url => url.includes('/notes?id='))) throw new Error('RBFM search BibTeX fallback failed: ' + JSON.stringify(row));
         result.openReviewSearchBibtex = {updated:true,identityPreserved:true,forumRequests:0,authors:paper.getCreators().length};
@@ -801,13 +812,13 @@ startup = async function(data) {
         MLRuntime.finder = undefined;
         MLRuntime.retriever = undefined;
         await win.ZoteroPane.selectItem(paper.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         const row = MLRuntime.progressState.rows.at(-1);
         const venue = paper.getField(journal ? 'publicationTitle' : 'proceedingsTitle');
         if (row.status !== strings.updated || paper.itemType !== type || venue !== (journal ? 'Regional Methods Journal' : 'Proceedings of the Unlisted Systems Meeting') || paper.getField('url') !== pageURL || paper.getField('DOI') || paper.getField('volume') !== '7' || !/^11[-–]19$/.test(paper.getField('pages')) || paper.id !== identity.id || paper.key !== identity.key || !paper.hasTag('keep-generic-tag') || !paper.getNotes().includes(note.id)) throw new Error('Generic DOI-free update failed: ' + JSON.stringify({type,venue,row,paper:paper.toJSON()}));
         for (const window of [...MLRuntime.dialogs]) window.close();
         requests.length = 0;
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || requests.some(url => url !== paper.getField('url') && !url.startsWith('https://export.arxiv.org/api/query?') && !url.startsWith('https://api.crossref.org/') && !url.startsWith('https://api.openalex.org/'))) throw new Error('Generic DOI-free repeat lookup changed the item or searched again: ' + JSON.stringify(requests));
         result.genericDOIFree.push({type,venue,repeated:true,identityPreserved:true,noteAndTagPreserved:true});
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -839,7 +850,7 @@ startup = async function(data) {
         MLRuntime.finder = undefined;
         MLRuntime.retriever = undefined;
         await win.ZoteroPane.selectItem(paper.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (JSON.stringify(paper.toJSON()) !== baseline || paper.itemType !== 'preprint') throw new Error('Publication evidence or given-name guard wrote an unverified item');
         result.publicationEvidenceGuards.push(kind);
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -866,7 +877,7 @@ startup = async function(data) {
         await win.ZoteroPane.selectItem(paper.id);
         MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
         MLRuntime.retriever = {retrieveCurrent:async () => {throw new Error('Offline fixture');}};
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (paper.itemType !== expected || paper.id !== identity.id || paper.key !== identity.key || paper.getField('title') !== 'Local Type Host Paper') throw new Error('Local type repair failed: ' + type + ' -> ' + paper.itemType);
         if (expected === 'conferencePaper' && paper.getField('proceedingsTitle') !== venue) throw new Error('Conference container was lost');
         if (url && paper.getField('url') !== url) throw new Error('Source URL was lost');
@@ -911,7 +922,7 @@ startup = async function(data) {
           Zotero.Translate.Web = FixtureTranslation;
           MLRuntime.finder = undefined;
           MLRuntime.retriever = undefined;
-          await MLRuntime.run(win, 'lint');
+          await MLRuntime.run(win, 'fix');
           if (officialCalls.length !== 1 || officialItem.id !== id || officialItem.key !== key || officialItem.itemType !== 'conferencePaper' || officialItem.getField('title') !== 'Official Host Test Paper' || officialItem.getField('DOI') !== (withDOI ? '10.52202/host-publication' : '') || officialItem.getField('abstractNote') !== metadata.abstractNote) throw new Error('Official source shortcut or DOI-free update failed');
           result.official.push({withDOI,requests:officialCalls.length,type:officialItem.itemType,DOI:officialItem.getField('DOI')});
           for (const window of [...MLRuntime.dialogs]) window.close();
@@ -939,7 +950,7 @@ startup = async function(data) {
         Zotero.Translate.Web = originalWeb;
         MLRuntime.finder = undefined;
         MLRuntime.retriever = undefined;
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         result.revisionDateUpgrade = {type:revised.itemType,date:revised.getField('date'),DOI:revised.getField('DOI'),venue:revised.getField('proceedingsTitle'),status:MLRuntime.progressState.rows.at(-1).status};
         if (revised.itemType !== 'conferencePaper' || revised.getField('date') !== '2024' || revised.getField('DOI') !== '10.1000/revision-host' || revised.id !== revisedIdentity.id || revised.key !== revisedIdentity.key || result.revisionDateUpgrade.status !== strings.updated) throw new Error('Revision date blocked an earlier publication: ' + JSON.stringify(result.revisionDateUpgrade));
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -966,7 +977,7 @@ startup = async function(data) {
           if (url === 'https://api2.openreview.net/notes?id=kPcY8AfCgk') return JSON.stringify({notes:[{id:'kPcY8AfCgk',content:{title:{value:rorTitle},authors:{value:['Mayur Kulkarni']},venue:{value:'AICity Oral'},venueid:{value:'thecvf.com/ECCV/2026/Workshop/AICity'},_bibtex:{value:'@inproceedings{ror,title={' + rorTitle + '},author={Kulkarni, Mayur},booktitle={AICity Oral},year={2026}}'}}}]});
           throw new Error('Offline workshop fixture: ' + url);
         };
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         result.rorWorkshop = {venue:ror.getField('proceedingsTitle'),display:await renderPublication(ror),status:MLRuntime.progressState.rows.at(-1).status};
         if (result.rorWorkshop.venue !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.display !== 'ECCV 2026 Workshop AICity' || result.rorWorkshop.status !== strings.updated || ror.id !== rorIdentity.id || ror.key !== rorIdentity.key || ror.getField('title') !== rorTitle || ror.getCreators()[0].lastName !== 'Kulkarni') throw new Error('OpenReview workshop repair failed: ' + JSON.stringify(result.rorWorkshop));
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -1000,27 +1011,26 @@ startup = async function(data) {
       let slowPDF = false;
       let pdfRequests = 0;
       try {
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
         MLRuntime.request = (url, ...args) => { pdfRequests++; return pdfRequest(url.startsWith('https://doi.org/') || url.startsWith('https://ieeexplore.ieee.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/pdf-article"))}.replace('/pdf-article', slowPDF ? '/pdf-slow-article' : '/pdf-article') : url, ...args); };
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:pdfItem.toJSON(),warnings:[]})};
         await win.ZoteroPane.selectItem(pdfItem.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'pdf');
         if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || pdfItem.getAttachments().length !== 2 || oldPDF.deleted || await oldPDF.attachmentHash !== originalPDFHash || oldPDF.getAnnotations()[0]?.annotationText !== 'Keep this annotation') throw new Error('Annotated PDF was not skipped');
         if (pdfRequests !== 0) throw new Error('Annotated PDF triggered a network request');
         for (const window of [...MLRuntime.dialogs]) window.close();
         await annotation.eraseTx();
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'pdf');
         if (MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated || pdfItem.getAttachments().length !== 2) throw new Error('PDF-only update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         for (const window of [...MLRuntime.dialogs]) window.close();
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'pdf');
         if (pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).status !== strings.noChanges) throw new Error('Identical PDF was duplicated');
         for (const window of [...MLRuntime.dialogs]) window.close();
         const nativeUpdatePDF = MLRuntime.updatePDF;
         try {
           MLRuntime.updatePDF = async () => { throw new Error('HTTP 403'); };
-          await MLRuntime.run(win, 'lint');
+          await MLRuntime.run(win, 'pdf');
           const row = MLRuntime.progressState.rows.at(-1);
-          if (row.status !== strings.noChanges || row.pdfStatus !== strings.pdfUnavailableReason.replace('{reason}', strings.sourceBlocked) || row.problem) throw new Error('PDF access error hid a successful metadata result: ' + JSON.stringify(row));
+          if (row.status !== strings.failed || row.pdfStatus !== strings.pdfUnavailableReason.replace('{reason}', strings.sourceBlocked)) throw new Error('PDF access error hid a successful metadata result: ' + JSON.stringify(row));
           await wait(() => MLRuntime.progressWindow?.document.getElementById('content')?.textContent.includes(row.pdfStatus));
           await capture('pdf-access-blocked', MLRuntime.progressWindow);
           result.separatePDFStatus = true;
@@ -1028,7 +1038,7 @@ startup = async function(data) {
         } finally { MLRuntime.updatePDF = nativeUpdatePDF; }
         const firstPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
         await Zotero.HTTP.request('GET', ${JSON.stringify(slowURL.replace("/pending", "/pdf-revise"))});
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'pdf');
         if (!firstPublished.deleted || pdfItem.getAttachments().length !== 2 || !oldPDF.deleted || supplement.deleted) throw new Error('Unannotated old PDF was not trashed or protected attachments changed');
         const currentPublished = Zotero.Items.get(pdfItem.getAttachments()).find(entry => entry.id !== oldPDF.id && entry.id !== supplement.id);
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -1040,7 +1050,7 @@ startup = async function(data) {
           return value;
         };
         try {
-          await MLRuntime.run(win, 'lint');
+          await MLRuntime.run(win, 'pdf');
           if (currentPublished.deleted || pdfItem.getAttachments().length !== 2 || MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfCancelled) throw new Error('Cancellation during replacement did not roll back');
         } finally { currentPublished.save = originalSave; }
         for (const window of [...MLRuntime.dialogs]) window.close();
@@ -1049,7 +1059,7 @@ startup = async function(data) {
         const nativeDownload = Zotero.HTTP.download;
         Zotero.HTTP.download = (...args) => { pdfStarted = true; return nativeDownload.apply(Zotero.HTTP, args); };
         try {
-          const pendingPDF = MLRuntime.run(win, 'lint');
+          const pendingPDF = MLRuntime.run(win, 'pdf');
           await wait(() => pdfStarted);
           await new Promise(resolve => setTimeout(resolve, 150));
           MLRuntime.cancel();
@@ -1077,20 +1087,20 @@ startup = async function(data) {
           MLRuntime.finder = {find:async () => ({candidates:[{source:'arXiv',publicationEvidence:'identifier',title:paper.getField('title'),doi:${JSON.stringify(pdfDOI)},linked:true}],warnings:[],answered:1})};
           MLRuntime.retriever = {candidate:async () => ({itemType:publishedType,title:paper.getField('title'),DOI:${JSON.stringify(pdfDOI)},url:'https://ieeexplore.ieee.org/document/11523638/',publicationTitle:publishedType==='journalArticle'?'IEEE Transactions on Multimedia':undefined,proceedingsTitle:publishedType==='conferencePaper'?'ICLR 2026':undefined,creators:paper.getCreators()})};
           await win.ZoteroPane.selectItem(paper.id);
-          await MLRuntime.run(win, 'lint');
-          if (paper.itemType !== publishedType || paper.id !== identity.id || paper.key !== identity.key || manuscript.deleted === annotated || paper.getAttachments().length !== 1 || ((await paper.getBestAttachment()).id === manuscript.id) !== annotated || MLRuntime.progressState.rows.at(-1).status !== strings.updated || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || (annotated && pdfRequests !== requestsBefore)) throw new Error('Formal publication did not replace the manuscript: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          await MLRuntime.run(win, 'fix');
+          if (manuscript.deleted || pdfRequests !== requestsBefore) throw new Error('Fix unexpectedly updated PDF');
+          await MLRuntime.run(win, 'pdf');
+          if (paper.itemType !== publishedType || paper.id !== identity.id || paper.key !== identity.key || manuscript.deleted === annotated || paper.getAttachments().length !== 1 || ((await paper.getBestAttachment()).id === manuscript.id) !== annotated || MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.noChanges : strings.updated) || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || (annotated && pdfRequests !== requestsBefore)) throw new Error('Formal publication did not replace the manuscript: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
           for (const window of [...MLRuntime.dialogs]) window.close();
         }
         result.formalPDFReplacesPreprint = true;
         result.pdfUpdate = {added:true,unchangedBodySkipped:true,annotatedPDFSkipped:true,unannotatedPDFTrashed:true,supplementPreserved:true,cancelled:true,replacementRollback:true};
       } finally {
         MLRuntime.request = pdfRequest;
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
       }
       const scienceDirectRequest = MLRuntime.request;
       const nativeFileResolver = Zotero.Utilities.Internal.getFileFromDocument;
       try {
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
         const paper = new Zotero.Item('journalArticle');
         paper.setField('title', ${JSON.stringify(pdfTitle)});
         paper.setField('DOI', ${JSON.stringify(pdfDOI)});
@@ -1108,19 +1118,17 @@ startup = async function(data) {
         };
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:paper.toJSON(),warnings:[]})};
         await win.ZoteroPane.selectItem(paper.id);
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'pdf');
         if (translatorCalls !== 1 || paper.getAttachments().length !== 1 || MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) throw new Error('ScienceDirect skipped its PDF translator: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
         result.scienceDirectPDFResolution = true;
         for (const window of [...MLRuntime.dialogs]) window.close();
       } finally {
         MLRuntime.request = scienceDirectRequest;
         Zotero.Utilities.Internal.getFileFromDocument = nativeFileResolver;
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
       }
       const arxivRequest = MLRuntime.request;
       const arxivDownload = Zotero.HTTP.download;
       try {
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', true, true);
         MLRuntime.finder = {find:async () => ({candidates:[],warnings:[],answered:1})};
         MLRuntime.retriever = {retrieveCurrent:async item => ({metadata:item.toJSON(),warnings:[]})};
         MLRuntime.request = (url, ...args) => arxivRequest.call(MLRuntime, url.startsWith('https://export.arxiv.org/') ? ${JSON.stringify(slowURL.replace("/pending", "/arxiv-feed"))} : url, ...args);
@@ -1144,11 +1152,11 @@ startup = async function(data) {
             await note.saveTx();
           }
           await win.ZoteroPane.selectItem(paper.id);
-          await MLRuntime.run(win, 'lint');
-          if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || paper.getAttachments().length !== 1 || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
+          await MLRuntime.run(win, 'pdf');
+          if (MLRuntime.progressState.rows.at(-1).status !== (annotated ? strings.noChanges : strings.updated) || (!annotated && MLRuntime.progressState.rows.at(-1).pdfStatus !== strings.pdfUpdated) || paper.getAttachments().length !== 1 || old.deleted === annotated || paper.id !== paperIdentity.id || paper.key !== paperIdentity.key) throw new Error('Native arXiv version update failed: ' + JSON.stringify(MLRuntime.progressState.rows.at(-1)));
           if (annotated && (await old.attachmentHash !== oldHash || old.getAnnotations()[0]?.annotationText !== 'Keep this annotation')) throw new Error('arXiv annotations changed');
           for (const window of [...MLRuntime.dialogs]) window.close();
-          await MLRuntime.run(win, 'lint');
+          await MLRuntime.run(win, 'pdf');
           if (MLRuntime.progressState.rows.at(-1).status !== strings.noChanges || paper.getAttachments().length !== 1) throw new Error('Native arXiv cached PDF was downloaded again');
           for (const window of [...MLRuntime.dialogs]) window.close();
         }
@@ -1156,7 +1164,6 @@ startup = async function(data) {
       } finally {
         MLRuntime.request = arxivRequest;
         Zotero.HTTP.download = arxivDownload;
-        Zotero.Prefs.set('extensions.metadata-linter.updatePDFs', false, true);
       }
       const cachedItem = new Zotero.Item('journalArticle');
       cachedItem.setField('title', 'Native Cache Host Paper');
@@ -1168,9 +1175,9 @@ startup = async function(data) {
         if (json.record !== 'cached') throw new Error('Cached JSON response changed');
         return {metadata:cachedItem.toJSON(),source:'DOI',warnings:[]};
       }};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       for (const window of [...MLRuntime.dialogs]) window.close();
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       for (const window of [...MLRuntime.dialogs]) window.close();
       result.nativeJSONCache = true;
 
@@ -1188,11 +1195,11 @@ startup = async function(data) {
         if (paper.id === batch[1].id) throw new Error('HTTP 429: Too Many Requests');
         return {metadata:{...paper.toJSON(),abstractNote:'Filled in batch'},source:'DOI',warnings:[]};
       }};
-      const batchRunning = MLRuntime.run(win, 'lint');
+      const batchRunning = MLRuntime.run(win, 'fix');
       const batchDialog = await wait(() => [...MLRuntime.dialogs].find(window => !window.closed && window.arguments?.[0] === progressState && window.document?.querySelector('.virtualized-table .row')));
       await win.ZoteroPane.itemsView.selectItems(batch.map(paper => paper.id));
-      await MLRuntime.run(win, 'lint');
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
+      await MLRuntime.run(win, 'fix');
       const batchDoc = batchDialog.document;
       const cancelButton = batchDoc.getElementById('actions').firstElementChild;
       result.queue = {total:progressState.total,windows:[...MLRuntime.dialogs].filter(window => !window.closed).length,waiting:progressState.rows.filter(row => row.status === strings.waiting).length,native:cancelButton.namespaceURI === 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',appearance:batchDialog.getComputedStyle(cancelButton).MozAppearance};
@@ -1245,11 +1252,49 @@ startup = async function(data) {
       result.coalescedProgress = true;
       result.progressProblemsAndSorting = true;
       await win.ZoteroPane.selectItem(batch[0].id);
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       await wait(() => batchDoc.querySelectorAll('.virtualized-table .row').length === 4);
       if (batchDialog.closed || [...MLRuntime.dialogs].filter(window => !window.closed).length !== 1 || progressState.rows.length !== 4 || batchDoc.querySelectorAll('.virtualized-table .row').length !== 4) throw new Error('Completed window was not reused with history retained');
       batchDoc.getElementById('actions').firstElementChild.dispatchEvent(new batchDialog.Event('command'));
       await wait(() => batchDialog.closed);
+      const doiRepair = new Zotero.Item('journalArticle');
+      doiRepair.setField('title', 'Damaged imported title');
+      doiRepair.setField('DOI', '10.1109/ICCV48922.2021.00686');
+      doiRepair.setCreators([{firstName:'Juhong',lastName:'Min',creatorType:'author'}]);
+      await doiRepair.saveTx();
+      await win.ZoteroPane.selectItem(doiRepair.id);
+      MLRuntime.finder = {find:async () => {throw new Error('Unexpected title discovery');}};
+      MLRuntime.retriever = {retrieveCurrent:async () => ({source:'DOI',warnings:[],metadata:{itemType:'conferencePaper',title:'Hypercorrelation Squeeze for Few-Shot Segmentation',DOI:doiRepair.getField('DOI'),proceedingsTitle:'ICCV 2021',creators:doiRepair.getCreators(),publicationEvidence:'identifier'}})};
+      await MLRuntime.run(win, 'fix');
+      if (doiRepair.getField('title') !== 'Hypercorrelation Squeeze for Few-Shot Segmentation' || doiRepair.itemType !== 'conferencePaper') throw new Error('Exact DOI did not repair the damaged title');
+      result.doiTitleRepair = true;
+      for (const mode of ['fill', 'fix']) {
+        doiRepair.setField('date', '1999');
+        doiRepair.setField('pages', '1-2');
+        doiRepair.setCreators([{firstName:'Wrong',lastName:'Author',creatorType:'author'}]);
+        await doiRepair.saveTx();
+        const beforeExtra = doiRepair.getField('extra');
+        MLRuntime.retriever = {retrieveCurrent:async () => ({source:'DOI',warnings:[],metadata:{itemType:'conferencePaper',title:doiRepair.getField('title'),DOI:doiRepair.getField('DOI'),date:'2021',pages:'6941-6952',publisher:'IEEE',proceedingsTitle:'ICCV 2021',creators:[{firstName:'Juhong',lastName:'Min',creatorType:'author'}],publicationEvidence:'identifier'}})};
+        await MLRuntime.run(win, mode);
+        await doiRepair.reload(null, true);
+        if (doiRepair.getField('date') !== (mode === 'fix' ? '2021' : '1999') || doiRepair.getField('pages') !== (mode === 'fix' ? '6941-6952' : '1-2') || doiRepair.getCreators()[0].lastName !== (mode === 'fix' ? 'Min' : 'Author') || doiRepair.getField('extra') !== beforeExtra) throw new Error(mode + ' did not preserve its field policy');
+      }
+      const defaultAction = settings.document.getElementById('ml-default-action');
+      if (defaultAction.value !== 'fill') throw new Error('Initial default must be Fill');
+      for (const mode of ['fix', 'pdf', 'fill']) {
+        defaultAction.value = mode;
+        defaultAction.dispatchEvent(new settings.Event('command'));
+        if (MLRuntime.defaultAction() !== mode) throw new Error('Default action preference was not saved');
+        const rootPopup = doc.getElementById('zotero-itemmenu');
+        const listeners = Cc['@mozilla.org/eventlistenerservice;1'].getService(Ci.nsIEventListenerService).getListenerInfoFor(rootPopup);
+        for (const listener of listeners.filter(info => info.type === 'popupshowing')) {
+          if (String(listener.listenerObject).includes('refreshDefault')) listener.listenerObject.call(rootPopup, {target:rootPopup});
+        }
+        if (actionNodes()[0].id !== 'metadata-linter-' + mode) throw new Error('Preferred action is not first');
+
+      }
+      result.fixFill = true;
+
       const dmlnet = new Zotero.Item('journalArticle');
       const dmlTitle = 'DMLNet: Differential Saliency with Multi-Domain Learning Network for Moving Infrared Small Target Detection';
       dmlnet.setField('title', dmlTitle);
@@ -1265,7 +1310,7 @@ startup = async function(data) {
         return {candidates:[candidate],warnings:[],answered:1};
       }};
       MLRuntime.retriever = {candidate:async () => ({itemType:'journalArticle',title:'DMLNet: Differential Saliency With Multidomain Learning Network for Moving Infrared Small-Target Detection',DOI:'10.1109/LGRS.2026.3708839',publicationTitle:dmlnet.getField('publicationTitle'),creators:[{firstName:'Yi',lastName:'Rong',creatorType:'author'},...dmlnet.getCreators()]})};
-      await MLRuntime.run(win, 'lint');
+      await MLRuntime.run(win, 'fix');
       result.dmlnet = {DOI:dmlnet.getField('DOI'),titlePreserved:dmlnet.getField('title') === dmlTitle,status:progressState.rows[0].status};
       if (result.dmlnet.DOI !== '10.1109/LGRS.2026.3708839' || !result.dmlnet.titlePreserved || result.dmlnet.status !== strings.updated) throw new Error('DMLNet compound-word DOI repair failed');
       select.value = 'standard';
@@ -1289,7 +1334,7 @@ startup = async function(data) {
         const id = paper.id, key = paper.key;
         await win.ZoteroPane.selectItem(id);
         MLRuntime.retriever = {retrieveCurrent:async () => ({metadata:paper.toJSON(),source:'DOI',warnings:[]})};
-        await MLRuntime.run(win, 'lint');
+        await MLRuntime.run(win, 'fix');
         if (paper.id !== id || paper.key !== key || paper.itemType !== 'conferencePaper' || paper.getField('proceedingsTitle') !== expected || paper.getCreators().some(creator => creator.creatorTypeID === Zotero.CreatorTypes.getID('editor')) || paper.getField('date') !== '2024') throw new Error('Supplementary conference repair failed: ' + venue);
         result.supplementaryConferences.push(paper.getField('proceedingsTitle'));
       }
@@ -1337,7 +1382,7 @@ startup = async function(data) {
         }
         await Promise.all([MLRuntime.request(${JSON.stringify(slowURL)}), MLRuntime.request(${JSON.stringify(slowURL)})]); return {metadata:item.toJSON(),source:'URL',warnings:[]}; }};
       const exitingRuntime = MLRuntime;
-      const pending = exitingRuntime.run(win, 'lint');
+      const pending = exitingRuntime.run(win, 'fix');
       await wait(() => requested);
       await new Promise(resolve => setTimeout(resolve, 300));
       const exitStart = Date.now();
@@ -1346,14 +1391,14 @@ startup = async function(data) {
       await pending;
       result.shutdown = {elapsedMs:Date.now()-exitStart,busy:exitingRuntime.busy,runtimeReleased:MLRuntime === null,chromeReleased:MLChrome === null};
       if (result.shutdown.elapsedMs > 2000 || result.shutdown.busy || !result.shutdown.runtimeReleased || !result.shutdown.chromeReleased) throw new Error('Shutdown waited for remote work or left resources alive');
-      if (doc.getElementById('metadata-linter-menu') || Zotero.MetadataLinter || Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences')) throw new Error('Shutdown left plugin UI registered');
+      if (doc.getElementById('metadata-linter-actions') || Zotero.MetadataLinter || Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences')) throw new Error('Shutdown left plugin UI registered');
       if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn')) throw new Error('Shutdown left publication column');
       if (view._renderCell !== MLHostNativeRenderer) throw new Error('Shutdown did not restore native renderer');
       await new Promise(resolve => setTimeout(resolve, 200));
       await MLOriginalStartup(data);
-      await wait(() => doc.getElementById('metadata-linter-menu') && Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences'));
+      await wait(() => doc.getElementById('metadata-linter-actions') && Zotero.PreferencePanes.pluginPanes.some(pane => pane.id === 'metadata-linter-preferences'));
       if (Zotero.ItemTreeManager.getCustomColumns().some(col => col.pluginID === 'metadata-linter@lzcn') || await renderPublication(toggleEntry) !== 'TMC') throw new Error('Restart did not decorate the single native Publication');
-      result.restart = {menus:doc.querySelectorAll('#metadata-linter-menu').length};
+      result.restart = {menus:doc.querySelectorAll('#metadata-linter-actions').length};
       if (result.restart.menus !== 1 || !MLRuntime) throw new Error('Restart did not restore exactly one plugin entry');
       shutdown();
       result.ok = true;

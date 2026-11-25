@@ -10,19 +10,23 @@ Find published versions and repair metadata in the original Zotero item.
 
 Requires Zotero 10. Download the XPI from [Releases](https://github.com/lzcn/zotero-metadata-fixer/releases/latest) and install it through **Tools → Plugins → Install Plugin From File**.
 
-Select items, right-click and choose **Metadata Fixer**. The results window shows metadata and PDF outcomes separately. Hover for details, or click a row to select its item. Cancel or close the window to stop pending work.
+Select items and right-click **Complete Metadata**, **Repair Metadata**, or **Update PDF**. Each action has a native icon. The preferred action appears first (initially Complete Metadata); choose it in Settings. The results window shows metadata and PDF outcomes separately. Hover for details, or click a row to select its item. Cancel or close the window to stop pending work.
 
-The plugin finds published versions, fills missing DOIs and fields, repairs record types, standardizes proceedings titles and optionally updates PDFs. Updates preserve annotations, notes, collections, tags and relations. Superseded unannotated main PDFs are moved to Trash after a successful replacement. Editing an item during retrieval stops its update. Empty results preserve existing fields.
+**Complete Metadata** only fills empty fields and an empty author list, preserving populated values and the item type. **Repair Metadata** includes filling and corrects retrieved bibliographic fields—including authors, date, venue, volume, issue, pages, publisher and identifiers—after confirming the same work. It also finds published versions, repairs record types and formats proceedings titles. Missing source values never erase existing fields. **Update PDF** only checks and updates the PDF. Repair Metadata and Complete Metadata never update PDFs. Updates preserve annotations, notes, collections, tags and relations. Superseded unannotated main PDFs are moved to Trash after a successful replacement. Editing an item during retrieval stops its update. Empty results preserve existing fields.
 
 ## Settings
 
+- Choose the default action: Complete Metadata, Repair Metadata or Update PDF.
 - Choose original, standard or short proceedings titles.
 - Show publication abbreviations in Zotero's native column. Disable Zotero Style's Publication Column to avoid conflicts.
-- PDF updates are on by default: skip items with annotated PDFs. Otherwise keep the latest version, preferring the published version over arXiv. Publisher access is required.
+
+Update PDF skips items with annotated PDFs. Otherwise it keeps the latest version, preferring the published version over arXiv. Publisher access is required.
 
 Lookup uses Zotero translators and scholarly metadata services. Conflicting or unverified matches are skipped. Run updates manually. Install plugin updates from XPI.
 
 ## Update flow
+
+Existing formal DOIs are queried before title discovery. A matching DOI with a corroborating title or authors can repair incorrect metadata; capitalization and punctuation alone are preserved. Without that identifier confirmation, title matching remains required. Errors shared by the authoritative source cannot be corrected from that source alone.
 
 Existing formal DOIs use Zotero translators, with DOI content negotiation and single-record Crossref/OpenAlex/DataCite enrichment as fallbacks. Without a formal DOI, lookup proceeds in this order:
 
@@ -43,7 +47,7 @@ Conference-site integrations support NeurIPS (NIPS), ICML and ICLR. Hints locate
 flowchart LR
   A[Selected item] --> B[Identify publication]
   B --> C[Validate and repair original item]
-  C --> D{PDF updates enabled and no annotations?}
+  A --> D{Update PDF selected and no annotations?}
   D -->|arXiv| E[Compare actual PDF version with arXiv]
   D -->|Published| F[Check publisher PDF validators and hash]
   E --> G[Replace old main PDF after validation]

@@ -8,14 +8,15 @@ import type {
 import { identifiers, isPreprint, preprintDOI } from "./identifiers";
 import { PublicationFinder, type Network } from "./providers";
 import { MetadataRetriever } from "./translate";
-import { applyPlan, fingerprint } from "./update";
+import { applyPlan, buildPlan, fingerprint } from "./update";
 import { Operation } from "./operation";
-import { PDFUpdater, UPDATE_PDFS_PREF } from "./pdf";
+import { PDFUpdater } from "./pdf";
 import { PDFVersionCache } from "./pdf-cache";
 import { SourcePolicy } from "./source-policy";
 import { checkAccess, classifyProblem, parseJSONResponse } from "./responses";
 import {
   normalizeMetadata,
+  matchesExistingDOI,
   matchesPublication,
   hasPublicationEvidence,
 } from "./metadata";
@@ -36,6 +37,10 @@ import {
   type ConferenceSettings,
   type PublicationStyle,
 } from "./conferences";
+
+export const DEFAULT_ACTION_PREF =
+  "extensions.zotero.metadata-linter.defaultAction";
+type Action = RetrievalSource | "fix" | "fill" | "pdf";
 
 declare const Zotero: any;
 declare const MLRootURI: string;
@@ -235,29 +240,57 @@ export class Runtime {
     const doc = win.document;
     const popup = doc.getElementById("zotero-itemmenu");
     if (!popup) return;
-    const menu = doc.createXULElement("menuitem");
-    menu.id = "metadata-linter-menu";
-    menu.setAttribute("label", this.s.name);
-    menu.setAttribute("tooltiptext", this.s.lint);
-    menu.setAttribute("class", "menuitem-iconic");
-    menu.setAttribute("image", MLRootURI + "icons/icon-16.png");
-    menu.addEventListener("command", () => {
-      void this.run(win, "lint").catch((error) => Zotero.logError(error));
-    });
+    const separator = doc.createXULElement("menuseparator");
+    separator.id = "metadata-linter-actions";
+    const entries = new Map<string, any>();
+    const icons = { fill: "plus", fix: "edit", pdf: "refresh" };
+    for (const mode of ["fill", "fix", "pdf"] as const) {
+      const action = doc.createXULElement("menuitem");
+      action.id = `metadata-linter-${mode}`;
+      action.setAttribute("label", this.s[mode]);
+      action.setAttribute("tooltiptext", this.s[`${mode}Help`]);
+      action.setAttribute("class", "menuitem-iconic");
+      action.setAttribute(
+        "image",
+        `chrome://zotero/skin/16/universal/${icons[mode]}.svg`,
+      );
+      action.addEventListener(
+        "command",
+        () => {
+          void this.run(win, mode).catch((error) => Zotero.logError(error));
+        },
+        false,
+        true,
+      );
+      entries.set(mode, action);
+    }
+    popup.appendChild(separator);
+    const refreshDefault = () => {
+      const preferred = this.defaultAction();
+      for (const mode of [
+        preferred,
+        ...["fill", "fix", "pdf"].filter((mode) => mode !== preferred),
+      ])
+        popup.insertBefore(entries.get(mode), separator);
+    };
+    refreshDefault();
     const showing = (event: Event) => {
       if (event.target !== popup) return;
       const selected: Item[] = win.ZoteroPane.getSelectedItems().filter(
         (item: Item) =>
           item.isRegularItem() && item.isEditable() && !item.deleted,
       );
-      menu.hidden = false;
-      menu.disabled = !selected.length || this.busy;
+      refreshDefault();
+      for (const action of entries.values()) {
+        action.hidden = false;
+        action.disabled = !selected.length || this.busy;
+      }
     };
     popup.addEventListener("popupshowing", showing);
-    popup.appendChild(menu);
     this.windows.set(win, () => {
       popup.removeEventListener("popupshowing", showing);
-      menu.remove();
+      for (const action of entries.values()) action.remove();
+      separator.remove();
     });
     this.publicationView.sync(win);
   }
@@ -431,19 +464,27 @@ export class Runtime {
       });
   }
 
+  defaultAction(): "fill" | "fix" | "pdf" {
+    const value = Zotero.Prefs?.get(DEFAULT_ACTION_PREF, true);
+    return value === "fix" || value === "pdf" ? value : "fill";
+  }
+
   preferenceData(): any {
     return { strings: this.s, settings: this.conferenceSettings() };
   }
 
   initializePreferences(doc: any): void {
     const commands: Record<string, (event: any) => void> = {
+      "ml-default-action": (event) => {
+        const value = event.target.value;
+        if (!["fill", "fix", "pdf"].includes(value))
+          throw new Error("Invalid default action");
+        Zotero.Prefs.set(DEFAULT_ACTION_PREF, value, true);
+      },
       "ml-publication-style": (event) =>
         this.setPublicationStyle(event.target.value),
       "ml-replace-publication": (event) =>
         this.setReplacePublicationColumn(Boolean(event.target.checked)),
-      "ml-update-pdfs": (event) => {
-        Zotero.Prefs.set(UPDATE_PDFS_PREF, Boolean(event.target.checked), true);
-      },
     };
     for (const [id, listener] of Object.entries(commands))
       doc.getElementById(id).addEventListener("command", listener, false, true);
@@ -453,7 +494,10 @@ export class Runtime {
   refreshPreferences(doc: any): void {
     if (!this.alive) return;
     for (const [id, text] of Object.entries({
-      "ml-update-pdfs": this.s.updatePDFs,
+      "ml-default-label": this.s.defaultAction,
+      "ml-default-fill": this.s.fill,
+      "ml-default-fix": this.s.fix,
+      "ml-default-pdf": this.s.pdf,
       "ml-replace-publication": this.s.replacePublication,
       "ml-publication-label": this.s.publicationStyle,
       "ml-retrieved-names": this.s.retrievedNames,
@@ -468,15 +512,11 @@ export class Runtime {
       else element.textContent = text;
     }
     doc
-      .getElementById("ml-update-pdfs")
-      .setAttribute("tooltiptext", this.s.updatePDFsHelp);
-    doc
       .getElementById("ml-replace-publication")
       .setAttribute("tooltiptext", this.s.replacePublicationHelp);
     doc.getElementById("ml-replace-publication").checked =
       this.publicationView.enabled();
-    doc.getElementById("ml-update-pdfs").checked =
-      Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false;
+    doc.getElementById("ml-default-action").value = this.defaultAction();
     doc.getElementById("ml-publication-style").value =
       this.conferenceSettings().publicationStyle;
   }
@@ -529,7 +569,7 @@ export class Runtime {
       throw new Error(this.s.unsupported);
   }
 
-  private enqueue(items: Item[], source: RetrievalSource | "lint"): void {
+  private enqueue(items: Item[], source: Action): void {
     const state = this.progressState;
     // Check each selection once; scanning every queued row per item is
     // quadratic for large selections.
@@ -567,7 +607,7 @@ export class Runtime {
     ).update(item, operation);
   }
 
-  async run(win: any, source: RetrievalSource | "lint"): Promise<void> {
+  async run(win: any, source: Action): Promise<void> {
     if (!this.alive) return;
     const selected: Item[] = win.ZoteroPane.getSelectedItems().filter(
       (item: Item) =>
@@ -654,16 +694,28 @@ export class Runtime {
       while (next < state.tasks.length && host.active()) {
         const { item, source, row } = state.tasks[next++] as {
           item: Item;
-          source: RetrievalSource | "lint";
+          source: Action;
           row: any;
         };
         row.status = this.s.working;
         row.pdfStatus = "";
-        let pdfDetail = "";
         let metadataConfirmed = false;
         if (!progress.window.closed)
           this.cleanup(() => progress.window.renderProgress?.());
         try {
+          if (source === "pdf") {
+            const pdf = await this.updatePDF(item, operation, pdfCache);
+            if (!host.active()) throw new Error(this.s.cancelled);
+            row.status = pdf === "added" ? this.s.updated : this.s.noChanges;
+            row.pdfStatus =
+              pdf === "added"
+                ? this.s.pdfUpdated
+                : pdf === "unavailable"
+                  ? this.s.pdfUnavailable
+                  : "";
+            continue;
+          }
+          const automatic = source === "fix" || source === "fill";
           const baseline = fingerprint(item);
           const preprint = isPreprint(item);
           const ids = identifiers(item);
@@ -671,7 +723,7 @@ export class Runtime {
           const missingDOI = !itemDOI || preprintDOI(itemDOI);
           let metadata: Metadata | undefined;
           let publication = false;
-          if (source === "lint" && missingDOI && ids.PMID) {
+          if (automatic && missingDOI && ids.PMID) {
             try {
               const resolved = await operation.wait(
                 retriever.retrieve(item, "PMID"),
@@ -689,7 +741,7 @@ export class Runtime {
               row.detail = `PMID: ${String(error)}`;
             }
           }
-          if (source === "lint" && !metadata && (preprint || missingDOI)) {
+          if (automatic && !metadata && (preprint || missingDOI)) {
             // A formal DOI is the shortest path; only missing or preprint DOIs
             // need title discovery.
             const lookup = !missingDOI
@@ -745,14 +797,19 @@ export class Runtime {
             }
           }
           if (!metadata) {
-            if (source === "lint") {
+            if (automatic) {
               try {
                 const current = await operation.wait(
                   retriever.retrieveCurrent(item, host.active),
                 );
                 metadata = current.metadata;
                 metadataConfirmed =
-                  matchesPublication(
+                  matchesExistingDOI(item, metadata) ||
+                  (((current.source === "arXiv" && Boolean(ids.arXiv)) ||
+                    (current.source === "PMID" && Boolean(ids.PMID))) &&
+                    titleScore(item.getField("title"), metadata.title) >=
+                      0.9) ||
+                  (matchesPublication(
                     item,
                     {
                       source: current.source,
@@ -761,15 +818,16 @@ export class Runtime {
                     },
                     metadata,
                   ) &&
-                  hasPublicationEvidence(
-                    {
-                      source: current.source,
-                      title: item.getField("title"),
-                      url: ids.URL,
-                    },
-                    metadata,
-                  );
+                    hasPublicationEvidence(
+                      {
+                        source: current.source,
+                        title: item.getField("title"),
+                        url: ids.URL,
+                      },
+                      metadata,
+                    ));
                 if (
+                  !matchesExistingDOI(item, metadata) &&
                   item.getField("title") &&
                   titleScore(item.getField("title"), metadata.title) < 0.9
                 )
@@ -813,45 +871,30 @@ export class Runtime {
             settings.publicationStyle ?? "original",
           );
           metadata = conference.metadata;
-          const plan = buildRepairPlan(
-            item,
-            metadata,
-            host,
-            conference.overrides,
-            publication,
-            settings.publicationStyle !== "original",
-            conference.venuePolicy,
-          );
-          await applyPlan(item, plan, host, publication);
-          row.status = plan.changes.length ? this.s.updated : this.s.noChanges;
-          if (
-            source === "lint" &&
-            Zotero.Prefs?.get(UPDATE_PDFS_PREF, true) !== false
-          ) {
-            try {
-              const pdf = await this.updatePDF(item, operation, pdfCache);
-              if (!host.active()) throw new Error(this.s.cancelled);
-              if (pdf === "added") row.pdfStatus = this.s.pdfUpdated;
-              if (pdf === "unavailable") {
-                row.pdfStatus = this.s.pdfUnavailable;
-                pdfDetail = this.s.pdfUnavailable;
-              }
-            } catch (error) {
-              if (!host.active()) {
-                row.pdfStatus = this.s.pdfCancelled;
-                pdfDetail = this.s.pdfCancelled;
-              } else {
-                row.pdfStatus = this.s.pdfUnavailableReason.replace(
-                  "{reason}",
-                  classifyProblem(String(error), this.s).message,
+          const plan =
+            source === "fill"
+              ? buildPlan(item, metadata, "blank", host)
+              : buildRepairPlan(
+                  item,
+                  metadata,
+                  host,
+                  conference.overrides,
+                  publication,
+                  settings.publicationStyle !== "original",
+                  conference.venuePolicy,
+                  metadataConfirmed,
                 );
-                pdfDetail = `${row.pdfStatus}\n${String(error)}`;
-                Zotero.logError(error);
-              }
-            }
-          }
+          await applyPlan(item, plan, host, source !== "fill" && publication);
+          row.status = plan.changes.length ? this.s.updated : this.s.noChanges;
         } catch (error) {
           row.status = host.active() ? this.s.failed : this.s.cancelled;
+          if (source === "pdf")
+            row.pdfStatus = host.active()
+              ? this.s.pdfUnavailableReason.replace(
+                  "{reason}",
+                  classifyProblem(String(error), this.s).message,
+                )
+              : this.s.pdfCancelled;
           row.detail += `\n${String(error)}`;
           if (host.active()) Zotero.logError(error);
         } finally {
@@ -861,8 +904,6 @@ export class Runtime {
             row.status === this.s.updated || metadataConfirmed
               ? ""
               : problem.message;
-          if (pdfDetail)
-            row.detail = [row.detail, pdfDetail].filter(Boolean).join("\n");
           if (
             row.status === this.s.noChanges &&
             problem.incomplete &&
